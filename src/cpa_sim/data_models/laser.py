@@ -1,0 +1,1 @@
+# defines LaserState (mutable) that is passed between stages and LaserSpec (immutable) that

@@ -1,0 +1,1 @@
+# simple amp model - for v1 release of cpa-sim
