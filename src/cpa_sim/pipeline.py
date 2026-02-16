@@ -1,8 +1,9 @@
-# defines pipeline assembely. enables different execution paths (eg: sequential, DAG + scheduler, ML, HPC + ML)
-# stays up to date with phys-pipeline features - does not impliment its own executors
+# defines pipeline assembly.
+# enables different execution paths (eg: sequential, DAG + scheduler, ML, HPC + ML)
+# stays up to date with phys-pipeline features; does not implement its own executors
 
 
-def build_pipeline():
+def build_pipeline() -> None:
     """
     Build and return your physics pipeline.
     """

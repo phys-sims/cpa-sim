@@ -1,4 +1,4 @@
-# this doc specifices units and conventions (backend and API) for cpa-sim
+# this doc specifies units and conventions (backend and API) for cpa-sim
 
 # internal units
 # time: fs (s*10**-15) - allows for accurate description of fs-ps pulsed lasers
@@ -14,6 +14,7 @@
 
 
 # free space
-# spot radius at beam waist: 1/(e**2) of max value - this complies with abcdef-sim (martinez formalism)
+# spot radius at beam waist: 1/(e**2) of max value; this complies with abcdef-sim
+# (martinez formalism)
 # ***review termonlogy (beam waist vs beam waist radius vs beam waist radius min vs spot size etc)
 # gratings: **** review plymouth vs newport conventions for grating orders and equation*****

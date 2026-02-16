@@ -1,1 +1,1 @@
-# impliments treacy compressor from classic equations
+# implements treacy compressor from classic equations
