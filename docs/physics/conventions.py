@@ -1,7 +1,7 @@
 # this doc specifices units and conventions (backend and API) for cpa-sim
 
 # internal units
-# time: fs (s*10**-15) - allows for accurate description of fs-ps pulsed lasers 
+# time: fs (s*10**-15) - allows for accurate description of fs-ps pulsed lasers
 # space: um (m*10**-6) - enables beam waist and wavelength to be numerically stable
 # angle: rad
 # everything else is derived from here (eg: w: rad/fs, c=0.299792458, )

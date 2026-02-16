@@ -1,5 +1,6 @@
 # defines pipeline assembely. enables different execution paths (eg: sequential, DAG + scheduler, ML, HPC + ML)
-# stays up to date with phys-pipeline features - does not impliment its own executors 
+# stays up to date with phys-pipeline features - does not impliment its own executors
+
 
 def build_pipeline():
     """
