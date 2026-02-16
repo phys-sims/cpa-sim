@@ -3,5 +3,7 @@
 # eg:
 # FIBER_BACKENDS = {
 #  "gnlse": GNLSEFiber,
-#  "fiber_sim": FiberSimFiber,
+#  "gnlse_sim": GNLSESimFiber,  # preferred v2 key (old alias: "fiber_sim")
 # }
+
+# Note: v1 uses WUST-FOG `gnlse` package; v2 `gnlse_sim` targets the phys-sims `gnlse-sim` repo.

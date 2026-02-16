@@ -7,7 +7,10 @@ This repository is **cpa-sim**, a modular **chirped-pulse amplification (CPA)** 
 **stretcher → fiber propagation → amplification → compressor**, with consistent conventions, provenance, and validation tiers.
 
 **v1 policy:** Prefer reputable external solvers/models (e.g., GLNSE library + fixed grating equation) instead of reimplementing physics.  
-**v2/v3:** Add in-house backends (`fiber-sim`, `abcdef-sim`) and ML/testharness integration while keeping the public API stable.
+**v2/v3:** Add in-house backends (`gnlse-sim`, `abcdef-sim`) and ML/testharness integration while keeping the public API stable.
+
+> Naming note: in this repo, `gnlse` (v1) refers to the WUST-FOG `gnlse` Python package.
+> `gnlse-sim` (v2) refers to the phys-sims org in-house solver repo that was previously called `fiber-sim`.
 
 ---
 
@@ -75,7 +78,7 @@ If these files don’t exist yet, create minimal stubs and iterate.
    - `FiberStage` backend
 
 ### v2 (ecosystem backends)
-- Add `kind="fiber_sim"` (fiber-sim backend) and `kind="abcdef_grating"` (abcdef-sim backend) without breaking v1 configs.
+- Add `kind="gnlse_sim"` (`gnlse-sim` backend; previous name `fiber-sim`) and `kind="abcdef_grating"` (abcdef-sim backend) without breaking v1 configs.
 - Add theoretical regression tests for each new backend.
 
 ### v3 (lab-facing)
@@ -95,7 +98,7 @@ This repo owns:
 
 Recommended separate repos:
 - `cpa-testbench`: slow sweeps, paper/lab comparisons, notebooks, “wow plots”
-- `fiber-sim`: your in-house GLNSE engine (v2)
+- `gnlse-sim` (formerly `fiber-sim`): your in-house GLNSE engine (v2)
 - `abcdef-sim`: your in-house free-space grating/back-prop model (v2)
 - `research-utils`: ML + testharness + report tooling
 - `phys-pipeline`: staging/caching/scheduling substrate

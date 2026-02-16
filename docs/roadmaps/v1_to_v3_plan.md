@@ -1,17 +1,17 @@
 # cpa-sim Roadmap (v1 → v3)
 
-_Last updated: 2026-02-15_  
+_Last updated: 2026-02-15_
 _Owner: Ryaan Lari_
 
-This roadmap is organized as **release versions** (v1, v2, v3).  
-Code should be organized by **stage type + backend** (e.g., `stages/fiber/gnlse.py`, `stages/fiber/fiber_sim.py`), not by version folders.
+This roadmap is organized as **release versions** (v1, v2, v3).
+Code should be organized by **stage type + backend** (e.g., `stages/fiber/gnlse.py`, `stages/fiber/gnlse_sim.py`), not by version folders.
 
 ---
 
 ## North-star outcomes
 
 - **v1 (Credible baseline):** A reproducible CPA chain that runs end-to-end with reputable external solvers/models, produces key metrics and plots, and has a clean API + CI discipline.
-- **v2 (Ecosystem integration):** Swap v1 backends with phys-sims org repos (`fiber-sim`, `abcdef-sim`) while preserving the public API and validation tiers.
+- **v2 (Ecosystem integration):** Swap v1 backends with phys-sims org repos (`gnlse-sim`, `abcdef-sim`) while preserving the public API and validation tiers.
 - **v3 (Lab-facing product):** Scalable sweeps + ML/testharness integration via `phys-sims-utils`, leveraging `phys-pipeline` caching/scheduling, with high-quality reports and regression protection.
 
 ---
@@ -105,7 +105,7 @@ These are **human-owned** decisions. Write them into ADRs and keep them stable.
 - [ ] Stable hashing for configs (cache keys) and provenance capture.
 - [ ] Stage registry: config.kind → backend implementation.
 
-**Human:** decide conventions; review data model decisions.  
+**Human:** decide conventions; review data model decisions.
 **Agent-safe:** implementation + tests.
 
 ---
@@ -122,13 +122,14 @@ These are **human-owned** decisions. Write them into ADRs and keep them stable.
 - [ ] ADR:
   - [ ] what’s included/excluded (no aberrations, no spatial effects, etc.)
 
-**Human:** supply equation + one numeric reference case + sign conventions.  
+**Human:** supply equation + one numeric reference case + sign conventions.
 **Agent-safe:** implementation, tests, ADR draft.
 
 ---
 
 ### D) FiberStage v1 — wrap external GLNSE solver (agent-safe with human review)
 - [ ] Choose solver (recommended: `gnlse` from WUST-FOG) and pin version.
+- [ ] Distinguish this from the v2 in-house `gnlse-sim` backend (formerly `fiber-sim`) in docs/config notes.
 - [ ] Implement wrapper `stages/fiber/gnlse.py`
   - map FiberCfg → solver parameters
   - normalize I/O to PulseState + PulseGrid conventions
@@ -142,7 +143,7 @@ These are **human-owned** decisions. Write them into ADRs and keep them stable.
 - [ ] ADR:
   - [ ] solver choice rationale + replacement conditions
 
-**Human:** choose solver + tolerances; review mapping.  
+**Human:** choose solver + tolerances; review mapping.
 **Agent-safe:** wrapper, tests scaffolding, doc condensation.
 
 ---
@@ -203,11 +204,11 @@ These are **human-owned** decisions. Write them into ADRs and keep them stable.
 
 ---
 
-# v2 — Ecosystem integration (fiber-sim + abcdef-sim backends)
+# v2 — Ecosystem integration (gnlse-sim + abcdef-sim backends)
 
 ## v2 Definition of Done
 1. `cpa-sim` public API stays stable (configs may add a new `kind`, but old ones still work).
-2. Fiber backend selectable: `kind="fiber_sim"`.
+2. Fiber backend selectable: `kind="gnlse_sim"` (new name; formerly `fiber_sim`).
 3. Free-space backend selectable: `kind="abcdef_grating"` (or equivalent).
 4. Validation/reporting schema expanded to record:
    - theoretical-vs-experimental error as separate objects
@@ -218,7 +219,7 @@ These are **human-owned** decisions. Write them into ADRs and keep them stable.
 
 ## v2 Workstreams and tasks
 
-### A) Build `fiber-sim` (new repo) to replace external solver (human + agent)
+### A) Build `gnlse-sim` (new repo; previously `fiber-sim`) to replace external solver (human + agent)
 **Goal:** ML-friendly, stable configs, deterministic runs, explicit parameterization.
 
 Core tasks:
@@ -234,14 +235,14 @@ Core tasks:
 - [ ] Export interface used by cpa-sim wrapper:
   - [ ] `simulate_fiber(state, cfg) -> state_out`
 
-**Human:** algorithm choices, numerical stability decisions.  
+**Human:** algorithm choices, numerical stability decisions.
 **Agent-safe:** repo scaffolding + lots of implementation once spec is clear.
 
 ---
 
-### B) Integrate `fiber-sim` into cpa-sim (agent-safe)
-- [ ] Add `stages/fiber/fiber_sim.py` backend implementing the same interface.
-- [ ] Expand FiberCfg union: add kind="fiber_sim".
+### B) Integrate `gnlse-sim` into cpa-sim (agent-safe)
+- [ ] Add `stages/fiber/gnlse_sim.py` backend implementing the same interface (or keep `fiber_sim.py` as compatibility alias if needed).
+- [ ] Expand FiberCfg union: add kind="gnlse_sim" (and optionally retain `fiber_sim` as deprecated alias).
 - [ ] Add theoretical regression tests.
 
 ---
@@ -256,7 +257,7 @@ Core tasks:
   - [ ] theoretical match against v1 Tracy for the overlapping regime
   - [ ] additional checks vs known ray/ABCD references where applicable
 
-**Human:** optics modeling decisions and scope.  
+**Human:** optics modeling decisions and scope.
 **Agent-safe:** engineering implementation + tests scaffolding.
 
 ---
@@ -281,7 +282,7 @@ Core tasks:
 
 ### F) v2 release deliverables
 - [ ] `cpa-sim` supports both external solver and in-house backends.
-- [ ] `fiber-sim` and `abcdef-sim` released (or at least tagged).
+- [ ] `gnlse-sim` (formerly `fiber-sim`) and `abcdef-sim` released (or at least tagged).
 - [ ] Migration notes in docs.
 
 ---
@@ -328,7 +329,7 @@ Core tasks:
 - [ ] Automatic “change report”:
   - compare main branch vs PR branch on a small benchmark suite
 
-**Human:** decide which optimization methods to support and what is “success.”  
+**Human:** decide which optimization methods to support and what is “success.”
 **Agent-safe:** tooling glue + report generation once spec is set.
 
 ---
