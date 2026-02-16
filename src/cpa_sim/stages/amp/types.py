@@ -1,1 +1,1 @@
-# shared AmpCfg 
+# shared AmpCfg
