@@ -10,7 +10,7 @@ license = { file = "LICENSE" }
 dependencies = [
   "numpy",
   "scipy",
-  "pydantic>=2.7"
+  "pydantic>=2.7",
   "phys-pipeline"
 ]
 [project.optional-dependencies]
