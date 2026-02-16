@@ -3,9 +3,9 @@
 > **Source of truth:** Update this file whenever behavior, tests, schemas, or canonical examples change.
 
 ## Last updated
-- Date: 2026-02-15
+- Date: 2026-02-16
 - By: @openai-codex
-- Scope: Adapted STATUS.md template for cpa-sim (initial tracking scaffold).
+- Scope: Added ADR set aligned to ecosystem ADR context and cpa-sim stage ownership.
 
 ---
 
@@ -73,11 +73,11 @@ Fill these in after first green run; keep them current.
 - [ ] Physics golden tests (free-space + fiber)
 
 ### Docs / ADRs
-- [ ] ADR-0001 conventions (units, FFT, sign)
-- [ ] ADR-0002 stage + state model
-- [ ] ADR-0003 solver choice (v1) + replacement triggers
-- [ ] ADR-0004 free-space model scope/limits
-- [ ] ADR-0005 validation tiers + tolerances
+- [x] ADR-0001 conventions (units, FFT, sign)
+- [x] ADR-0002 canonical result schema contract
+- [x] ADR-0003 validation tiers + CI policy
+- [x] ADR-0004 stage/domain boundaries (laser, free-space, fiber, amp)
+- [ ] ADR-0005 backend selection policy (solver choice + replacement triggers)
 
 ### Release readiness
 - [ ] README quickstart + one runnable config
@@ -94,6 +94,5 @@ Fill these in after first green run; keep them current.
 
 ## Next actions
 - [ ] Run initial CI commands locally and populate the CI health checklist rows.
-- [ ] Decide and document conventions in ADR-0001 (units/FFT/sign).
 - [ ] Add minimal canonical configs under `configs/examples/`.
 - [ ] Land first end-to-end smoke test and record runtimes here.
