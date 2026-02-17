@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from importlib import import_module
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 
@@ -69,7 +71,7 @@ def run_example(out_dir: Path, *, plot_format: str = "svg") -> dict[str, Path]:
         "spectrum": out_dir / f"fiber_spectrum.{plot_format}",
     }
 
-    import matplotlib.pyplot as plt
+    plt: Any = import_module("matplotlib.pyplot")
 
     t_fs = np.asarray(initial.pulse.grid.t, dtype=float)
     w = np.asarray(initial.pulse.grid.w, dtype=float)

@@ -5,7 +5,7 @@
 ## Last updated
 - Date: 2026-02-17
 - By: @openai-codex
-- Scope: Finalized Fiber Phase-7 example packaging by moving reusable example logic under `src/cpa_sim/examples/` so tests can import it reliably in CI, while keeping the runnable script/docs/test coverage for SVG artifact generation.
+- Scope: Fixed Phase-7 example mypy portability by replacing direct `matplotlib` import with importlib-based dynamic loading in the packaged example helper, preserving CI compatibility when matplotlib stubs/deps are absent.
 
 ---
 
