@@ -96,6 +96,20 @@ This keeps public configuration stable while backend selection happens per stage
 
 In short: `runtime` and `policy` are global execution concerns, while stage configs define the physical chain itself.
 
+## Fiber stage example (WUST `gnlse`)
+
+A runnable fiber-stage example script is available at:
+
+- `scripts/examples/wust_gnlse_fiber_example.py`
+
+Run it with:
+
+```bash
+python scripts/examples/wust_gnlse_fiber_example.py --out artifacts/fiber-example --format svg
+```
+
+For configuration/units details, see `docs/examples/wust-gnlse-fiber-example.md`.
+
 ## Outputs and provenance
 
 A run returns a `StageResult` with:

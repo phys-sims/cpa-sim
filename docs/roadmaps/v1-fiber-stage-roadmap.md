@@ -126,16 +126,16 @@ Mark these tests, e.g. `@pytest.mark.gnlse` and skip if dependency missing.
 
 ## Phase 7 — Docs & examples (“wow factor” optional)
 
-- [ ] Add a small runnable example script:
-  - [ ] create input pulse
-  - [ ] run fiber stage with WUST gnlse
-  - [ ] save a couple plots (time + spectrum)
-- [ ] Update docs to describe:
-  - [ ] config fields and units
-  - [ ] backend selection
-  - [ ] normalization expectations
+- [x] Add a small runnable example script:
+  - [x] create input pulse
+  - [x] run fiber stage with WUST gnlse
+  - [x] save a couple plots (time + spectrum)
+- [x] Update docs to describe:
+  - [x] config fields and units
+  - [x] backend selection
+  - [x] normalization expectations
 
 **Tests**
-- [ ] Example runs end-to-end without manual edits
+- [x] Example runs end-to-end without manual edits
 
 ---
