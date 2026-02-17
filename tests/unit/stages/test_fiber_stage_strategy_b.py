@@ -1,10 +1,15 @@
+import sys
+import types
+
 import numpy as np
 import pytest
 
 from cpa_sim.models import (
+    DispersionInterpolationCfg,
     DispersionTaylorCfg,
     FiberCfg,
     FiberPhysicsCfg,
+    RamanCfg,
     ToyPhaseNumericsCfg,
     WustGnlseNumericsCfg,
 )
@@ -33,6 +38,45 @@ def _state() -> LaserState:
         ),
         beam=BeamState(radius_mm=1.2, m2=1.3),
     )
+
+
+class _FakeSolution:
+    def __init__(self, field_t: np.ndarray):
+        self.At = np.vstack([field_t, 1.1 * field_t])
+
+
+class _FakeGNLSE:
+    def __init__(self, setup: object):
+        self.setup = setup
+
+    def run(self) -> _FakeSolution:
+        return _FakeSolution(self.setup.pulse_model)
+
+
+@pytest.fixture
+def fake_gnlse_module() -> types.ModuleType:
+    mod = types.ModuleType("gnlse")
+
+    class GNLSESetup:
+        pass
+
+    def dispersion_taylor(loss: float, betas: list[float]) -> tuple[str, float, list[float]]:
+        return ("taylor", loss, betas)
+
+    def dispersion_interp(
+        loss: float,
+        center_wl_nm: float,
+        lambdas_nm: list[float],
+        neff: list[float],
+    ) -> tuple[str, float, float, list[float], list[float]]:
+        return ("interp", loss, center_wl_nm, lambdas_nm, neff)
+
+    mod.GNLSESetup = GNLSESetup
+    mod.DispersionFiberFromTaylor = dispersion_taylor
+    mod.DispersionFiberFromInterpolation = dispersion_interp
+    mod.GNLSE = _FakeGNLSE
+    mod.raman_blowwood = object()
+    return mod
 
 
 @pytest.mark.unit
@@ -80,7 +124,16 @@ def test_resampling_happens_only_when_policy_allows() -> None:
 
 
 @pytest.mark.unit
-def test_wust_backend_missing_dependency_has_clear_error() -> None:
+def test_wust_backend_missing_dependency_has_clear_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    import cpa_sim.stages.fiber.backends.wust_gnlse as wust_backend
+
+    monkeypatch.setattr(
+        wust_backend,
+        "_import_gnlse",
+        lambda: (_ for _ in ()).throw(
+            RuntimeError("Fiber backend 'wust_gnlse' requires the optional 'gnlse' package.")
+        ),
+    )
     s = _state()
     stage = FiberStage(
         FiberCfg(
@@ -91,3 +144,56 @@ def test_wust_backend_missing_dependency_has_clear_error() -> None:
     )
     with pytest.raises(RuntimeError, match="optional 'gnlse'"):
         stage.process(s)
+
+
+@pytest.mark.unit
+def test_wust_setup_fields_populated_with_expected_units(
+    monkeypatch: pytest.MonkeyPatch, fake_gnlse_module: types.ModuleType
+) -> None:
+    monkeypatch.setitem(sys.modules, "gnlse", fake_gnlse_module)
+
+    s = _state()
+    stage = FiberStage(
+        FiberCfg(
+            physics=FiberPhysicsCfg(
+                length_m=1.25,
+                loss_db_per_m=0.1,
+                gamma_1_per_w_m=0.002,
+                dispersion=DispersionTaylorCfg(betas_psn_per_m=[-0.025, 0.001]),
+                raman=RamanCfg(model="blowwood"),
+                self_steepening=True,
+            ),
+            numerics=WustGnlseNumericsCfg(record_backend_version=False),
+        )
+    )
+
+    result = stage.process(s)
+    assert result.state.artifacts["fiber.backend"] == "wust_gnlse"
+    assert result.state.artifacts["fiber.resolution"] == "64"
+    assert float(result.state.artifacts["fiber.time_window_ps"]) == pytest.approx(0.002)
+    assert result.state.meta["pulse"]["field_units"] == "sqrt(W)"
+    assert result.state.metrics["fiber.grid_points"] == pytest.approx(64.0)
+
+
+@pytest.mark.unit
+def test_wust_interpolation_dispersion_mapping(
+    monkeypatch: pytest.MonkeyPatch, fake_gnlse_module: types.ModuleType
+) -> None:
+    monkeypatch.setitem(sys.modules, "gnlse", fake_gnlse_module)
+    s = _state()
+
+    stage = FiberStage(
+        FiberCfg(
+            physics=FiberPhysicsCfg(
+                gamma_1_per_w_m=0.001,
+                dispersion=DispersionInterpolationCfg(
+                    effective_indices=[1.44, 1.45],
+                    lambdas_nm=[1000.0, 1060.0],
+                    central_wavelength_nm=1030.0,
+                ),
+            ),
+            numerics=WustGnlseNumericsCfg(record_backend_version=False),
+        )
+    )
+    result = stage.process(s)
+    assert result.state.metrics["fiber.energy_out"] > 0.0

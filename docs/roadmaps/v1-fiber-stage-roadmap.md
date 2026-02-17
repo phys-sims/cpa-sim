@@ -70,20 +70,20 @@ This roadmap is expected to change frequently (checkboxes, status, notes). Keepi
 ## Phase 4 — Implement WUST‑FOG backend (core)
 
 - [x] Lazy-import `gnlse`
-- [ ] Build `GNLSESetup` from `LaserState` + `FiberPhysicsCfg` + `WustGnlseNumericsCfg`
-- [ ] Map dispersion:
-  - [ ] Taylor -> `DispersionFiberFromTaylor(loss, betas)`
-  - [ ] Interpolation -> `DispersionFiberFromInterpolation(...)`
-- [ ] Map Raman string -> function
-- [ ] Run solver
-- [ ] Convert output back into `LaserState`:
-  - [ ] `pulse.field_t`
-  - [ ] `pulse.intensity_t`
-  - [ ] `pulse.field_w` + `pulse.spectrum_w` (prefer project FFT helper)
-- [ ] Attach provenance artifacts and key metrics
+- [x] Build `GNLSESetup` from `LaserState` + `FiberPhysicsCfg` + `WustGnlseNumericsCfg`
+- [x] Map dispersion:
+  - [x] Taylor -> `DispersionFiberFromTaylor(loss, betas)`
+  - [x] Interpolation -> `DispersionFiberFromInterpolation(...)`
+- [x] Map Raman string -> function
+- [x] Run solver
+- [x] Convert output back into `LaserState`:
+  - [x] `pulse.field_t`
+  - [x] `pulse.intensity_t`
+  - [x] `pulse.field_w` + `pulse.spectrum_w` (prefer project FFT helper)
+- [x] Attach provenance artifacts and key metrics
 
 **Tests**
-- [ ] Unit test: setup fields populated with correct units
+- [x] Unit test: setup fields populated with correct units
 - [x] Unit test: run fails with clear error if `gnlse` missing (and message suggests extras)
 
 ---
@@ -107,14 +107,14 @@ This roadmap is expected to change frequently (checkboxes, status, notes). Keepi
 
 Mark these tests, e.g. `@pytest.mark.gnlse` and skip if dependency missing.
 
-- [ ] SPM-only case:
-  - [ ] loss=0, dispersion=None, gamma>0
-  - [ ] assert energy ~ conserved
-  - [ ] assert spectral RMS increases
+- [x] SPM-only case:
+  - [x] loss=0, dispersion=None, gamma>0
+  - [x] assert energy ~ conserved
+  - [x] assert spectral RMS increases
 
-- [ ] GVD-only case:
-  - [ ] gamma=0, beta2!=0
-  - [ ] assert temporal RMS increases
+- [x] GVD-only case:
+  - [x] gamma=0, beta2!=0
+  - [x] assert temporal RMS increases
 
 - [ ] Raman toggle:
   - [ ] enable one model and confirm finite output and run completion
