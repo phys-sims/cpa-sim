@@ -66,3 +66,12 @@ ignore-words-list = "teh,nd"
 skip = "poetry.lock,*.lock,*.svg,*.png,*.jpg"
 # You can also narrow paths if needed:
 # path = "src,tests,docs,examples"
+
+
+[tool.pytest.ini_options]
+markers = [
+  "unit: fast contract and schema tests",
+  "integration: fast end-to-end chain tests",
+  "physics: canonical physics regression tests",
+  "slow: long-running sweeps and large-grid tests",
+]
