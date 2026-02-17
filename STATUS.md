@@ -5,7 +5,7 @@
 ## Last updated
 - Date: 2026-02-17
 - By: @openai-codex
-- Scope: Adjusted CI optional gnlse workflow after failure feedback: make optional job non-blocking for gate and install gnlse via explicit setuptools + --no-build-isolation workaround for pkg_resources build-time issue.
+- Scope: Fixed mypy compatibility for optional gnlse import by switching to importlib-based lazy loading in the fiber backend, while retaining prior CI optional-job remediation notes.
 
 ---
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 import warnings
-from importlib import metadata
+from importlib import import_module, metadata
 from typing import Any
 
 import numpy as np
@@ -33,13 +33,12 @@ def _ensure_numpy_math_compat() -> None:
 
 def _import_gnlse() -> Any:
     try:
-        import gnlse  # type: ignore[import-untyped]
+        return import_module("gnlse")
     except ModuleNotFoundError as exc:  # pragma: no cover - dependency gate
         raise RuntimeError(
             "Fiber backend 'wust_gnlse' requires the optional 'gnlse' package. "
             "Install with: pip install -e '.[gnlse]'"
         ) from exc
-    return gnlse
 
 
 def _resolve_gamma(physics: FiberPhysicsCfg, *, center_wavelength_nm: float) -> float:
