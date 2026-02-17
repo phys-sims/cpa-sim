@@ -5,7 +5,7 @@
 ## Last updated
 - Date: 2026-02-17
 - By: @openai-codex
-- Scope: Clarified runtime vs policy semantics, added policy hash provenance coverage, and reran required quality gates.
+- Scope: Implemented FiberStage Strategy B config split (physics + numerics), backend dispatch, fiber grid/units helpers, and new unit coverage.
 
 ---
 
@@ -14,9 +14,9 @@
 | Check | Command | Status | Last run | Notes |
 | --- | --- | --- | --- | --- |
 | Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-02-17 | Passed; pre-commit reported only a deprecation warning for `default_stages`. |
-| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-02-17 | Success: no issues found in 29 source files. |
-| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-17 | 5 passed, 1 deselected. |
-| Pytest physics (supplemental) | `python -m pytest -q -m physics --durations=10` | ✅ | 2026-02-17 | 1 passed, 5 deselected (manual run). |
+| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-02-17 | Success: no issues found in 34 source files. |
+| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-17 | 11 passed, 1 deselected. |
+| Pytest physics (supplemental) | `python -m pytest -q -m physics --durations=10` | ✅ | 2026-02-17 | 1 passed, 11 deselected (manual run). |
 | Pytest slow (supplemental) | `python -m pytest -q -m slow --durations=10` | ⬜ | — |  |
 
 ---
@@ -58,14 +58,14 @@ Fill these in after first green run; keep them current.
 ### Stages (end-to-end chain)
 - [x] PulseInitStage (laser_gen analytic backend)
 - [x] FreeSpaceStage: `treacy_grating` backend (stretcher/compressor)
-- [x] FiberStage: `gnlse` adapter boundary (deterministic placeholder transform)
+- [x] FiberStage: Strategy B `FiberStageCfg(physics, numerics)` with `toy_phase` and `wust_gnlse` backends
 - [x] AmpStage: `simple_gain` backend
 - [x] MetricsStage (energy, FWHM, bandwidth, B-integral proxy)
 - [ ] Report/Validation schema (tiered validation records)
 
 ### Backends + adapters
-- [ ] External solver adapter isolated (no scattered third-party calls)
-- [ ] Unit normalization and convention tests
+- [x] External solver adapter isolated (no scattered third-party calls)
+- [x] Unit normalization metadata + grid invariant tests
 
 ### QA / determinism
 - [x] Determinism tests (same config + seed)

@@ -55,6 +55,8 @@ pip install -e .
 
 ```bash
 pip install -e .[dev]
+# optional WUST-FOG backend dependency
+pip install -e .[gnlse]
 ```
 
 ## Quickstart (Python API)
@@ -79,7 +81,7 @@ The top-level `PipelineConfig` includes these sections:
 - `runtime` (seed and run controls),
 - `laser_gen` (initial pulse/beam specification),
 - `stretcher` (free-space backend + GDD),
-- `fiber` (fiber backend + nonlinear phase control),
+- `fiber` (`FiberStageCfg` with stable `physics` plus backend-specific `numerics`),
 - `amp` (amplifier backend + gain),
 - `compressor` (free-space backend + GDD),
 - `metrics` (summary metric backend).
