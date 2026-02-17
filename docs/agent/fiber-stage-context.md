@@ -1,7 +1,7 @@
 # Fiber Stage Context (Strategy B + WUST‑FOG GNLSE backend)
 
-**Last updated:** 2026-02-16  
-**Owner:** Ryaan Lari  
+**Last updated:** 2026-02-16
+**Owner:** Ryaan Lari
 **Audience:** coding agents + future maintainers
 
 ## 0) Purpose
