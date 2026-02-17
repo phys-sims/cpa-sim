@@ -1,12 +1,12 @@
 # FreeSpaceStage: Treacy grating‑pair backend — implementation roadmap
 
-> **Stability:** This file is meant to be **frequently updated** by agents.  
-> **Source of truth:** Update this checklist whenever behavior, tests, schemas, or validation fixtures change.  
+> **Stability:** This file is meant to be **frequently updated** by agents.
+> **Source of truth:** Update this checklist whenever behavior, tests, schemas, or validation fixtures change.
 > **IMPORTANT:** Always write **absolute dates** (YYYY-MM-DD) to avoid “today/yesterday” mistakes.
 
 ## Status header (keep current)
-- Last updated: 2026-02-16
-- Updated by: (human/agent handle)
+- Last updated: 2026-02-17
+- Updated by: @openai-codex
 - Target milestone: v1 Treacy compressor parity with LaserCalculator
 
 ---
@@ -20,10 +20,10 @@
 ---
 
 ## 1) Discovery checklist (agent must do first)
-- [ ] Locate `FreeSpaceCfg` definition (search for `class FreeSpaceCfg(StageConfig)`).
-- [ ] Locate `FreeSpaceStage` implementation/dispatch (search for `treacy_grating` usage).
-- [ ] Identify where pulse spectrum and frequency grid live in state (search for `omega`, `Ew`, `Et`, `rad_per_fs`).
-- [ ] Identify existing test patterns and fixtures layout (search `tests/fixtures` and existing “golden” tests).
+- [x] Locate `FreeSpaceCfg` definition (migrated to discriminated union in `src/cpa_sim/models/config.py`).
+- [x] Locate `FreeSpaceStage` implementation/dispatch (`src/cpa_sim/stages/free_space/treacy_grating.py`, `src/cpa_sim/stages/registry.py`).
+- [x] Identify where pulse spectrum and frequency grid live in state (`LaserState.pulse.field_w`, `LaserState.pulse.grid.w`).
+- [x] Identify existing test patterns and fixtures layout and added `tests/fixtures/treacy_grating_pair_golden.json`.
 
 **Exit criteria:** agent can name the exact module paths and the canonical way to access `ω` and `E(ω)` in the simulation state.
 
@@ -31,12 +31,12 @@
 
 ## 2) Config/schema migration (replace placeholder safely)
 ### Tasks
-- [ ] Replace placeholder `FreeSpaceCfg(kind="treacy_grating", gdd_fs2=...)` with a discriminated union:
+- [x] Replace placeholder `FreeSpaceCfg(kind="treacy_grating", gdd_fs2=...)` with a discriminated union:
   - `TreacyGratingPairCfg(kind="treacy_grating_pair", ...)`
   - `PhaseOnlyDispersionCfg(kind="phase_only_dispersion", ...)`
-- [ ] Add a `model_validator(mode="before")` that maps legacy shapes:
+- [x] Add a `model_validator(mode="before")` that maps legacy shapes:
   - legacy `kind="treacy_grating"` + `gdd_fs2` → `phase_only_dispersion`
-- [ ] Add a deprecation warning for legacy config usage.
+- [x] Add a deprecation warning for legacy config usage.
 - [ ] Update `PipelineConfig` defaults:
   - `compressor` default should be `treacy_grating_pair` (geometry-based) or remain legacy but documented
   - `stretcher` may remain phase-only until Martinez exists
@@ -53,21 +53,21 @@
 
 ## 3) Implement geometry backend (coefficients only)
 ### Tasks
-- [ ] Create backend module (or extend existing) for `treacy_grating_pair`:
+- [x] Create backend module (or extend existing) for `treacy_grating_pair`:
   - conversions: nm→um; lpmm→period_um; deg→rad
   - compute `GDD` and `TOD` using the reference formulas
   - domain checks with clear errors
   - record scalar diagnostics (`θL`, `θD`, `omega0`)
-- [ ] Ensure outputs are in internal units (`gdd_fs2`, `tod_fs3`)
+- [x] Ensure outputs are in internal units (`gdd_fs2`, `tod_fs3`)
 
 ### Tests (fast unit)
-- [ ] `test_unit_conversions()`:
+- [x] `test_unit_conversions()`:
   - period_um = 1000/lpmm
   - lambda_um = nm*1e-3
-- [ ] `test_invalid_order_raises()`:
+- [x] `test_invalid_order_raises()`:
   - choose inputs that make `asin` invalid; assert ValueError message contains key numbers
-- [ ] `test_sign_sanity()` (weak sanity):
-  - pick a typical case; assert `gdd_fs2 < 0` (for default N=2,m=-1 geometry)  
+- [x] `test_sign_sanity()` (weak sanity):
+  - pick a typical case; assert `gdd_fs2 < 0` (for default N=2,m=-1 geometry)
   (This is a sanity check; golden tests are the real guardrail.)
 
 **Exit criteria:** backend computes stable coefficients; errors are clean; diagnostics present.
@@ -76,20 +76,20 @@
 
 ## 4) Apply phase to pulse (phase-only propagation)
 ### Tasks
-- [ ] Implement `apply_to_pulse=True` path:
+- [x] Implement `apply_to_pulse=True` path:
   - identify canonical `ω` grid in `rad/fs`
   - compute `φ(ω)` Taylor expansion about `ω0`
   - multiply spectrum by `exp(iφ)`
-- [ ] Keep `apply_to_pulse=False` functional (metrics still computed, state unchanged)
+- [x] Keep `apply_to_pulse=False` functional (metrics still computed, state unchanged)
 
 ### Tests (invariants)
-- [ ] `test_phase_only_preserves_spectral_magnitude()`:
+- [x] `test_phase_only_preserves_spectral_magnitude()`:
   - run stage
   - assert `abs(Ew_out)` equals `abs(Ew_in)` within tolerance
-- [ ] `test_phase_only_preserves_energy()`:
+- [x] `test_phase_only_preserves_energy()`:
   - compute energy via ADR-0001 rule (envelope in sqrt(W))
   - assert conserved within tolerance
-- [ ] `test_apply_to_pulse_false_is_noop()`
+- [x] `test_apply_to_pulse_false_is_noop()`
 
 **Exit criteria:** stage is provably phase-only; energy and magnitude invariants pass.
 
@@ -97,7 +97,7 @@
 
 ## 5) Golden parity vs LaserCalculator (the real acceptance test)
 ### Files
-- [ ] Add fixture file: `tests/fixtures/treacy_grating_pair_golden.json`
+- [x] Add fixture file: `tests/fixtures/treacy_grating_pair_golden.json`
 
 ### Fixture schema (agent creates structure; human can fill numbers)
 Each entry:
@@ -117,9 +117,9 @@ Each entry:
 ```
 
 ### Tasks
-- [ ] Agent creates the fixture file with **10–15 cases** and `expect_*` values set to `null` or `0.0` placeholders.
+- [x] Agent creates the fixture file with **10–15 cases** and `expect_*` values set to `null` placeholders.
 - [ ] Human fills `expect_*` values from the calculator outputs (see “What the human must provide” section below).
-- [ ] Add test: `test_treacy_matches_golden()`:
+- [x] Add test: `test_treacy_matches_golden()`:
   - load cases
   - compute metrics-only (skip applying to pulse for speed)
   - compare `gdd_fs2` and `tod_fs3` to expected with tight tolerances
@@ -137,8 +137,8 @@ Each entry:
 
 ## 6) Integration test (tiny end-to-end)
 ### Tasks
-- [ ] Add a tiny pipeline config: laser → compressor → metrics
-- [ ] Run pipeline once, assert metrics keys exist and are finite
+- [x] Add a tiny pipeline config: laser → compressor → metrics
+- [x] Run pipeline once, assert metrics keys exist and are finite
 - [ ] Assert invariants still hold (energy conserved)
 
 **Exit criteria:** stage works inside the real pipeline, not just unit-tested in isolation.
@@ -197,4 +197,3 @@ If golden mismatch occurs, it is almost always:
 - [ ] wrong diffraction angle formula (transmission sign convention)
 
 Golden tests + recording `diffraction_angle_deg` make this obvious.
-

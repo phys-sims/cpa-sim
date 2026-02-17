@@ -10,10 +10,12 @@ from cpa_sim.models.config import (
     FreeSpaceCfg,
     LaserGenCfg,
     MetricsCfg,
+    PhaseOnlyDispersionCfg,
     PipelineConfig,
     RamanCfg,
     RuntimeCfg,
     ToyPhaseNumericsCfg,
+    TreacyGratingPairCfg,
     WustGnlseNumericsCfg,
 )
 from cpa_sim.models.state import (
@@ -39,6 +41,8 @@ __all__ = [
     "FiberPhysicsCfg",
     "FiberStageCfg",
     "FreeSpaceCfg",
+    "PhaseOnlyDispersionCfg",
+    "TreacyGratingPairCfg",
     "LaserGenCfg",
     "LaserSpec",
     "LaserState",

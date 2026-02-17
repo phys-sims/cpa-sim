@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -22,12 +23,57 @@ class LaserGenCfg(StageConfig):
     spec: LaserSpec = Field(default_factory=LaserSpec)
 
 
-class FreeSpaceCfg(StageConfig):
+class TreacyGratingPairCfg(StageConfig):
     model_config = ConfigDict(frozen=True)
 
     name: str
-    kind: Literal["treacy_grating"] = "treacy_grating"
+    kind: Literal["treacy_grating_pair"] = "treacy_grating_pair"
+    line_density_lpmm: float = 1200.0
+    incidence_angle_deg: float = 35.0
+    separation_um: float = 100_000.0
+    wavelength_nm: float = 1030.0
+    diffraction_order: int = -1
+    n_passes: int = 2
+    include_tod: bool = True
+    apply_to_pulse: bool = True
+    override_gdd_fs2: float | None = None
+    override_tod_fs3: float | None = None
+
+
+class PhaseOnlyDispersionCfg(StageConfig):
+    model_config = ConfigDict(frozen=True)
+
+    name: str
+    kind: Literal["phase_only_dispersion"] = "phase_only_dispersion"
     gdd_fs2: float = 0.0
+    tod_fs3: float = 0.0
+    apply_to_pulse: bool = True
+
+
+FreeSpaceCfg = Annotated[
+    TreacyGratingPairCfg | PhaseOnlyDispersionCfg,
+    Field(discriminator="kind"),
+]
+
+
+def _migrate_legacy_free_space_cfg(data: object) -> object:
+    if not isinstance(data, dict):
+        return data
+    if data.get("kind") != "treacy_grating":
+        return data
+    warnings.warn(
+        "Free-space kind='treacy_grating' is deprecated; use kind='phase_only_dispersion' "
+        "or kind='treacy_grating_pair'.",
+        DeprecationWarning,
+        stacklevel=3,
+    )
+    return {
+        "name": data.get("name", "free_space"),
+        "kind": "phase_only_dispersion",
+        "gdd_fs2": data.get("gdd_fs2", 0.0),
+        "tod_fs3": data.get("tod_fs3", 0.0),
+        "apply_to_pulse": data.get("apply_to_pulse", True),
+    }
 
 
 class DispersionTaylorCfg(BaseModel):
@@ -153,8 +199,23 @@ class PipelineConfig(BaseModel):
 
     runtime: RuntimeCfg = Field(default_factory=RuntimeCfg)
     laser_gen: LaserGenCfg = Field(default_factory=LaserGenCfg)
-    stretcher: FreeSpaceCfg = Field(default_factory=lambda: FreeSpaceCfg(name="stretcher"))
+    stretcher: FreeSpaceCfg = Field(
+        default_factory=lambda: PhaseOnlyDispersionCfg(name="stretcher")
+    )
     fiber: FiberCfg = Field(default_factory=FiberCfg)
     amp: AmpCfg = Field(default_factory=AmpCfg)
-    compressor: FreeSpaceCfg = Field(default_factory=lambda: FreeSpaceCfg(name="compressor"))
+    compressor: FreeSpaceCfg = Field(
+        default_factory=lambda: TreacyGratingPairCfg(name="compressor")
+    )
     metrics: MetricsCfg = Field(default_factory=MetricsCfg)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _migrate_legacy_free_space(cls, data: object) -> object:
+        if not isinstance(data, dict):
+            return data
+        payload = dict(data)
+        for key in ("stretcher", "compressor"):
+            if key in payload:
+                payload[key] = _migrate_legacy_free_space_cfg(payload[key])
+        return payload

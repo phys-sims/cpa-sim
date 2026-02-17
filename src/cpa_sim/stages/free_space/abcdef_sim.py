@@ -17,5 +17,6 @@ class AbcdefSimStage(LaserStage[FreeSpaceCfg]):
         self, state: LaserState, *, policy: PolicyBag | None = None
     ) -> StageResult[LaserState]:
         raise NotImplementedError(
-            "abcdef-sim backend is planned for v2. Use kind='treacy_grating' for v1 runs."
+            "abcdef-sim backend is planned for v2. Use kind='treacy_grating_pair' "
+            "(or 'phase_only_dispersion') for v1 runs."
         )

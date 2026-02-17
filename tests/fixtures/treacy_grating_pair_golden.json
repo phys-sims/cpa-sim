@@ -1,0 +1,12 @@
+[
+  {"name":"case_01","line_density_lpmm":1200.0,"incidence_angle_deg":35.0,"separation_um":100000.0,"wavelength_nm":1030.0,"diffraction_order":-1,"n_passes":2,"expect_gdd_fs2":null,"expect_tod_fs3":null,"expect_diffraction_angle_deg":null},
+  {"name":"case_02","line_density_lpmm":1200.0,"incidence_angle_deg":30.0,"separation_um":80000.0,"wavelength_nm":1030.0,"diffraction_order":-1,"n_passes":2,"expect_gdd_fs2":null,"expect_tod_fs3":null,"expect_diffraction_angle_deg":null},
+  {"name":"case_03","line_density_lpmm":1200.0,"incidence_angle_deg":40.0,"separation_um":120000.0,"wavelength_nm":1030.0,"diffraction_order":-1,"n_passes":2,"expect_gdd_fs2":null,"expect_tod_fs3":null,"expect_diffraction_angle_deg":null},
+  {"name":"case_04","line_density_lpmm":1000.0,"incidence_angle_deg":35.0,"separation_um":100000.0,"wavelength_nm":1030.0,"diffraction_order":-1,"n_passes":2,"expect_gdd_fs2":null,"expect_tod_fs3":null,"expect_diffraction_angle_deg":null},
+  {"name":"case_05","line_density_lpmm":1400.0,"incidence_angle_deg":35.0,"separation_um":100000.0,"wavelength_nm":1030.0,"diffraction_order":-1,"n_passes":2,"expect_gdd_fs2":null,"expect_tod_fs3":null,"expect_diffraction_angle_deg":null},
+  {"name":"case_06","line_density_lpmm":600.0,"incidence_angle_deg":25.0,"separation_um":90000.0,"wavelength_nm":1550.0,"diffraction_order":-1,"n_passes":2,"expect_gdd_fs2":null,"expect_tod_fs3":null,"expect_diffraction_angle_deg":null},
+  {"name":"case_07","line_density_lpmm":1000.0,"incidence_angle_deg":22.0,"separation_um":120000.0,"wavelength_nm":800.0,"diffraction_order":-1,"n_passes":2,"expect_gdd_fs2":null,"expect_tod_fs3":null,"expect_diffraction_angle_deg":null},
+  {"name":"case_08","line_density_lpmm":900.0,"incidence_angle_deg":28.0,"separation_um":110000.0,"wavelength_nm":1040.0,"diffraction_order":-1,"n_passes":4,"expect_gdd_fs2":null,"expect_tod_fs3":null,"expect_diffraction_angle_deg":null},
+  {"name":"case_09","line_density_lpmm":1800.0,"incidence_angle_deg":45.0,"separation_um":70000.0,"wavelength_nm":515.0,"diffraction_order":-1,"n_passes":2,"expect_gdd_fs2":null,"expect_tod_fs3":null,"expect_diffraction_angle_deg":null},
+  {"name":"case_10","line_density_lpmm":1200.0,"incidence_angle_deg":35.0,"separation_um":50000.0,"wavelength_nm":1030.0,"diffraction_order":-1,"n_passes":1,"expect_gdd_fs2":null,"expect_tod_fs3":null,"expect_diffraction_angle_deg":null}
+]
