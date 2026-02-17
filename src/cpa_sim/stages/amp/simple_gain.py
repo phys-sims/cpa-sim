@@ -5,6 +5,7 @@ import numpy as np
 from cpa_sim.models.config import AmpCfg
 from cpa_sim.models.state import LaserState
 from cpa_sim.phys_pipeline_compat import PolicyBag, StageResult
+from cpa_sim.stages.amp.utils import field_gain_from_power_gain
 from cpa_sim.stages.base import LaserStage
 
 
@@ -17,7 +18,7 @@ class SimpleGainStage(LaserStage[AmpCfg]):
         self, state: LaserState, *, policy: PolicyBag | None = None
     ) -> StageResult[LaserState]:
         out = state.deepcopy()
-        gain = np.sqrt(max(self.cfg.gain_linear, 0.0))
+        gain = field_gain_from_power_gain(self.cfg.gain_linear)
         out.pulse.field_t = out.pulse.field_t * gain
         out.pulse.field_w = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(out.pulse.field_t)))
         out.pulse.intensity_t = np.abs(out.pulse.field_t) ** 2

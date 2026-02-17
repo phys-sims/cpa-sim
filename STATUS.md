@@ -5,7 +5,7 @@
 ## Last updated
 - Date: 2026-02-17
 - By: @openai-codex
-- Scope: Implemented phys-pipeline-aligned stage/state contracts, deterministic sequential chain, and ADR-0005.
+- Scope: Clarified runtime vs policy semantics, added policy hash provenance coverage, and reran required quality gates.
 
 ---
 
@@ -13,10 +13,10 @@
 
 | Check | Command | Status | Last run | Notes |
 | --- | --- | --- | --- | --- |
-| Pre-commit (lint/format) | `python -m pre_commit run -a` | ⬜ | — |  |
-| Type checking (mypy) | `python -m mypy src` | ⬜ | — |  |
-| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ⬜ | — |  |
-| Pytest physics (supplemental) | `python -m pytest -q -m physics --durations=10` | ⬜ | — | Run nightly/manual if slow. |
+| Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-02-17 | Passed; pre-commit reported only a deprecation warning for `default_stages`. |
+| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-02-17 | Success: no issues found in 29 source files. |
+| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-17 | 5 passed, 1 deselected. |
+| Pytest physics (supplemental) | `python -m pytest -q -m physics --durations=10` | ✅ | 2026-02-17 | 1 passed, 5 deselected (manual run). |
 | Pytest slow (supplemental) | `python -m pytest -q -m slow --durations=10` | ⬜ | — |  |
 
 ---
@@ -93,6 +93,6 @@ Fill these in after first green run; keep them current.
 ---
 
 ## Next actions
-- [ ] Run initial CI commands locally and populate the CI health checklist rows.
+- [x] Run initial CI commands locally and populate the CI health checklist rows.
 - [ ] Add minimal canonical configs under `configs/examples/`.
-- [ ] Land first end-to-end smoke test and record runtimes here.
+- [x] Land first end-to-end smoke test and record runtimes here.

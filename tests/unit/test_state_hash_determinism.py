@@ -20,3 +20,11 @@ def test_free_space_phase_preserves_energy() -> None:
     laser_energy = base.metrics["cpa.laser_init.laser.energy_au"]
 
     assert np.isclose(energy_after, laser_energy)
+
+
+def test_policy_hash_is_recorded_in_provenance() -> None:
+    cfg = PipelineConfig()
+    result = run_pipeline(cfg, policy={"debug": {"enabled": True}})
+
+    provenance = result.state.meta["provenance"]
+    assert provenance["policy_hash"] is not None
