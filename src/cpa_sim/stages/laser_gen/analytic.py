@@ -1,0 +1,58 @@
+from __future__ import annotations
+
+import numpy as np
+
+from cpa_sim.models.config import LaserGenCfg
+from cpa_sim.models.state import BeamState, LaserState, PulseGrid, PulseState
+from cpa_sim.phys_pipeline_compat import PolicyBag, StageResult
+from cpa_sim.stages.base import LaserStage
+
+
+class AnalyticLaserGenStage(LaserStage[LaserGenCfg]):
+    def __init__(self, cfg: LaserGenCfg):
+        super().__init__(cfg)
+        self.name = cfg.name
+
+    def process(
+        self, state: LaserState, *, policy: PolicyBag | None = None
+    ) -> StageResult[LaserState]:
+        spec = self.cfg.spec
+        t = np.linspace(
+            -0.5 * spec.pulse.time_window_fs,
+            0.5 * spec.pulse.time_window_fs,
+            spec.pulse.n_samples,
+        )
+        dt = float(t[1] - t[0])
+        sigma = spec.pulse.width_fs / (2.0 * np.sqrt(2.0 * np.log(2.0)))
+        if spec.pulse.shape == "gaussian":
+            envelope = np.exp(-(t**2) / (2.0 * sigma**2))
+        else:
+            envelope = (1.0 / np.cosh(t / max(spec.pulse.width_fs, 1e-9))) ** 2
+        field_t = spec.pulse.amplitude * envelope.astype(np.complex128)
+        field_w = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(field_t)))
+        w = np.fft.fftshift(2.0 * np.pi * np.fft.fftfreq(t.size, d=dt))
+        dw = float(w[1] - w[0])
+        intensity = np.abs(field_t) ** 2
+        spectrum = np.abs(field_w) ** 2
+
+        out = state.deepcopy()
+        out.pulse = PulseState(
+            grid=PulseGrid(
+                t=t.tolist(),
+                w=w.tolist(),
+                dt=dt,
+                dw=dw,
+                center_wavelength_nm=spec.pulse.center_wavelength_nm,
+            ),
+            field_t=field_t,
+            field_w=field_w,
+            intensity_t=intensity,
+            spectrum_w=spectrum,
+        )
+        out.beam = BeamState(radius_mm=spec.beam.radius_mm, m2=spec.beam.m2)
+        stage_metrics = {
+            "laser.energy_au": float(np.sum(intensity) * dt),
+            "laser.peak_intensity_au": float(np.max(intensity)),
+        }
+        out.metrics.update(stage_metrics)
+        return StageResult(state=out, metrics=stage_metrics)

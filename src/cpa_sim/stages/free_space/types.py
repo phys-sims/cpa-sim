@@ -1,1 +1,3 @@
-# Free space cfg (shared schema, backends variable)
+from cpa_sim.models.config import FreeSpaceCfg
+
+__all__ = ["FreeSpaceCfg"]
