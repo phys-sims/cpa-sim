@@ -15,7 +15,7 @@ This document distills the `phys-pipeline` docs into an implementation-oriented 
 - reproducibility via provenance + hashing,
 - a sequential pipeline first, DAG capability second.
 
-For `cpa-sim`, this means building the CPA chain as composable stages (`pulse init -> free-space stretcher -> fiber -> amp -> free-space compressor -> metrics/report`) while preserving deterministic contracts.
+For `cpa-sim`, this means building the CPA chain as composable stages (`laser-gen -> free-space stretcher -> fiber -> amp -> free-space compressor -> metrics/report`) while preserving deterministic contracts.
 
 ---
 
@@ -25,18 +25,38 @@ For `cpa-sim`, this means building the CPA chain as composable stages (`pulse in
 
 Mirror `phys-pipeline`'s `State` philosophy:
 
-- stage input/output should be one stable `PulseState` model,
+- stage input/output should be one stable `LaserState` model,
 - `deepcopy()` semantics must be explicit,
 - hashing representation should be deterministic and stable across runs.
 
-Recommended `PulseState` top-level fields:
+Recommended `LaserState` top-level fields:
 
+- `pulse`: `PulseState` temporal/spectral parameters tied to the field representation `E(ω,t)`,
+- `beam`: `BeamState` spatial parameters tied to the field representation `E(r)`,
 - `meta`: run_id, seed, config hash, version/timestamps,
+- `metrics`: scalar summaries,
+- `artifacts`: references to saved artifacts (paths/keys, not giant inline blobs).
+
+Recommended `PulseState` nested fields:
+
 - `grid`: time/frequency axes + spacing + center wavelength,
 - `field`: complex envelope arrays,
 - `derived`: intensity/spectrum (computed or cached),
-- `metrics`: scalar summaries,
-- `artifacts`: references to saved artifacts (paths/keys, not giant inline blobs).
+
+Recommended `BeamState` nested fields:
+
+- spatial grid/axes,
+- beam envelope/profile parameters,
+- derived spatial metrics (e.g., spot sizes, wavefront terms).
+
+#### Pre-chain generation contract
+
+Before the `FiberStage -> AmpStage -> FreeSpaceStage` chain, include a `LaserGenStage` that materializes a `LaserState` from immutable spec inputs.
+
+- Input spec model: `LaserSpec`.
+- `LaserSpec` contains `PulseSpec` and `BeamSpec`.
+- Specs are immutable and tied directly to the pipeline JSON schema.
+- Runtime states (`LaserState`, `PulseState`, `BeamState`) are distinct from specs and carry simulated/evolving values.
 
 ### 2.2 `StageConfig` contract (frozen typed config)
 
@@ -158,15 +178,19 @@ Keep markers aligned with repository policy: `unit`, `integration`, `physics`, `
 ```text
 src/cpa_sim/
   models/
-    pulse_grid.py
+    pulse_spec.py
+    beam_spec.py
+    laser_spec.py
     pulse_state.py
+    beam_state.py
+    laser_state.py
     stage_result.py
     provenance.py
   policy.py
   errors.py
   pipeline.py
   stages/
-    pulse_init/
+    laser_gen/
       base.py
       analytic.py
     free_space/
@@ -191,7 +215,7 @@ Each stage type dispatches by `cfg.kind`. Keep third-party solver calls isolated
 
 Implement one tiny deterministic config that runs:
 
-`PulseInit -> FreeSpace(stretcher) -> Fiber(gnlse adapter stub/mock if needed) -> Amp -> FreeSpace(compressor) -> Metrics`
+`LaserGen -> FreeSpace(stretcher) -> Fiber(gnlse adapter stub/mock if needed) -> Amp -> FreeSpace(compressor) -> Metrics`
 
 and emits:
 
@@ -219,7 +243,7 @@ Use ADRs to tie each decision to concrete tests.
 
 ## 9) Implementation sequencing an agent can execute
 
-1. Define typed models (`PulseGrid`, `PulseState`, `StageResult`, provenance models).
+1. Define typed models (`LaserSpec`, `PulseSpec`, `BeamSpec`, `LaserState`, `PulseState`, `BeamState`, `StageResult`, provenance models).
 2. Implement deterministic sequential pipeline runner.
 3. Add policy container and stable hashing helpers.
 4. Add free-space + amp + metrics minimal backends; wire backend dispatch by `kind`.
