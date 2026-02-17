@@ -5,7 +5,7 @@
 ## Last updated
 - Date: 2026-02-17
 - By: @openai-codex
-- Scope: Completed remaining fiber roadmap execution items: Raman-toggle integration coverage, NumPy 2 compatibility guard for WUST gnlse backend, CI optional gnlse workflow job, and units helper roundtrip coverage.
+- Scope: Adjusted CI optional gnlse workflow after failure feedback: make optional job non-blocking for gate and install gnlse via explicit setuptools + --no-build-isolation workaround for pkg_resources build-time issue.
 
 ---
 
