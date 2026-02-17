@@ -147,6 +147,16 @@ def test_wust_backend_missing_dependency_has_clear_error(monkeypatch: pytest.Mon
 
 
 @pytest.mark.unit
+def test_units_helpers_roundtrip_scalars() -> None:
+    from cpa_sim.stages.fiber.utils.units import fs_to_ps, m_to_nm, nm_to_m, ps_to_fs
+
+    assert fs_to_ps(2500.0) == pytest.approx(2.5)
+    assert ps_to_fs(1.75) == pytest.approx(1750.0)
+    assert nm_to_m(1030.0) == pytest.approx(1.03e-6)
+    assert m_to_nm(1.55e-6) == pytest.approx(1550.0)
+    assert m_to_nm(nm_to_m(800.0)) == pytest.approx(800.0)
+
+
 def test_wust_setup_fields_populated_with_expected_units(
     monkeypatch: pytest.MonkeyPatch, fake_gnlse_module: types.ModuleType
 ) -> None:

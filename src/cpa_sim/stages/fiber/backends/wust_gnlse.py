@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import warnings
 from importlib import metadata
 from typing import Any
@@ -24,9 +25,15 @@ from cpa_sim.stages.fiber.utils.units import fs_to_ps
 _LIGHT_SPEED_M_PER_S = 299792458.0
 
 
+def _ensure_numpy_math_compat() -> None:
+    # gnlse currently references np.math; NumPy 2 removed that alias.
+    if not hasattr(np, "math"):
+        np.math = math  # type: ignore[attr-defined]
+
+
 def _import_gnlse() -> Any:
     try:
-        import gnlse  # type: ignore[import-not-found]
+        import gnlse  # type: ignore[import-untyped]
     except ModuleNotFoundError as exc:  # pragma: no cover - dependency gate
         raise RuntimeError(
             "Fiber backend 'wust_gnlse' requires the optional 'gnlse' package. "
@@ -124,6 +131,7 @@ def run_wust_gnlse(
     physics: FiberPhysicsCfg,
     numerics: WustGnlseNumericsCfg,
 ) -> StageResult[LaserState]:
+    _ensure_numpy_math_compat()
     gnlse = _import_gnlse()
     out, artifacts = _apply_grid_policy(state, numerics=numerics, stage_name=stage_name)
 
