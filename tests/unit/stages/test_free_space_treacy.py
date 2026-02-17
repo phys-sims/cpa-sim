@@ -29,7 +29,9 @@ def _empty_state() -> LaserState:
         intensity_t=np.zeros(2),
         spectrum_w=np.zeros(2),
     )
-    return LaserState(pulse=pulse, beam=BeamState(radius_mm=1.0, m2=1.0), meta={}, metrics={}, artifacts={})
+    return LaserState(
+        pulse=pulse, beam=BeamState(radius_mm=1.0, m2=1.0), meta={}, metrics={}, artifacts={}
+    )
 
 
 def _generated_laser_state() -> LaserState:
@@ -41,7 +43,9 @@ def _generated_laser_state() -> LaserState:
 def test_legacy_freespace_cfg_migrates() -> None:
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
-        cfg = PipelineConfig(stretcher={"name": "stretcher", "kind": "treacy_grating", "gdd_fs2": 42.0})
+        cfg = PipelineConfig(
+            stretcher={"name": "stretcher", "kind": "treacy_grating", "gdd_fs2": 42.0}
+        )
 
     assert cfg.stretcher.kind == "phase_only_dispersion"
     assert cfg.stretcher.gdd_fs2 == pytest.approx(42.0)
@@ -84,9 +88,11 @@ def test_invalid_order_raises() -> None:
 
 @pytest.mark.unit
 def test_sign_sanity() -> None:
-    metrics = TreacyGratingStage(TreacyGratingPairCfg(name="stretcher", apply_to_pulse=False)).process(
-        _generated_laser_state()
-    ).metrics
+    metrics = (
+        TreacyGratingStage(TreacyGratingPairCfg(name="stretcher", apply_to_pulse=False))
+        .process(_generated_laser_state())
+        .metrics
+    )
     assert metrics["stretcher.gdd_fs2"] < 0.0
 
 
