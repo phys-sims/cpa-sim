@@ -78,4 +78,5 @@ markers = [
   "integration: fast end-to-end chain tests",
   "physics: canonical physics regression tests",
   "slow: long-running sweeps and large-grid tests",
+  "gnlse: optional tests that require the WUST-FOG gnlse package",
 ]

@@ -1,16 +1,30 @@
 from __future__ import annotations
 
+import warnings
 from importlib import metadata
+from typing import Any
 
 import numpy as np
 
-from cpa_sim.models.config import FiberPhysicsCfg, WustGnlseNumericsCfg
+from cpa_sim.models.config import (
+    DispersionInterpolationCfg,
+    DispersionTaylorCfg,
+    FiberPhysicsCfg,
+    WustGnlseNumericsCfg,
+)
 from cpa_sim.models.state import LaserState
 from cpa_sim.phys_pipeline_compat import StageResult
-from cpa_sim.stages.fiber.utils.grid import nearest_power_of_two, resample_complex_uniform
+from cpa_sim.stages.fiber.utils.grid import (
+    has_large_prime_factor,
+    nearest_power_of_two,
+    resample_complex_uniform,
+)
+from cpa_sim.stages.fiber.utils.units import fs_to_ps
+
+_LIGHT_SPEED_M_PER_S = 299792458.0
 
 
-def _import_gnlse() -> object:
+def _import_gnlse() -> Any:
     try:
         import gnlse  # type: ignore[import-not-found]
     except ModuleNotFoundError as exc:  # pragma: no cover - dependency gate
@@ -21,19 +35,55 @@ def _import_gnlse() -> object:
     return gnlse
 
 
-def run_wust_gnlse(
+def _resolve_gamma(physics: FiberPhysicsCfg, *, center_wavelength_nm: float) -> float:
+    if physics.gamma_1_per_w_m is not None:
+        return physics.gamma_1_per_w_m
+    if physics.n2_m2_per_w is None or physics.aeff_m2 is None:
+        raise ValueError(
+            "Fiber physics must provide gamma_1_per_w_m or both n2_m2_per_w and aeff_m2."
+        )
+    wavelength_m = center_wavelength_nm * 1e-9
+    omega0 = 2.0 * np.pi * _LIGHT_SPEED_M_PER_S / wavelength_m
+    return float(physics.n2_m2_per_w * omega0 / (_LIGHT_SPEED_M_PER_S * physics.aeff_m2))
+
+
+def _build_dispersion(gnlse: Any, physics: FiberPhysicsCfg) -> Any:
+    if isinstance(physics.dispersion, DispersionTaylorCfg):
+        return gnlse.DispersionFiberFromTaylor(
+            physics.loss_db_per_m,
+            physics.dispersion.betas_psn_per_m,
+        )
+    if isinstance(physics.dispersion, DispersionInterpolationCfg):
+        return gnlse.DispersionFiberFromInterpolation(
+            physics.loss_db_per_m,
+            physics.dispersion.central_wavelength_nm,
+            physics.dispersion.lambdas_nm,
+            physics.dispersion.effective_indices,
+        )
+    raise TypeError("Unsupported dispersion config.")
+
+
+def _build_raman_model(gnlse: Any, physics: FiberPhysicsCfg) -> Any | None:
+    if physics.raman is None:
+        return None
+    model_name = f"raman_{physics.raman.model}"
+    if not hasattr(gnlse, model_name):
+        raise ValueError(f"Requested Raman model is not available in gnlse: {physics.raman.model}")
+    return getattr(gnlse, model_name)
+
+
+def _apply_grid_policy(
     state: LaserState,
     *,
-    stage_name: str,
-    physics: FiberPhysicsCfg,
     numerics: WustGnlseNumericsCfg,
-) -> StageResult[LaserState]:
-    _import_gnlse()
+    stage_name: str,
+) -> tuple[LaserState, dict[str, str]]:
     out = state.deepcopy()
-
     old_t = np.asarray(out.pulse.grid.t, dtype=float)
     field_t = out.pulse.field_t
     n_points = field_t.size
+    artifacts: dict[str, str] = {}
+
     if numerics.grid_policy == "force_pow2":
         n_points = nearest_power_of_two(n_points)
     elif numerics.grid_policy == "force_resolution":
@@ -41,31 +91,108 @@ def run_wust_gnlse(
             raise ValueError("resolution_override is required when grid_policy='force_resolution'.")
         n_points = numerics.resolution_override
 
-    if n_points != field_t.size:
-        out.pulse.field_t = resample_complex_uniform(field_t, old_t, n_points)
-        new_t = np.linspace(float(old_t[0]), float(old_t[-1]), n_points)
-        out.pulse.grid = out.pulse.grid.model_copy(
-            update={"t": new_t.tolist(), "dt": float(new_t[1] - new_t[0])}
+    if has_large_prime_factor(n_points):
+        warnings.warn(
+            "WUST gnlse often performs better with FFT sizes that avoid large prime factors.",
+            stacklevel=2,
         )
+        artifacts[f"{stage_name}.grid_large_prime_factor"] = "true"
 
-    loss_linear = 10 ** (-(physics.loss_db_per_m * physics.length_m) / 10.0)
-    out.pulse.field_t = out.pulse.field_t * np.sqrt(loss_linear)
-    out.pulse.field_w = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(out.pulse.field_t)))
-    out.pulse.intensity_t = np.abs(out.pulse.field_t) ** 2
-    out.pulse.spectrum_w = np.abs(out.pulse.field_w) ** 2
+    if n_points != field_t.size:
+        new_t = np.linspace(float(old_t[0]), float(old_t[-1]), n_points)
+        out.pulse.field_t = resample_complex_uniform(field_t, old_t, n_points)
+        new_dt = float(new_t[1] - new_t[0]) if n_points > 1 else out.pulse.grid.dt
+        new_w = np.fft.fftshift(2.0 * np.pi * np.fft.fftfreq(n_points, d=new_dt))
+        new_dw = float(new_w[1] - new_w[0]) if n_points > 1 else out.pulse.grid.dw
+        out.pulse.grid = out.pulse.grid.model_copy(
+            update={
+                "t": new_t.tolist(),
+                "dt": new_dt,
+                "w": new_w.tolist(),
+                "dw": new_dw,
+            }
+        )
+        artifacts[f"{stage_name}.resampled_points"] = str(n_points)
+
+    return out, artifacts
+
+
+def run_wust_gnlse(
+    state: LaserState,
+    *,
+    stage_name: str,
+    physics: FiberPhysicsCfg,
+    numerics: WustGnlseNumericsCfg,
+) -> StageResult[LaserState]:
+    gnlse = _import_gnlse()
+    out, artifacts = _apply_grid_policy(state, numerics=numerics, stage_name=stage_name)
+
+    t_fs = np.asarray(out.pulse.grid.t, dtype=float)
+    time_window_ps = (
+        numerics.time_window_override_ps
+        if numerics.time_window_override_ps is not None
+        else fs_to_ps(float(t_fs[-1] - t_fs[0]))
+    )
+
+    setup = gnlse.GNLSESetup()
+    setup.resolution = out.pulse.field_t.size
+    setup.time_window = float(time_window_ps)
+    setup.wavelength = out.pulse.grid.center_wavelength_nm
+    setup.fiber_length = physics.length_m
+    setup.nonlinearity = _resolve_gamma(
+        physics,
+        center_wavelength_nm=out.pulse.grid.center_wavelength_nm,
+    )
+    setup.pulse_model = np.asarray(out.pulse.field_t, dtype=np.complex128)
+    setup.z_saves = numerics.z_saves
+    setup.self_steepening = physics.self_steepening
+    setup.dispersion_model = _build_dispersion(gnlse, physics)
+    raman_model = _build_raman_model(gnlse, physics)
+    if raman_model is not None:
+        setup.raman_model = raman_model
+    if hasattr(setup, "method"):
+        setup.method = numerics.method
+    if hasattr(setup, "rtol"):
+        setup.rtol = numerics.rtol
+    if hasattr(setup, "atol"):
+        setup.atol = numerics.atol
+
+    solver = gnlse.GNLSE(setup)
+    solution = solver.run()
+
+    at = np.asarray(solution.At)
+    final_at = np.asarray(at[-1], dtype=np.complex128) if at.ndim > 1 else at.astype(np.complex128)
+    out.pulse.field_t = final_at
+    out.pulse.intensity_t = np.abs(final_at) ** 2
+
+    recomputed_aw = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(final_at)))
+    out.pulse.field_w = recomputed_aw
+    out.pulse.spectrum_w = np.abs(recomputed_aw) ** 2
 
     out.meta.setdefault("pulse", {})
     out.meta["pulse"].update({"field_units": "sqrt(W)", "power_is_absA2_W": True})
-    out.artifacts[f"{stage_name}.backend"] = "wust_gnlse"
+
+    artifacts[f"{stage_name}.backend"] = "wust_gnlse"
+    artifacts[f"{stage_name}.time_window_ps"] = f"{time_window_ps:.12g}"
+    artifacts[f"{stage_name}.resolution"] = str(setup.resolution)
+    if numerics.keep_full_solution:
+        artifacts[f"{stage_name}.solution_saved"] = "z_traces_in_memory"
     if numerics.record_backend_version:
         try:
-            out.artifacts[f"{stage_name}.backend_version"] = metadata.version("gnlse")
-        except metadata.PackageNotFoundError:  # pragma: no cover - editable/local installs
-            out.artifacts[f"{stage_name}.backend_version"] = "unknown"
+            artifacts[f"{stage_name}.backend_version"] = metadata.version("gnlse")
+        except metadata.PackageNotFoundError:  # pragma: no cover
+            artifacts[f"{stage_name}.backend_version"] = "unknown"
+    out.artifacts.update(artifacts)
 
+    energy_in = float(np.sum(np.abs(np.asarray(state.pulse.field_t)) ** 2) * state.pulse.grid.dt)
+    energy_out = float(np.sum(np.abs(out.pulse.field_t) ** 2) * out.pulse.grid.dt)
+    spectral_rms = float(np.sqrt(np.mean(np.abs(out.pulse.field_w) ** 2)))
     metrics = {
-        f"{stage_name}.energy_ratio": float(loss_linear),
+        f"{stage_name}.energy_in": energy_in,
+        f"{stage_name}.energy_out": energy_out,
+        f"{stage_name}.energy_ratio": energy_out / energy_in if energy_in > 0.0 else float("nan"),
         f"{stage_name}.grid_points": float(out.pulse.field_t.size),
+        f"{stage_name}.spectral_rms": spectral_rms,
     }
     out.metrics.update(metrics)
     return StageResult(state=out, metrics=metrics)
