@@ -5,7 +5,7 @@
 ## Last updated
 - Date: 2026-02-17
 - By: @openai-codex
-- Scope: Implemented FreeSpaceStage roadmap work for v1 Treacy grating-pair/phase-only configs, geometry-derived dispersion metrics, legacy config migration warnings, new free-space unit+integration tests, and placeholder golden fixture scaffolding.
+- Scope: Implemented FreeSpaceStage roadmap work for v1 Treacy grating-pair/phase-only configs, geometry-derived dispersion metrics, legacy config migration warnings, free-space unit+integration tests, and Treacy golden fixture scaffolding with website-compatible units/pass handling.
 
 ---
 
