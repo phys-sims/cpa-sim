@@ -1,6 +1,6 @@
 # Fiber Stage Roadmap (Strategy B + WUST‑FOG gnlse backend)
 
-**Last updated:** 2026-02-16
+**Last updated:** 2026-02-17
 **Depends on:** `docs/agent/fiber-stage-context.md` (read it first)
 
 ## Why this is a separate file
@@ -93,9 +93,9 @@ This roadmap is expected to change frequently (checkboxes, status, notes). Keepi
 - [x] Add extras: `cpa-sim[gnlse]` in `pyproject.toml`
 - [x] Document install in README or docs page:
   - [x] “pip install -e '.[gnlse]'”
-- [ ] CI plan:
-  - [ ] normal job runs unit tests without gnlse
-  - [ ] optional job installs FFTW + `.[gnlse]` and runs integration tests
+- [x] CI plan:
+  - [x] normal job runs unit tests without gnlse
+  - [x] optional job installs FFTW + `.[gnlse]` and runs integration tests
 
 **Tests**
 - [ ] `pip install -e '.[gnlse]'` works locally
@@ -116,11 +116,11 @@ Mark these tests, e.g. `@pytest.mark.gnlse` and skip if dependency missing.
   - [x] gamma=0, beta2!=0
   - [x] assert temporal RMS increases
 
-- [ ] Raman toggle:
-  - [ ] enable one model and confirm finite output and run completion
+- [x] Raman toggle:
+  - [x] enable one model and confirm finite output and run completion
 
 **Tests**
-- [ ] `pytest -q -m gnlse` passes in gnlse-enabled environment
+- [x] `pytest -q -m gnlse` passes in gnlse-enabled environment
 
 ---
 

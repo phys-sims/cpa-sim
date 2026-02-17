@@ -98,3 +98,28 @@ def test_wust_gnlse_gvd_only_broadens_temporal_width() -> None:
         result.state.pulse.field_t, np.asarray(result.state.pulse.grid.t, dtype=float)
     )
     assert post_rms_t > pre_rms_t
+
+
+@pytest.mark.integration
+@pytest.mark.gnlse
+def test_wust_gnlse_raman_toggle_produces_finite_output() -> None:
+    _requires_gnlse()
+    state = _gaussian_state()
+
+    stage = FiberStage(
+        FiberCfg(
+            physics=FiberPhysicsCfg(
+                length_m=0.1,
+                loss_db_per_m=0.0,
+                gamma_1_per_w_m=0.002,
+                dispersion=DispersionTaylorCfg(betas_psn_per_m=[0.0]),
+                raman={"kind": "wust", "model": "blowwood"},
+            ),
+            numerics=WustGnlseNumericsCfg(z_saves=8, keep_full_solution=False),
+        )
+    )
+    result = stage.process(state)
+
+    assert np.all(np.isfinite(result.state.pulse.intensity_t))
+    assert np.all(np.isfinite(result.state.pulse.spectrum_w))
+    assert np.isfinite(result.metrics["fiber.energy_out"])

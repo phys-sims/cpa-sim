@@ -14,3 +14,7 @@ def ps_to_fs(value_ps: float) -> float:
 
 def nm_to_m(value_nm: float) -> float:
     return value_nm / NM_PER_M
+
+
+def m_to_nm(value_m: float) -> float:
+    return value_m * NM_PER_M
