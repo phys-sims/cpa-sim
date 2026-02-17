@@ -21,6 +21,36 @@ ATOL_GDD = 1e-6
 ATOL_TOD = 1e-3
 
 
+def _separation_um(case: dict[str, float | int | str | None]) -> float:
+    if case.get("separation_um") is not None:
+        return float(case["separation_um"])
+    if case.get("separation_mm") is not None:
+        return float(case["separation_mm"]) * 1e3
+    if case.get("separation_cm") is not None:
+        return float(case["separation_cm"]) * 1e4
+    if case.get("separation_m") is not None:
+        return float(case["separation_m"]) * 1e6
+    raise KeyError("Golden case must specify separation_um/mm/cm/m.")
+
+
+def _expected_with_units(
+    case: dict[str, float | int | str | None],
+    *,
+    fs_key: str,
+    ps_key: str,
+    conversion: float,
+) -> float | None:
+    if case.get(fs_key) is not None:
+        return float(case[fs_key])
+    if case.get(ps_key) is None:
+        return None
+
+    expected = float(case[ps_key]) * conversion
+    expected_assumes_n_passes = float(case.get("expect_assumes_n_passes", 2))
+    case_n_passes = float(case["n_passes"])
+    return expected * (case_n_passes / expected_assumes_n_passes)
+
+
 def _empty_state() -> LaserState:
     pulse = PulseState(
         grid=PulseGrid(t=[0.0, 1.0], w=[0.0, 1.0], dt=1.0, dw=1.0, center_wavelength_nm=1030.0),
@@ -130,7 +160,7 @@ def test_treacy_matches_golden_fixture_when_expectations_present() -> None:
                 name="golden",
                 line_density_lpmm=case["line_density_lpmm"],
                 incidence_angle_deg=case["incidence_angle_deg"],
-                separation_um=case["separation_um"],
+                separation_um=_separation_um(case),
                 wavelength_nm=case["wavelength_nm"],
                 diffraction_order=case["diffraction_order"],
                 n_passes=case["n_passes"],
@@ -138,13 +168,29 @@ def test_treacy_matches_golden_fixture_when_expectations_present() -> None:
             )
         )
         metrics = stage.process(state).metrics
-        if case["expect_gdd_fs2"] is not None:
+        expected_gdd_fs2 = _expected_with_units(
+            case,
+            fs_key="expect_gdd_fs2",
+            ps_key="expect_gdd_ps2",
+            conversion=1e6,
+        )
+        if expected_gdd_fs2 is not None:
             assert metrics["golden.gdd_fs2"] == pytest.approx(
-                case["expect_gdd_fs2"], rel=RTOL, abs=ATOL_GDD
+                expected_gdd_fs2,
+                rel=RTOL,
+                abs=ATOL_GDD,
             )
-        if case["expect_tod_fs3"] is not None:
+        expected_tod_fs3 = _expected_with_units(
+            case,
+            fs_key="expect_tod_fs3",
+            ps_key="expect_tod_ps3",
+            conversion=1e9,
+        )
+        if expected_tod_fs3 is not None:
             assert metrics["golden.tod_fs3"] == pytest.approx(
-                case["expect_tod_fs3"], rel=RTOL, abs=ATOL_TOD
+                expected_tod_fs3,
+                rel=RTOL,
+                abs=ATOL_TOD,
             )
         if case["expect_diffraction_angle_deg"] is not None:
             assert metrics["golden.diffraction_angle_deg"] == pytest.approx(
