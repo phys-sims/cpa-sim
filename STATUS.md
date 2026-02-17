@@ -3,9 +3,9 @@
 > **Source of truth:** Update this file whenever behavior, tests, schemas, or canonical examples change.
 
 ## Last updated
-- Date: 2026-02-16
+- Date: 2026-02-17
 - By: @openai-codex
-- Scope: Added ADR set aligned to ecosystem ADR context and cpa-sim stage ownership.
+- Scope: Implemented phys-pipeline-aligned stage/state contracts, deterministic sequential chain, and ADR-0005.
 
 ---
 
@@ -56,11 +56,11 @@ Fill these in after first green run; keep them current.
 ## Roadmap checklist (v1 focus)
 
 ### Stages (end-to-end chain)
-- [ ] PulseInitStage (pulse generation / grid)
-- [ ] FreeSpaceStage: `tracy_grating` backend (stretcher/compressor)
-- [ ] FiberStage: `gnlse` backend (external GLNSE wrapper)
-- [ ] AmpStage: `simple_gain` backend
-- [ ] MetricsStage (energy, FWHM, bandwidth, B-integral estimate, plots)
+- [x] PulseInitStage (laser_gen analytic backend)
+- [x] FreeSpaceStage: `treacy_grating` backend (stretcher/compressor)
+- [x] FiberStage: `gnlse` adapter boundary (deterministic placeholder transform)
+- [x] AmpStage: `simple_gain` backend
+- [x] MetricsStage (energy, FWHM, bandwidth, B-integral proxy)
 - [ ] Report/Validation schema (tiered validation records)
 
 ### Backends + adapters
@@ -68,8 +68,8 @@ Fill these in after first green run; keep them current.
 - [ ] Unit normalization and convention tests
 
 ### QA / determinism
-- [ ] Determinism tests (same config + seed)
-- [ ] Integration smoke test (fast, CI)
+- [x] Determinism tests (same config + seed)
+- [x] Integration smoke test (fast, CI)
 - [ ] Physics golden tests (free-space + fiber)
 
 ### Docs / ADRs
@@ -77,7 +77,7 @@ Fill these in after first green run; keep them current.
 - [x] ADR-0002 canonical result schema contract
 - [x] ADR-0003 validation tiers + CI policy
 - [x] ADR-0004 stage/domain boundaries (laser, free-space, fiber, amp)
-- [ ] ADR-0005 backend selection policy (solver choice + replacement triggers)
+- [x] ADR-0005 phys-pipeline contract adoption
 
 ### Release readiness
 - [ ] README quickstart + one runnable config
