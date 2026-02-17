@@ -5,7 +5,7 @@
 ## Last updated
 - Date: 2026-02-17
 - By: @openai-codex
-- Scope: Fixed Phase-7 example mypy portability by replacing direct `matplotlib` import with importlib-based dynamic loading in the packaged example helper, preserving CI compatibility when matplotlib stubs/deps are absent.
+- Scope: Implemented FreeSpaceStage roadmap work for v1 Treacy grating-pair/phase-only configs, geometry-derived dispersion metrics, legacy config migration warnings, new free-space unit+integration tests, and placeholder golden fixture scaffolding.
 
 ---
 
@@ -15,7 +15,7 @@
 | --- | --- | --- | --- | --- |
 | Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-02-17 | Passed; pre-commit reported only a deprecation warning for `default_stages`. |
 | Type checking (mypy) | `python -m mypy src` | ✅ | 2026-02-17 | Success: no issues found in 36 source files. |
-| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-17 | 18 passed, 1 deselected (includes new gnlse example script test). |
+| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-17 | 26 passed, 1 deselected (includes new free-space unit/integration coverage). |
 | Pytest physics (supplemental) | `python -m pytest -q -m physics --durations=10` | ⬜ | — | Not rerun in this change set. |
 | Pytest slow (supplemental) | `python -m pytest -q -m slow --durations=10` | ⬜ | — |  |
 | Pytest gnlse optional (supplemental) | `python -m pytest -q -m gnlse --durations=10` | ✅ | 2026-02-17 | 4 passed, 15 deselected (includes new example artifact test). |

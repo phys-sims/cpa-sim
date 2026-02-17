@@ -244,9 +244,9 @@ Error messages must name the offending values.
 
 A Treacy backend is considered correct when:
 
-1) **Golden numeric match:** for a committed fixture set of cases, computed `GDD` and `TOD` match recorded reference outputs within specified tolerances.  
-2) **Invariants:** phase-only application preserves spectrum magnitude and energy.  
-3) **Contracts:** unit suffixes and `phys-pipeline` stage contract obeyed.  
+1) **Golden numeric match:** for a committed fixture set of cases, computed `GDD` and `TOD` match recorded reference outputs within specified tolerances.
+2) **Invariants:** phase-only application preserves spectrum magnitude and energy.
+3) **Contracts:** unit suffixes and `phys-pipeline` stage contract obeyed.
 4) **Back-compat:** old placeholder configs still parse, with deprecation warning.
 
 ---
@@ -255,4 +255,3 @@ A Treacy backend is considered correct when:
 - LaserCalculator “Grating pair dispersion calculator” (Treacy, double-pass; notes on passes/order/angles).
 - Ibsen Photonics white paper “Pulse stretching and compressing using grating pairs” (Treacy GDD expression; mentions retroreflection doubles dispersion).
 - General Treacy (1969) grating pair theory background.
-

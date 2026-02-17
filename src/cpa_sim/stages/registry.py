@@ -8,7 +8,11 @@ from cpa_sim.stages.laser_gen import AnalyticLaserGenStage
 from cpa_sim.stages.metrics import StandardMetricsStage
 
 LASER_GEN_BACKENDS = {"analytic": AnalyticLaserGenStage}
-FREE_SPACE_BACKENDS = {"treacy_grating": TreacyGratingStage}
+FREE_SPACE_BACKENDS = {
+    "treacy_grating": TreacyGratingStage,
+    "phase_only_dispersion": TreacyGratingStage,
+    "treacy_grating_pair": TreacyGratingStage,
+}
 FIBER_BACKENDS = {"fiber": FiberStage}
 AMP_BACKENDS = {"simple_gain": SimpleGainStage}
 METRICS_BACKENDS = {"standard": StandardMetricsStage}
