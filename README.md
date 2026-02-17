@@ -86,6 +86,14 @@ The top-level `PipelineConfig` includes these sections:
 
 This keeps public configuration stable while backend selection happens per stage via `kind`.
 
+### Runtime config vs stage config vs pipeline policy
+
+- `runtime` is **run-level metadata/control** (for example seed) and is not a processing stage.
+- stage configs (`laser_gen`, `stretcher`, `fiber`, `amp`, `compressor`, `metrics`) define model parameters and backend `kind` per stage.
+- `policy` is a pipeline-wide override bag passed at execution time for cross-cutting controls (debug/tolerances/instrumentation) without changing stage config shape.
+
+In short: `runtime` and `policy` are global execution concerns, while stage configs define the physical chain itself.
+
 ## Outputs and provenance
 
 A run returns a `StageResult` with:

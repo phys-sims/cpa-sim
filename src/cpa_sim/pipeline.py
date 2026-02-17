@@ -48,7 +48,10 @@ def run_pipeline(
     config_hash = hashlib.sha256(
         json.dumps(cfg.model_dump(mode="json"), sort_keys=True, separators=(",", ":")).encode()
     ).hexdigest()
-    initial_state = _empty_state(seed=cfg.runtime.seed, config_hash=config_hash)
+    policy_hash = _hash_policy(policy)
+    initial_state = _empty_state(
+        seed=cfg.runtime.seed, config_hash=config_hash, policy_hash=policy_hash
+    )
     result = pipeline.run(initial_state, policy=policy)
     result.state.meta.setdefault("config_hash", config_hash)
     result.state.meta.setdefault("seed", cfg.runtime.seed)
@@ -58,9 +61,17 @@ def run_pipeline(
     return result
 
 
-def _empty_state(*, seed: int, config_hash: str) -> LaserState:
+def _hash_policy(policy: PolicyLike | None) -> str | None:
+    if policy is None:
+        return None
+    return hashlib.sha256(
+        json.dumps(policy, sort_keys=True, default=str, separators=(",", ":")).encode()
+    ).hexdigest()
+
+
+def _empty_state(*, seed: int, config_hash: str, policy_hash: str | None) -> LaserState:
     provenance = RunProvenance.from_seed_and_hash(
-        seed=seed, config_hash=config_hash, policy_hash=None
+        seed=seed, config_hash=config_hash, policy_hash=policy_hash
     )
     pulse = PulseState(
         grid=PulseGrid(t=[0.0, 1.0], w=[0.0, 1.0], dt=1.0, dw=1.0, center_wavelength_nm=1030.0),
