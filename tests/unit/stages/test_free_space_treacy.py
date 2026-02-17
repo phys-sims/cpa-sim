@@ -36,12 +36,9 @@ def _separation_um(case: dict[str, float | int | str | None]) -> float:
 def _expected_with_units(
     case: dict[str, float | int | str | None],
     *,
-    fs_key: str,
     ps_key: str,
     conversion: float,
 ) -> float | None:
-    if case.get(fs_key) is not None:
-        return float(case[fs_key])
     if case.get(ps_key) is None:
         return None
 
@@ -170,7 +167,6 @@ def test_treacy_matches_golden_fixture_when_expectations_present() -> None:
         metrics = stage.process(state).metrics
         expected_gdd_fs2 = _expected_with_units(
             case,
-            fs_key="expect_gdd_fs2",
             ps_key="expect_gdd_ps2",
             conversion=1e6,
         )
@@ -182,7 +178,6 @@ def test_treacy_matches_golden_fixture_when_expectations_present() -> None:
             )
         expected_tod_fs3 = _expected_with_units(
             case,
-            fs_key="expect_tod_fs3",
             ps_key="expect_tod_ps3",
             conversion=1e9,
         )
