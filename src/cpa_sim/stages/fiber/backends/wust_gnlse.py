@@ -44,7 +44,9 @@ def run_wust_gnlse(
     if n_points != field_t.size:
         out.pulse.field_t = resample_complex_uniform(field_t, old_t, n_points)
         new_t = np.linspace(float(old_t[0]), float(old_t[-1]), n_points)
-        out.pulse.grid = out.pulse.grid.model_copy(update={"t": new_t.tolist(), "dt": float(new_t[1] - new_t[0])})
+        out.pulse.grid = out.pulse.grid.model_copy(
+            update={"t": new_t.tolist(), "dt": float(new_t[1] - new_t[0])}
+        )
 
     loss_linear = 10 ** (-(physics.loss_db_per_m * physics.length_m) / 10.0)
     out.pulse.field_t = out.pulse.field_t * np.sqrt(loss_linear)
