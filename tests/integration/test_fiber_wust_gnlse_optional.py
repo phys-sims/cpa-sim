@@ -64,8 +64,12 @@ def test_wust_gnlse_spm_only_preserves_energy_and_broadens_spectrum() -> None:
     )
     result = stage.process(state)
 
-    post_energy = float(np.sum(np.abs(result.state.pulse.field_t) ** 2) * result.state.pulse.grid.dt)
-    post_rms_w = _rms_axis(result.state.pulse.field_w, np.asarray(result.state.pulse.grid.w, dtype=float))
+    post_energy = float(
+        np.sum(np.abs(result.state.pulse.field_t) ** 2) * result.state.pulse.grid.dt
+    )
+    post_rms_w = _rms_axis(
+        result.state.pulse.field_w, np.asarray(result.state.pulse.grid.w, dtype=float)
+    )
     assert post_energy == pytest.approx(pre_energy, rel=5e-2)
     assert post_rms_w > pre_rms_w
 
@@ -90,5 +94,7 @@ def test_wust_gnlse_gvd_only_broadens_temporal_width() -> None:
     )
     result = stage.process(state)
 
-    post_rms_t = _rms_axis(result.state.pulse.field_t, np.asarray(result.state.pulse.grid.t, dtype=float))
+    post_rms_t = _rms_axis(
+        result.state.pulse.field_t, np.asarray(result.state.pulse.grid.t, dtype=float)
+    )
     assert post_rms_t > pre_rms_t
