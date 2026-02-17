@@ -5,7 +5,7 @@
 ## Last updated
 - Date: 2026-02-17
 - By: @openai-codex
-- Scope: Implemented Fiber Phase-7 docs/examples deliverables: added a runnable WUST gnlse example script, documentation for units/backend selection/normalization, and an integration test that validates SVG artifact generation.
+- Scope: Finalized Fiber Phase-7 example packaging by moving reusable example logic under `src/cpa_sim/examples/` so tests can import it reliably in CI, while keeping the runnable script/docs/test coverage for SVG artifact generation.
 
 ---
 
@@ -14,7 +14,7 @@
 | Check | Command | Status | Last run | Notes |
 | --- | --- | --- | --- | --- |
 | Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-02-17 | Passed; pre-commit reported only a deprecation warning for `default_stages`. |
-| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-02-17 | Success: no issues found in 34 source files. |
+| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-02-17 | Success: no issues found in 36 source files. |
 | Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-17 | 18 passed, 1 deselected (includes new gnlse example script test). |
 | Pytest physics (supplemental) | `python -m pytest -q -m physics --durations=10` | ⬜ | — | Not rerun in this change set. |
 | Pytest slow (supplemental) | `python -m pytest -q -m slow --durations=10` | ⬜ | — |  |

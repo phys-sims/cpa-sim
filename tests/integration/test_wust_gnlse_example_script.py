@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.examples.wust_gnlse_fiber_example import run_example
+from cpa_sim.examples.wust_gnlse_fiber_example import run_example
 
 
 @pytest.mark.integration
