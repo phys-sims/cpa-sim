@@ -5,7 +5,15 @@ import json
 from pathlib import Path
 from typing import Any
 
-from cpa_sim.models import PipelineConfig, RuntimeCfg, ToyFiberAmpCfg
+from cpa_sim.models import (
+    BeamSpec,
+    LaserGenCfg,
+    LaserSpec,
+    PipelineConfig,
+    PulseSpec,
+    RuntimeCfg,
+    ToyFiberAmpCfg,
+)
 from cpa_sim.pipeline import run_pipeline
 
 DEFAULT_OUT_DIR = Path("artifacts/toy-amp-case-a")
@@ -14,6 +22,20 @@ DEFAULT_OUT_DIR = Path("artifacts/toy-amp-case-a")
 def build_config(*, seed: int) -> PipelineConfig:
     return PipelineConfig(
         runtime=RuntimeCfg(seed=seed),
+        laser_gen=LaserGenCfg(
+            name="laser_init_case_a",
+            spec=LaserSpec(
+                pulse=PulseSpec(
+                    shape="gaussian",
+                    amplitude=1.0,
+                    width_fs=100.0,
+                    center_wavelength_nm=1030.0,
+                    n_samples=512,
+                    time_window_fs=3000.0,
+                ),
+                beam=BeamSpec(radius_mm=1.0, m2=1.0),
+            ),
+        ),
         stages=[
             ToyFiberAmpCfg(
                 name="toy_amp",
