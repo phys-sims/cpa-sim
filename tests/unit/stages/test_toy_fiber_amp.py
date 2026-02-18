@@ -1,6 +1,6 @@
 import pytest
 
-from cpa_sim.models import AmpCfg, PipelineConfig, PhaseOnlyDispersionCfg, ToyFiberAmpCfg
+from cpa_sim.models import AmpCfg, PhaseOnlyDispersionCfg, PipelineConfig, ToyFiberAmpCfg
 from cpa_sim.pipeline import run_pipeline
 
 

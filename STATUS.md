@@ -5,7 +5,7 @@
 ## Last updated
 - Date: 2026-02-18
 - By: @openai-codex
-- Scope: Added a new deterministic `toy_fiber_amp` backend (distributed gain/loss + beta2 + Kerr SPM), unit tests for gain/SPM/CPA nonlinear-reduction behavior, and direct-vs-CPA toy amplifier examples/docs with explicit limitations.
+- Scope: Made toy amp A/B examples use explicit laser generation settings, added a single A-vs-B comparison script, added integration coverage for that script, and added PNG-embedding gallery documentation.
 
 ---
 

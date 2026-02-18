@@ -43,6 +43,17 @@ Expected qualitative behavior:
 - reduced B-integral proxy during amplification vs Example A,
 - after compression, pulse remains amplified but with less nonlinear distortion than direct amplification.
 
+
+## Combined runner (A vs B side-by-side)
+
+Run both cases in one command and emit a comparison summary:
+
+```bash
+python scripts/examples/toy_amp_case_ab_compare.py --out artifacts/toy-amp-case-ab --emit-plots
+```
+
+This writes per-case summaries plus `comparison_summary.json` with the same key metrics for direct side-by-side review.
+
 ## Notes on metrics
 
 `toy_fiber_amp` emits stage metrics:
