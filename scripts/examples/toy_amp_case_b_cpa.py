@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 from pathlib import Path
 from typing import Any
@@ -24,6 +25,38 @@ from cpa_sim.models import (
 from cpa_sim.pipeline import run_pipeline
 
 DEFAULT_OUT_DIR = Path("artifacts/toy-amp-case-b")
+
+
+def _gnlse_available() -> bool:
+    return importlib.util.find_spec("gnlse") is not None
+
+
+def _build_stretcher_stage(*, length_m: float, beta2_ps2_per_m: float) -> FiberCfg | ToyFiberAmpCfg:
+    if _gnlse_available():
+        return FiberCfg(
+            name="stretcher",
+            physics=FiberPhysicsCfg(
+                length_m=length_m,
+                gamma_1_per_w_m=0.0,
+                dispersion=DispersionTaylorCfg(betas_psn_per_m=[beta2_ps2_per_m]),
+            ),
+            numerics=WustGnlseNumericsCfg(
+                backend="wust_gnlse",
+                grid_policy="force_pow2",
+                z_saves=64,
+            ),
+        )
+
+    # CI-safe fallback for environments without optional `gnlse` dependency.
+    return ToyFiberAmpCfg(
+        name="stretcher",
+        length_m=length_m,
+        beta2_s2_per_m=beta2_ps2_per_m * 1e-24,
+        gamma_w_inv_m=0.0,
+        gain_db=0.0,
+        loss_db_per_m=0.0,
+        n_steps=20,
+    )
 
 
 def build_config(*, seed: int) -> PipelineConfig:
@@ -60,18 +93,9 @@ def build_config(*, seed: int) -> PipelineConfig:
             ),
         ),
         stages=[
-            FiberCfg(
-                name="stretcher",
-                physics=FiberPhysicsCfg(
-                    length_m=stretcher_length_m,
-                    gamma_1_per_w_m=0.0,
-                    dispersion=DispersionTaylorCfg(betas_psn_per_m=[stretcher_beta2_ps2_per_m]),
-                ),
-                numerics=WustGnlseNumericsCfg(
-                    backend="wust_gnlse",
-                    grid_policy="force_pow2",
-                    z_saves=64,
-                ),
+            _build_stretcher_stage(
+                length_m=stretcher_length_m,
+                beta2_ps2_per_m=stretcher_beta2_ps2_per_m,
             ),
             ToyFiberAmpCfg(
                 name="edfa",
