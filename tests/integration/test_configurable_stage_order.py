@@ -1,3 +1,5 @@
+import importlib.util
+
 import pytest
 
 from cpa_sim.models import AmpCfg, FiberCfg, MetricsCfg, PhaseOnlyDispersionCfg, PipelineConfig
@@ -52,6 +54,11 @@ def test_stage_plot_policy_emits_artifacts_for_all_stages(tmp_path) -> None:
         cfg,
         policy={"cpa.emit_stage_plots": True, "cpa.stage_plot_dir": str(tmp_path)},
     )
+
+    has_matplotlib = importlib.util.find_spec("matplotlib.pyplot") is not None
+    if not has_matplotlib:
+        assert result.state.artifacts == {}
+        return
 
     expected_stages = ["laser_init", "fs_a", "fiber_a", "amp_a", "metrics"]
     for stage_name in expected_stages:
