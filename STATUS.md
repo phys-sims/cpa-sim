@@ -5,7 +5,7 @@
 ## Last updated
 - Date: 2026-02-18
 - By: @openai-codex
-- Scope: Made toy amp A/B examples use explicit laser generation settings, added a single A-vs-B comparison script, added integration coverage for that script, and added PNG-embedding gallery documentation.
+- Scope: Refactored toy amp A/B example scripts to share one canonical laser seed config, made A/B comparison metrics schema stage-name-agnostic, and strengthened integration coverage for non-brittle comparison outputs.
 
 ---
 
