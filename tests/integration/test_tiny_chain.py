@@ -15,6 +15,9 @@ def test_tiny_chain_runs_and_emits_finite_metrics() -> None:
         "cpa.metrics.summary.peak_intensity_au",
         "cpa.metrics.summary.fwhm_fs",
         "cpa.metrics.summary.bandwidth_rad_per_fs",
+        "cpa.metrics.summary.amplification_ratio",
+        "cpa.metrics.summary.temporal_shape_similarity",
+        "cpa.metrics.summary.spectral_shape_similarity",
     ]:
         assert key in result.metrics
         assert result.metrics[key] == pytest.approx(result.metrics[key])
