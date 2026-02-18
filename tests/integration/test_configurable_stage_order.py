@@ -55,7 +55,10 @@ def test_stage_plot_policy_emits_artifacts_for_all_stages(tmp_path) -> None:
         policy={"cpa.emit_stage_plots": True, "cpa.stage_plot_dir": str(tmp_path)},
     )
 
-    has_matplotlib = importlib.util.find_spec("matplotlib.pyplot") is not None
+    try:
+        has_matplotlib = importlib.util.find_spec("matplotlib") is not None
+    except ModuleNotFoundError:
+        has_matplotlib = False
     if not has_matplotlib:
         assert result.state.artifacts == {}
         return
