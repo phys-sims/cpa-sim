@@ -7,6 +7,7 @@ from cpa_sim.models.state import LaserState
 from cpa_sim.phys_pipeline_compat import PolicyBag, StageResult
 from cpa_sim.stages.amp.utils import field_gain_from_power_gain
 from cpa_sim.stages.base import LaserStage
+from cpa_sim.utils import maybe_emit_stage_plots
 
 
 class SimpleGainStage(LaserStage[AmpCfg]):
@@ -28,4 +29,5 @@ class SimpleGainStage(LaserStage[AmpCfg]):
             f"{self.name}.energy_au": float(np.sum(out.pulse.intensity_t) * out.pulse.grid.dt),
         }
         out.metrics.update(stage_metrics)
+        out.artifacts.update(maybe_emit_stage_plots(stage_name=self.name, state=out, policy=policy))
         return StageResult(state=out, metrics=stage_metrics)

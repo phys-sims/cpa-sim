@@ -187,6 +187,12 @@ class AmpCfg(StageConfig):
     gain_linear: float = 1.0
 
 
+PipelineStageCfg = Annotated[
+    FreeSpaceCfg | FiberCfg | AmpCfg,
+    Field(discriminator="kind"),
+]
+
+
 class MetricsCfg(StageConfig):
     model_config = ConfigDict(frozen=True)
 
@@ -207,6 +213,7 @@ class PipelineConfig(BaseModel):
     compressor: FreeSpaceCfg = Field(
         default_factory=lambda: TreacyGratingPairCfg(name="compressor")
     )
+    stages: list[PipelineStageCfg] | None = None
     metrics: MetricsCfg = Field(default_factory=MetricsCfg)
 
     @model_validator(mode="before")
@@ -218,4 +225,8 @@ class PipelineConfig(BaseModel):
         for key in ("stretcher", "compressor"):
             if key in payload:
                 payload[key] = _migrate_legacy_free_space_cfg(payload[key])
+        if "stages" in payload and isinstance(payload["stages"], list):
+            payload["stages"] = [
+                _migrate_legacy_free_space_cfg(stage_cfg) for stage_cfg in payload["stages"]
+            ]
         return payload
