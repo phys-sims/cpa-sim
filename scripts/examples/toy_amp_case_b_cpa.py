@@ -9,6 +9,9 @@ import numpy as np
 
 from cpa_sim.models import (
     BeamSpec,
+    DispersionTaylorCfg,
+    FiberCfg,
+    FiberPhysicsCfg,
     LaserGenCfg,
     LaserSpec,
     PipelineConfig,
@@ -16,6 +19,7 @@ from cpa_sim.models import (
     RuntimeCfg,
     ToyFiberAmpCfg,
     TreacyGratingPairCfg,
+    WustGnlseNumericsCfg,
 )
 from cpa_sim.pipeline import run_pipeline
 
@@ -32,6 +36,7 @@ def build_config(*, seed: int) -> PipelineConfig:
         * (input_width_ps * 1e-12) ** 2
         / (4.0 * np.log(2.0) * stretcher_length_m)
     )
+    stretcher_beta2_ps2_per_m = float(stretcher_beta2_s2_per_m * 1e24)
 
     # EDFA-like toy gain block configured from an exponential gain coefficient (1 / m).
     edfa_length_m = 5.0
@@ -55,14 +60,18 @@ def build_config(*, seed: int) -> PipelineConfig:
             ),
         ),
         stages=[
-            ToyFiberAmpCfg(
+            FiberCfg(
                 name="stretcher",
-                length_m=stretcher_length_m,
-                beta2_s2_per_m=float(stretcher_beta2_s2_per_m),
-                gamma_w_inv_m=0.0,
-                gain_db=0.0,
-                loss_db_per_m=0.0,
-                n_steps=20,
+                physics=FiberPhysicsCfg(
+                    length_m=stretcher_length_m,
+                    gamma_1_per_w_m=0.0,
+                    dispersion=DispersionTaylorCfg(betas_psn_per_m=[stretcher_beta2_ps2_per_m]),
+                ),
+                numerics=WustGnlseNumericsCfg(
+                    backend="wust_gnlse",
+                    grid_policy="force_pow2",
+                    z_saves=64,
+                ),
             ),
             ToyFiberAmpCfg(
                 name="edfa",
