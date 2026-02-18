@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from cpa_sim.models.state import LaserSpec
 from cpa_sim.phys_pipeline_compat import StageConfig
@@ -187,8 +187,41 @@ class AmpCfg(StageConfig):
     gain_linear: float = 1.0
 
 
+class ToyFiberAmpCfg(StageConfig):
+    model_config = ConfigDict(frozen=True)
+
+    name: str = "amp"
+    kind: Literal["toy_fiber_amp"] = "toy_fiber_amp"
+    length_m: float = 1.0
+    beta2_s2_per_m: float = 0.0
+    gamma_w_inv_m: float = 0.0
+    gain_db: float = 0.0
+    loss_db_per_m: float = 0.0
+    n_steps: int = 8
+
+    @field_validator("length_m")
+    @classmethod
+    def _validate_length(cls, value: float) -> float:
+        if value <= 0.0:
+            raise ValueError("ToyFiberAmpCfg.length_m must be > 0.")
+        return value
+
+    @field_validator("n_steps")
+    @classmethod
+    def _validate_n_steps(cls, value: int) -> int:
+        if value < 1:
+            raise ValueError("ToyFiberAmpCfg.n_steps must be >= 1.")
+        return value
+
+
+AmpStageCfg = Annotated[
+    AmpCfg | ToyFiberAmpCfg,
+    Field(discriminator="kind"),
+]
+
+
 PipelineStageCfg = Annotated[
-    FreeSpaceCfg | FiberCfg | AmpCfg,
+    FreeSpaceCfg | FiberCfg | AmpStageCfg,
     Field(discriminator="kind"),
 ]
 
@@ -209,7 +242,7 @@ class PipelineConfig(BaseModel):
         default_factory=lambda: PhaseOnlyDispersionCfg(name="stretcher")
     )
     fiber: FiberCfg = Field(default_factory=FiberCfg)
-    amp: AmpCfg = Field(default_factory=AmpCfg)
+    amp: AmpStageCfg = Field(default_factory=AmpCfg)
     compressor: FreeSpaceCfg = Field(
         default_factory=lambda: TreacyGratingPairCfg(name="compressor")
     )

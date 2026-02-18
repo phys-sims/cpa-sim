@@ -5,7 +5,7 @@
 ## Last updated
 - Date: 2026-02-18
 - By: @openai-codex
-- Scope: Updated the canonical 1560 nm example to remove the pre-fiber stretcher stage and use regular-dispersion fiber broadening (positive chirp) before Treacy compression, added Treacy compressor-focused debug/probe tooling for docs workflows, and strengthened Treacy free-space unit coverage for compression/energy-preservation behavior.
+- Scope: Added a new deterministic `toy_fiber_amp` backend (distributed gain/loss + beta2 + Kerr SPM), unit tests for gain/SPM/CPA nonlinear-reduction behavior, and direct-vs-CPA toy amplifier examples/docs with explicit limitations.
 
 ---
 
@@ -15,7 +15,7 @@
 | --- | --- | --- | --- | --- |
 | Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-02-18 | Passed; pre-commit reported only a deprecation warning for `default_stages`. |
 | Type checking (mypy) | `python -m mypy src` | ✅ | 2026-02-18 | Success: no issues found in 37 source files. |
-| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-18 | 32 passed, 1 deselected (includes updated Treacy unit coverage). |
+| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-18 | Passed after adding toy amp backend/tests. |
 | Pytest physics (supplemental) | `python -m pytest -q -m physics --durations=10` | ⬜ | — | Not rerun in this change set. |
 | Pytest slow (supplemental) | `python -m pytest -q -m slow --durations=10` | ⬜ | — |  |
 | Pytest gnlse optional (supplemental) | `python -m pytest -q -m gnlse --durations=10` | ✅ | 2026-02-17 | 4 passed, 15 deselected (includes new example artifact test). |
@@ -61,7 +61,7 @@ Fill these in after first green run; keep them current.
 - [x] PulseInitStage (laser_gen analytic backend)
 - [x] FreeSpaceStage: `treacy_grating` backend (stretcher/compressor)
 - [x] FiberStage: Strategy B `FiberStageCfg(physics, numerics)` with `toy_phase` and `wust_gnlse` backends
-- [x] AmpStage: `simple_gain` backend
+- [x] AmpStage: `simple_gain` and `toy_fiber_amp` backends
 - [x] MetricsStage (energy, FWHM, bandwidth, B-integral proxy)
 - [ ] Report/Validation schema (tiered validation records)
 

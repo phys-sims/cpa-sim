@@ -82,7 +82,7 @@ The top-level `PipelineConfig` includes these sections:
 - `laser_gen` (initial pulse/beam specification),
 - `stretcher` / `compressor` defaults (free-space configs used when `stages` is not set),
 - `fiber` (`FiberStageCfg` with stable `physics` plus backend-specific `numerics`),
-- `amp` (amplifier backend + gain),
+- `amp` (amplifier backend + gain; supports `simple_gain` and `toy_fiber_amp`),
 - `stages` (optional arbitrary ordered list of `free_space`, `fiber`, and `amp` stage configs),
 - `metrics` (summary metric backend; always appended at pipeline end).
 
@@ -126,6 +126,11 @@ For configuration/units details, see `docs/examples/wust-gnlse-fiber-example.md`
 Canonical end-to-end 1560 nm chain example documentation is at:
 
 - `docs/examples/canonical-1560nm-chain.md`
+
+
+Toy amplifier A/B example documentation is available at:
+
+- `docs/examples/toy-fiber-amp-spm.md`
 
 
 ## Outputs and provenance
