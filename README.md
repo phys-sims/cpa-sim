@@ -123,6 +123,11 @@ python scripts/examples/wust_gnlse_fiber_example.py --out artifacts/fiber-exampl
 
 For configuration/units details, see `docs/examples/wust-gnlse-fiber-example.md`.
 
+Canonical end-to-end 1560 nm chain example documentation is at:
+
+- `docs/examples/canonical-1560nm-chain.md`
+
+
 ## Outputs and provenance
 
 A run returns a `StageResult` with:
