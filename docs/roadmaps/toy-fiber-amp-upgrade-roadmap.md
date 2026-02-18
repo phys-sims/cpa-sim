@@ -1,7 +1,7 @@
 # Toy Fiber Amplifier Upgrade Roadmap (v1-compatible, fast, deterministic)
 
-**Last updated:** 2026-02-18  
-**Audience:** implementation agent + human reviewer  
+**Last updated:** 2026-02-18
+**Audience:** implementation agent + human reviewer
 **Depends on:**
 - `docs/adr/ADR-0001-conventions-units.md`
 - `docs/adr/ADR-0002-result-schema-contract.md`
