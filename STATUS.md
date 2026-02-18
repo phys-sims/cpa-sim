@@ -5,7 +5,7 @@
 ## Last updated
 - Date: 2026-02-18
 - By: @openai-codex
-- Scope: Updated the canonical 1560 nm example to remove the pre-DCF stretcher stage, added Treacy compressor-focused debug/probe tooling for docs workflows, and strengthened Treacy free-space unit coverage for compression/energy-preservation behavior.
+- Scope: Updated the canonical 1560 nm example to remove the pre-fiber stretcher stage and use regular-dispersion fiber broadening (positive chirp) before Treacy compression, added Treacy compressor-focused debug/probe tooling for docs workflows, and strengthened Treacy free-space unit coverage for compression/energy-preservation behavior.
 
 ---
 

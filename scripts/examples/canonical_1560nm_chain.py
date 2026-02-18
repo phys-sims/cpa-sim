@@ -28,11 +28,11 @@ def build_config(*, seed: int, ci_safe: bool) -> PipelineConfig:
     if ci_safe:
         n_samples = 256
         time_window_fs = 2400.0
-        fiber_length_m = 0.25
+        fiber_length_m = 2.0
     else:
         n_samples = 1024
         time_window_fs = 6000.0
-        fiber_length_m = 1.0
+        fiber_length_m = 12.0
 
     laser_gen = LaserGenCfg(
         spec=LaserSpec(
@@ -49,14 +49,14 @@ def build_config(*, seed: int, ci_safe: bool) -> PipelineConfig:
 
     stages = [
         FiberCfg(
-            name="fiber_dcf_1560nm",
+            name="fiber_regular_disp_1560nm",
             physics=FiberPhysicsCfg(
                 length_m=fiber_length_m,
                 loss_db_per_m=0.2,
                 gamma_1_per_w_m=0.003,
                 dispersion=DispersionTaylorCfg(
-                    # ADR sign convention: anomalous beta2 is negative.
-                    betas_psn_per_m=[-0.022],
+                    # Regular-dispersion broadening for positive chirp before Treacy compression.
+                    betas_psn_per_m=[0.022],
                 ),
             ),
         ),

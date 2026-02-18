@@ -8,7 +8,7 @@ This guide shows how to run the canonical 1560 nm CPA chain example and publish 
 
 The script `scripts/examples/canonical_1560nm_chain.py` builds and runs a deterministic CPA chain with explicit stage ordering:
 
-1. **Fiber prechirp**: DCF-like `FiberCfg` at **1560 nm** with anomalous dispersion sign convention (`beta2 < 0`)
+1. **Fiber broadening**: regular-dispersion `FiberCfg` at **1560 nm** (`beta2 > 0`) with enough length to create significant positive chirp
 2. **Amplification**: EDFA-like gain using current `simple_gain` (`AmpCfg`)
 3. **Compressor**: `TreacyGratingPairCfg` (`treacy_compressor`) as phase action
 
@@ -45,7 +45,7 @@ python scripts/examples/canonical_1560nm_chain.py \
 ## Treacy compressor debug/probe script
 
 To debug compressor behavior directly, use `scripts/examples/treacy_compressor_probe.py`.
-This script scans Treacy grating separation while keeping the 1560 nm DCF prechirp path fixed, and writes:
+This script scans Treacy grating separation while keeping the 1560 nm regular-dispersion broadening path fixed, and writes:
 
 - `probe_summary.json` (full scan + best point)
 - `probe_results.csv` (quick spreadsheet/plot input)
@@ -68,7 +68,7 @@ You should see:
 - `artifacts/.../run_summary.json`
 - per-stage SVG files in your `--plot-dir`, e.g.
   - `laser_init_time_intensity.svg`
-  - `fiber_dcf_1560nm_time_intensity.svg`
+  - `fiber_regular_disp_1560nm_time_intensity.svg`
   - `edfa_like_gain_time_intensity.svg`
   - `treacy_compressor_time_intensity.svg`
   - `metrics_time_intensity.svg`
@@ -129,10 +129,10 @@ Example markdown section for your report:
 ## Canonical 1560 nm chain outputs
 
 ### Fiber stage (time intensity)
-![Fiber stage time intensity](images/fiber_dcf_1560nm_time_intensity.png)
+![Fiber stage time intensity](images/fiber_regular_disp_1560nm_time_intensity.png)
 
 ### Fiber stage (spectrum)
-![Fiber stage spectrum](images/fiber_dcf_1560nm_spectrum.png)
+![Fiber stage spectrum](images/fiber_regular_disp_1560nm_spectrum.png)
 
 ### Compressor stage (time intensity)
 ![Compressor stage time intensity](images/treacy_compressor_time_intensity.png)

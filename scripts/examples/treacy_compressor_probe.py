@@ -37,11 +37,11 @@ def _build_cfg(*, seed: int, separation_um: float, ci_safe: bool) -> PipelineCon
     if ci_safe:
         n_samples = 256
         time_window_fs = 2400.0
-        fiber_length_m = 0.2
+        fiber_length_m = 2.0
     else:
         n_samples = 1024
         time_window_fs = 6000.0
-        fiber_length_m = 1.0
+        fiber_length_m = 12.0
 
     return PipelineConfig(
         runtime=RuntimeCfg(seed=seed),
@@ -59,12 +59,12 @@ def _build_cfg(*, seed: int, separation_um: float, ci_safe: bool) -> PipelineCon
         ),
         stages=[
             FiberCfg(
-                name="fiber_dcf_1560nm",
+                name="fiber_regular_disp_1560nm",
                 physics=FiberPhysicsCfg(
                     length_m=fiber_length_m,
                     loss_db_per_m=0.2,
                     gamma_1_per_w_m=0.0,
-                    dispersion=DispersionTaylorCfg(betas_psn_per_m=[-0.022]),
+                    dispersion=DispersionTaylorCfg(betas_psn_per_m=[0.022]),
                 ),
             ),
             TreacyGratingPairCfg(
@@ -141,7 +141,7 @@ def run_probe(
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Scan Treacy separation to debug compressor behavior against DCF prechirp."
+        description="Scan Treacy separation to debug compressor behavior against regular-dispersion fiber chirp."
     )
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument("--seed", type=int, default=1560)
