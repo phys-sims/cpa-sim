@@ -5,7 +5,7 @@
 ## Last updated
 - Date: 2026-02-18
 - By: @openai-codex
-- Scope: Added configurable stage-order support via `PipelineConfig.stages` (arbitrary free-space/fiber/amp permutations with laser_gen+metrics always anchored), added policy-driven per-stage SVG plot emission, expanded integration coverage for reordered/baseline chains and stage-plot artifacts, and updated README documentation for the new pipeline configuration and policy behavior.
+- Scope: Added a packaged CLI entrypoint (`cpa-sim run <config.yaml> --out <dir>`) that loads YAML into `PipelineConfig`, runs the pipeline, and writes overall/stage metrics plus an artifact index JSON; added subprocess-based integration coverage for CLI execution and output files.
 
 ---
 
@@ -14,8 +14,8 @@
 | Check | Command | Status | Last run | Notes |
 | --- | --- | --- | --- | --- |
 | Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-02-18 | Passed; pre-commit reported only a deprecation warning for `default_stages`. |
-| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-02-18 | Success: no issues found in 36 source files. |
-| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-18 | 29 passed, 1 deselected (includes configurable stage-order and stage-plot policy integration coverage). |
+| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-02-18 | Success: no issues found in 37 source files. |
+| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-18 | 30 passed, 1 deselected (includes new CLI integration coverage). |
 | Pytest physics (supplemental) | `python -m pytest -q -m physics --durations=10` | ⬜ | — | Not rerun in this change set. |
 | Pytest slow (supplemental) | `python -m pytest -q -m slow --durations=10` | ⬜ | — |  |
 | Pytest gnlse optional (supplemental) | `python -m pytest -q -m gnlse --durations=10` | ✅ | 2026-02-17 | 4 passed, 15 deselected (includes new example artifact test). |
@@ -83,7 +83,7 @@ Fill these in after first green run; keep them current.
 
 ### Release readiness
 - [ ] README quickstart + one runnable config
-- [ ] CLI stable (`cpa-sim run ...`)
+- [x] CLI stable (`cpa-sim run ...`)
 - [ ] CHANGELOG + versioning policy
 - [ ] PyPI build passes (`python -m build`)
 
