@@ -7,28 +7,9 @@ from typing import Any
 
 from toy_amp_case_a_direct import run_example as run_case_a
 from toy_amp_case_b_cpa import run_example as run_case_b
+from toy_amp_shared import shared_laser_spec_summary
 
 DEFAULT_OUT_DIR = Path("artifacts/toy-amp-case-ab")
-
-METRICS_TO_COMPARE = (
-    "laser.energy_au",
-    "toy_amp.energy_in_au",
-    "toy_amp.energy_out_au",
-    "toy_amp.peak_power_in_au",
-    "toy_amp.peak_power_out_au",
-    "toy_amp.bandwidth_in_rad_per_fs",
-    "toy_amp.bandwidth_out_rad_per_fs",
-    "toy_amp.b_integral_proxy_rad",
-    "pipeline.final_energy_au",
-    "pipeline.final_peak_power_au",
-    "pipeline.final_bandwidth_rad_per_fs",
-)
-
-
-def _extract_metrics(payload: dict[str, Any]) -> dict[str, float | None]:
-    raw = payload.get("metrics", {})
-    return {name: raw.get(name) for name in METRICS_TO_COMPARE}
-
 
 def run_comparison(*, out_dir: Path, seed: int, emit_plots: bool) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -38,28 +19,20 @@ def run_comparison(*, out_dir: Path, seed: int, emit_plots: bool) -> dict[str, A
 
     comparison = {
         "seed": seed,
-        "laser_gen_is_explicit": {
-            "case_a": "laser_init_case_a",
-            "case_b": "laser_init_case_b",
-            "shared_spec": {
-                "shape": "gaussian",
-                "amplitude": 1.0,
-                "width_fs": 100.0,
-                "center_wavelength_nm": 1030.0,
-                "n_samples": 512,
-                "time_window_fs": 3000.0,
-            },
+        "laser_gen": {
+            "source": "toy_amp_shared.build_shared_laser_gen",
+            "shared_spec": shared_laser_spec_summary(),
         },
         "cases": {
             "A_direct": {
                 "description": case_a["description"],
                 "summary_path": str(out_dir / "case-a" / "run_summary.json"),
-                "metrics": _extract_metrics(case_a),
+                "comparison_metrics": case_a["comparison_metrics"],
             },
             "B_cpa": {
                 "description": case_b["description"],
                 "summary_path": str(out_dir / "case-b" / "run_summary.json"),
-                "metrics": _extract_metrics(case_b),
+                "comparison_metrics": case_b["comparison_metrics"],
             },
         },
     }
@@ -84,7 +57,7 @@ def main() -> None:
     args = _build_parser().parse_args()
     comparison = run_comparison(out_dir=args.out, seed=args.seed, emit_plots=args.emit_plots)
     print(f"wrote comparison: {args.out / 'comparison_summary.json'}")
-    print(f"compared metrics: {len(comparison['cases']['A_direct']['metrics'])}")
+    print(f"compared metrics: {len(comparison['cases']['A_direct']['comparison_metrics'])}")
 
 
 if __name__ == "__main__":

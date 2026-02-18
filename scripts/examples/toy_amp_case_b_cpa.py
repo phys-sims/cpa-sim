@@ -9,20 +9,24 @@ from typing import Any
 import numpy as np
 
 from cpa_sim.models import (
-    BeamSpec,
     DispersionTaylorCfg,
     FiberCfg,
     FiberPhysicsCfg,
-    LaserGenCfg,
-    LaserSpec,
     PipelineConfig,
-    PulseSpec,
     RuntimeCfg,
     ToyFiberAmpCfg,
     TreacyGratingPairCfg,
     WustGnlseNumericsCfg,
 )
 from cpa_sim.pipeline import run_pipeline
+from toy_amp_shared import build_shared_laser_gen
+
+def _metric_by_suffix(metrics: dict[str, Any], suffix: str) -> float | None:
+    for key, value in metrics.items():
+        if key.endswith(suffix):
+            return value
+    return None
+
 
 DEFAULT_OUT_DIR = Path("artifacts/toy-amp-case-b")
 
@@ -78,20 +82,7 @@ def build_config(*, seed: int) -> PipelineConfig:
 
     return PipelineConfig(
         runtime=RuntimeCfg(seed=seed),
-        laser_gen=LaserGenCfg(
-            name="laser_init_case_b",
-            spec=LaserSpec(
-                pulse=PulseSpec(
-                    shape="sech2",
-                    amplitude=1.0,
-                    width_fs=2_000.0,
-                    center_wavelength_nm=1560.0,
-                    n_samples=512,
-                    time_window_fs=120_000.0,
-                ),
-                beam=BeamSpec(radius_mm=1.0, m2=1.0),
-            ),
-        ),
+        laser_gen=build_shared_laser_gen(),
         stages=[
             _build_stretcher_stage(
                 length_m=stretcher_length_m,
@@ -131,6 +122,18 @@ def run_example(*, out_dir: Path, seed: int, emit_plots: bool) -> dict[str, Any]
         "seed": seed,
         "matching_criterion": "output_energy",
         "description": "CPA-style fiber stretcher -> EDFA-like toy fiber amp -> Treacy compressor chain.",
+        "comparison_metrics": {
+            "energy_in_au": _metric_by_suffix(result.metrics, ".energy_in_au"),
+            "energy_out_au": _metric_by_suffix(result.metrics, ".energy_out_au"),
+            "peak_power_in_au": _metric_by_suffix(result.metrics, ".peak_power_in_au"),
+            "peak_power_out_au": _metric_by_suffix(result.metrics, ".peak_power_out_au"),
+            "bandwidth_in_rad_per_fs": _metric_by_suffix(result.metrics, ".bandwidth_in_rad_per_fs"),
+            "bandwidth_out_rad_per_fs": _metric_by_suffix(result.metrics, ".bandwidth_out_rad_per_fs"),
+            "b_integral_proxy_rad": _metric_by_suffix(result.metrics, ".b_integral_proxy_rad"),
+            "pipeline.final_energy_au": _metric_by_suffix(result.metrics, ".summary.energy_au"),
+            "pipeline.final_peak_power_au": _metric_by_suffix(result.metrics, ".summary.peak_intensity_au"),
+            "pipeline.final_bandwidth_rad_per_fs": _metric_by_suffix(result.metrics, ".summary.bandwidth_rad_per_fs"),
+        },
         "metrics": result.metrics,
         "artifacts": {**result.artifacts, **result.state.artifacts},
     }
