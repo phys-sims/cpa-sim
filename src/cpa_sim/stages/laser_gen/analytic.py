@@ -51,6 +51,13 @@ class AnalyticLaserGenStage(LaserStage[LaserGenCfg]):
             spectrum_w=spectrum,
         )
         out.beam = BeamState(radius_mm=spec.beam.radius_mm, m2=spec.beam.m2)
+        out.meta.setdefault("reference", {})
+        out.meta["reference"].update(
+            {
+                "intensity_t": intensity.tolist(),
+                "spectrum_w": spectrum.tolist(),
+            }
+        )
         stage_metrics = {
             "laser.energy_au": float(np.sum(intensity) * dt),
             "laser.peak_intensity_au": float(np.max(intensity)),

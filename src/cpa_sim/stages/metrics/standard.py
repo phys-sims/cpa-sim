@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
+from cpa_sim.metrics import amplification_ratio, normalized_cross_correlation
 from cpa_sim.models.config import MetricsCfg
 from cpa_sim.models.state import LaserState
 from cpa_sim.phys_pipeline_compat import PolicyBag, StageResult
@@ -29,11 +30,32 @@ class StandardMetricsStage(LaserStage[MetricsCfg]):
         fwhm = float(t[above[-1]] - t[above[0]]) if above.size > 1 else 0.0
         bandwidth = float(np.sqrt(np.average((np.asarray(out.pulse.grid.w) ** 2), weights=spec)))
 
+        laser_energy = float(out.metrics.get("laser.energy_au", 0.0))
+        amp_ratio = amplification_ratio(energy_out=energy, energy_in=laser_energy)
+
+        reference = out.meta.get("reference", {})
+        reference_intensity = np.asarray(reference.get("intensity_t", []), dtype=float)
+        reference_spectrum = np.asarray(reference.get("spectrum_w", []), dtype=float)
+
+        temporal_similarity = (
+            normalized_cross_correlation(reference_intensity, intensity)
+            if reference_intensity.shape == intensity.shape
+            else 0.0
+        )
+        spectral_similarity = (
+            normalized_cross_correlation(reference_spectrum, spec)
+            if reference_spectrum.shape == spec.shape
+            else 0.0
+        )
+
         stage_metrics = {
             "summary.energy_au": energy,
             "summary.peak_intensity_au": peak,
             "summary.fwhm_fs": fwhm,
             "summary.bandwidth_rad_per_fs": bandwidth,
+            "summary.amplification_ratio": amp_ratio,
+            "summary.temporal_shape_similarity": temporal_similarity,
+            "summary.spectral_shape_similarity": spectral_similarity,
         }
         out.metrics.update(stage_metrics)
         out.artifacts.update(maybe_emit_stage_plots(stage_name=self.name, state=out, policy=policy))
