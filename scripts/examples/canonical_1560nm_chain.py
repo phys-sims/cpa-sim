@@ -12,7 +12,6 @@ from cpa_sim.models import (
     FiberPhysicsCfg,
     LaserGenCfg,
     LaserSpec,
-    PhaseOnlyDispersionCfg,
     PipelineConfig,
     PulseSpec,
     RuntimeCfg,
@@ -49,12 +48,6 @@ def build_config(*, seed: int, ci_safe: bool) -> PipelineConfig:
     )
 
     stages = [
-        PhaseOnlyDispersionCfg(
-            name="stretcher_phase_only",
-            gdd_fs2=12000.0,
-            tod_fs3=5000.0,
-            apply_to_pulse=True,
-        ),
         FiberCfg(
             name="fiber_dcf_1560nm",
             physics=FiberPhysicsCfg(
@@ -122,7 +115,7 @@ def run_example(
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Run a canonical 1560 nm CPA chain with explicit stage ordering."
+        description="Run a canonical 1560 nm CPA chain with DCF prechirp and Treacy compression."
     )
     parser.add_argument(
         "--out",

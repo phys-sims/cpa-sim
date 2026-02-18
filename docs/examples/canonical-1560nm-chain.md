@@ -8,10 +8,9 @@ This guide shows how to run the canonical 1560 nm CPA chain example and publish 
 
 The script `scripts/examples/canonical_1560nm_chain.py` builds and runs a deterministic CPA chain with explicit stage ordering:
 
-1. **Stretcher precursor**: `PhaseOnlyDispersionCfg` (`stretcher_phase_only`)
-2. **Fiber propagation**: DCF-like `FiberCfg` at **1560 nm** with anomalous dispersion sign convention (`beta2 < 0`)
-3. **Amplification**: EDFA-like gain using current `simple_gain` (`AmpCfg`)
-4. **Compressor**: `TreacyGratingPairCfg` (`treacy_compressor`) as phase action
+1. **Fiber prechirp**: DCF-like `FiberCfg` at **1560 nm** with anomalous dispersion sign convention (`beta2 < 0`)
+2. **Amplification**: EDFA-like gain using current `simple_gain` (`AmpCfg`)
+3. **Compressor**: `TreacyGratingPairCfg` (`treacy_compressor`) as phase action
 
 Pipeline policy enables per-stage plots:
 
@@ -42,6 +41,26 @@ python scripts/examples/canonical_1560nm_chain.py \
   --seed 1560
 ```
 
+
+## Treacy compressor debug/probe script
+
+To debug compressor behavior directly, use `scripts/examples/treacy_compressor_probe.py`.
+This script scans Treacy grating separation while keeping the 1560 nm DCF prechirp path fixed, and writes:
+
+- `probe_summary.json` (full scan + best point)
+- `probe_results.csv` (quick spreadsheet/plot input)
+
+Example:
+
+```bash
+python scripts/examples/treacy_compressor_probe.py \
+  --ci-safe \
+  --out artifacts/treacy-compressor-probe-ci \
+  --start-um 60000 \
+  --stop-um 180000 \
+  --step-um 5000
+```
+
 ## 2) Inspect generated artifacts
 
 You should see:
@@ -49,7 +68,6 @@ You should see:
 - `artifacts/.../run_summary.json`
 - per-stage SVG files in your `--plot-dir`, e.g.
   - `laser_init_time_intensity.svg`
-  - `stretcher_phase_only_time_intensity.svg`
   - `fiber_dcf_1560nm_time_intensity.svg`
   - `edfa_like_gain_time_intensity.svg`
   - `treacy_compressor_time_intensity.svg`

@@ -69,6 +69,17 @@ def _generated_laser_state() -> LaserState:
     return AnalyticLaserGenStage(cfg.laser_gen).process(_empty_state()).state
 
 
+def _rms_width_fs(state: LaserState) -> float:
+    t_fs = np.asarray(state.pulse.grid.t)
+    intensity = np.asarray(state.pulse.intensity_t)
+    norm = float(np.sum(intensity))
+    if norm <= 0.0:
+        return 0.0
+    t_mean = float(np.sum(t_fs * intensity) / norm)
+    variance = float(np.sum(((t_fs - t_mean) ** 2) * intensity) / norm)
+    return float(np.sqrt(max(variance, 0.0)))
+
+
 @pytest.mark.unit
 def test_legacy_freespace_cfg_migrates() -> None:
     with warnings.catch_warnings(record=True) as caught:
@@ -199,3 +210,52 @@ def test_treacy_matches_golden_fixture_when_expectations_present() -> None:
                 abs(float(case["expect_diffraction_angle_deg"])),
                 abs=ATOL_ANGLE_DEG,
             )
+
+
+@pytest.mark.unit
+def test_treacy_can_compress_quadratic_positive_chirp() -> None:
+    initial = _generated_laser_state()
+    prechirped = (
+        TreacyGratingStage(
+            PhaseOnlyDispersionCfg(
+                name="prechirp", gdd_fs2=50_000.0, tod_fs3=0.0, apply_to_pulse=True
+            )
+        )
+        .process(initial)
+        .state
+    )
+
+    compressed = (
+        TreacyGratingStage(
+            TreacyGratingPairCfg(
+                name="compressor",
+                line_density_lpmm=1200.0,
+                incidence_angle_deg=35.0,
+                separation_um=20_000.0,
+                wavelength_nm=1030.0,
+                n_passes=2,
+                include_tod=False,
+                apply_to_pulse=True,
+            )
+        )
+        .process(prechirped)
+        .state
+    )
+
+    assert _rms_width_fs(compressed) < (_rms_width_fs(prechirped) - 5.0)
+
+
+@pytest.mark.unit
+def test_treacy_apply_to_pulse_preserves_energy() -> None:
+    initial = _generated_laser_state()
+    out = (
+        TreacyGratingStage(
+            TreacyGratingPairCfg(name="compressor", apply_to_pulse=True, separation_um=100_000.0)
+        )
+        .process(initial)
+        .state
+    )
+
+    assert np.sum(out.pulse.intensity_t) * out.pulse.grid.dt == pytest.approx(
+        np.sum(initial.pulse.intensity_t) * initial.pulse.grid.dt
+    )
