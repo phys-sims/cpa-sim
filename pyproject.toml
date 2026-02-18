@@ -11,8 +11,13 @@ dependencies = [
   "numpy",
   "scipy",
   "pydantic>=2.7",
-  "phys-pipeline"
+  "phys-pipeline",
+  "PyYAML",
 ]
+
+[project.scripts]
+cpa-sim = "cpa_sim.cli:main"
+
 [project.optional-dependencies]
 gnlse = [
   "gnlse"
