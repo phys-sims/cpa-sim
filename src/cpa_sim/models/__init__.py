@@ -1,5 +1,6 @@
 from cpa_sim.models.config import (
     AmpCfg,
+    AmpStageCfg,
     DispersionCfg,
     DispersionInterpolationCfg,
     DispersionTaylorCfg,
@@ -14,6 +15,7 @@ from cpa_sim.models.config import (
     PipelineConfig,
     RamanCfg,
     RuntimeCfg,
+    ToyFiberAmpCfg,
     ToyPhaseNumericsCfg,
     TreacyGratingPairCfg,
     WustGnlseNumericsCfg,
@@ -31,6 +33,7 @@ from cpa_sim.models.state import (
 
 __all__ = [
     "AmpCfg",
+    "AmpStageCfg",
     "BeamSpec",
     "BeamState",
     "DispersionCfg",
@@ -48,6 +51,7 @@ __all__ = [
     "LaserState",
     "MetricsCfg",
     "PipelineConfig",
+    "ToyFiberAmpCfg",
     "PulseGrid",
     "RamanCfg",
     "PulseSpec",

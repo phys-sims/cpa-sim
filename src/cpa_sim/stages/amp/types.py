@@ -1,3 +1,3 @@
-from cpa_sim.models.config import AmpCfg
+from cpa_sim.models.config import AmpStageCfg
 
-__all__ = ["AmpCfg"]
+__all__ = ["AmpStageCfg"]

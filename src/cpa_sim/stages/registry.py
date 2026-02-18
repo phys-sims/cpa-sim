@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from cpa_sim.models.config import AmpCfg, FiberCfg, FreeSpaceCfg, LaserGenCfg, MetricsCfg
-from cpa_sim.stages.amp import SimpleGainStage
+from cpa_sim.models.config import AmpStageCfg, FiberCfg, FreeSpaceCfg, LaserGenCfg, MetricsCfg
+from cpa_sim.stages.amp import SimpleGainStage, ToyFiberAmpStage
 from cpa_sim.stages.fiber import FiberStage
 from cpa_sim.stages.free_space import TreacyGratingStage
 from cpa_sim.stages.laser_gen import AnalyticLaserGenStage
@@ -14,7 +14,7 @@ FREE_SPACE_BACKENDS = {
     "treacy_grating_pair": TreacyGratingStage,
 }
 FIBER_BACKENDS = {"fiber": FiberStage}
-AMP_BACKENDS = {"simple_gain": SimpleGainStage}
+AMP_BACKENDS = {"simple_gain": SimpleGainStage, "toy_fiber_amp": ToyFiberAmpStage}
 METRICS_BACKENDS = {"standard": StandardMetricsStage}
 
 
@@ -30,7 +30,7 @@ def build_fiber_stage(cfg: FiberCfg) -> FiberStage:
     return FIBER_BACKENDS[cfg.kind](cfg)
 
 
-def build_amp_stage(cfg: AmpCfg) -> SimpleGainStage:
+def build_amp_stage(cfg: AmpStageCfg) -> SimpleGainStage | ToyFiberAmpStage:
     return AMP_BACKENDS[cfg.kind](cfg)
 
 
