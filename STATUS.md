@@ -3,9 +3,9 @@
 > **Source of truth:** Update this file whenever behavior, tests, schemas, or canonical examples change.
 
 ## Last updated
-- Date: 2026-02-17
+- Date: 2026-02-18
 - By: @openai-codex
-- Scope: Implemented FreeSpaceStage roadmap work for v1 Treacy grating-pair/phase-only configs, geometry-derived dispersion metrics, legacy config migration warnings, free-space unit+integration tests, Treacy golden fixture scaffolding with website-compatible units/pass handling, and clarified golden-test tolerances/sign-convention handling against LaserCalculator rounded outputs.
+- Scope: Added configurable stage-order support via `PipelineConfig.stages` (arbitrary free-space/fiber/amp permutations with laser_gen+metrics always anchored), added policy-driven per-stage SVG plot emission, expanded integration coverage for reordered/baseline chains and stage-plot artifacts, and updated README documentation for the new pipeline configuration and policy behavior.
 
 ---
 
@@ -13,9 +13,9 @@
 
 | Check | Command | Status | Last run | Notes |
 | --- | --- | --- | --- | --- |
-| Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-02-17 | Passed; pre-commit reported only a deprecation warning for `default_stages`. |
-| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-02-17 | Success: no issues found in 36 source files. |
-| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-17 | 26 passed, 1 deselected (includes new free-space unit/integration coverage). |
+| Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-02-18 | Passed; pre-commit reported only a deprecation warning for `default_stages`. |
+| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-02-18 | Success: no issues found in 36 source files. |
+| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-18 | 29 passed, 1 deselected (includes configurable stage-order and stage-plot policy integration coverage). |
 | Pytest physics (supplemental) | `python -m pytest -q -m physics --durations=10` | ⬜ | — | Not rerun in this change set. |
 | Pytest slow (supplemental) | `python -m pytest -q -m slow --durations=10` | ⬜ | — |  |
 | Pytest gnlse optional (supplemental) | `python -m pytest -q -m gnlse --durations=10` | ✅ | 2026-02-17 | 4 passed, 15 deselected (includes new example artifact test). |

@@ -12,6 +12,7 @@ from cpa_sim.models.config import (
 from cpa_sim.models.state import LaserState
 from cpa_sim.phys_pipeline_compat import PolicyBag, StageResult
 from cpa_sim.stages.base import LaserStage
+from cpa_sim.utils import maybe_emit_stage_plots
 
 C_UM_PER_FS = 0.299792458
 
@@ -134,4 +135,5 @@ class TreacyGratingStage(LaserStage[FreeSpaceCfg]):
         }
         stage_metrics.update({f"{self.name}.{key}": value for key, value in cfg_metrics.items()})
         out.metrics.update(stage_metrics)
+        out.artifacts.update(maybe_emit_stage_plots(stage_name=self.name, state=out, policy=policy))
         return StageResult(state=out, metrics=stage_metrics)

@@ -7,6 +7,7 @@ from typing import Any, cast
 import numpy as np
 
 from cpa_sim.models import PipelineConfig, RunProvenance
+from cpa_sim.models.config import AmpCfg, FiberCfg, PipelineStageCfg
 from cpa_sim.models.state import BeamState, LaserState, PulseGrid, PulseState
 from cpa_sim.phys_pipeline_compat import (
     PipelineStage,
@@ -23,16 +24,30 @@ from cpa_sim.stages.registry import (
 )
 
 
+def _build_configurable_stages(cfg: PipelineConfig) -> list[PipelineStage[LaserState, Any]]:
+    if cfg.stages is None:
+        ordered: list[PipelineStageCfg] = [cfg.stretcher, cfg.fiber, cfg.amp, cfg.compressor]
+    else:
+        ordered = cfg.stages
+
+    stages: list[PipelineStage[LaserState, Any]] = []
+    for stage_cfg in ordered:
+        if isinstance(stage_cfg, FiberCfg):
+            stages.append(build_fiber_stage(stage_cfg))
+        elif isinstance(stage_cfg, AmpCfg):
+            stages.append(build_amp_stage(stage_cfg))
+        else:
+            stages.append(build_free_space_stage(stage_cfg))
+    return stages
+
+
 def build_pipeline(
     cfg: PipelineConfig, *, policy: PolicyLike | None = None
 ) -> SequentialPipeline[LaserState]:
     """Build a deterministic sequential CPA chain aligned with phys-pipeline contracts."""
     stages: list[PipelineStage[LaserState, Any]] = [
         build_laser_gen_stage(cfg.laser_gen),
-        build_free_space_stage(cfg.stretcher),
-        build_fiber_stage(cfg.fiber),
-        build_amp_stage(cfg.amp),
-        build_free_space_stage(cfg.compressor),
+        *_build_configurable_stages(cfg),
         build_metrics_stage(cfg.metrics),
     ]
     return cast(

@@ -80,11 +80,11 @@ The top-level `PipelineConfig` includes these sections:
 
 - `runtime` (seed and run controls),
 - `laser_gen` (initial pulse/beam specification),
-- `stretcher` (free-space backend + GDD),
+- `stretcher` / `compressor` defaults (free-space configs used when `stages` is not set),
 - `fiber` (`FiberStageCfg` with stable `physics` plus backend-specific `numerics`),
 - `amp` (amplifier backend + gain),
-- `compressor` (free-space backend + GDD),
-- `metrics` (summary metric backend).
+- `stages` (optional arbitrary ordered list of `free_space`, `fiber`, and `amp` stage configs),
+- `metrics` (summary metric backend; always appended at pipeline end).
 
 This keeps public configuration stable while backend selection happens per stage via `kind`.
 
@@ -95,6 +95,19 @@ This keeps public configuration stable while backend selection happens per stage
 - `policy` is a pipeline-wide override bag passed at execution time for cross-cutting controls (debug/tolerances/instrumentation) without changing stage config shape.
 
 In short: `runtime` and `policy` are global execution concerns, while stage configs define the physical chain itself.
+
+### Configurable stage ordering
+
+`PipelineConfig.stages` allows arbitrary permutations of free-space, fiber, and amp stages.
+When omitted, the legacy default order remains `stretcher -> fiber -> amp -> compressor`.
+`laser_gen` is always the first stage and `metrics` is always the final stage, so baseline
+runs without stretching/compression can be expressed by omitting free-space entries from `stages`.
+
+### Stage plot policy
+
+Pass runtime policy `{"cpa.emit_stage_plots": true}` to emit per-stage time/spectrum SVG plots.
+Use `"cpa.stage_plot_dir"` to control the output directory (default: `artifacts/stage-plots`).
+
 
 ## Fiber stage example (WUST `gnlse`)
 

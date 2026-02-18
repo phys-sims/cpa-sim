@@ -6,6 +6,7 @@ from cpa_sim.models.config import LaserGenCfg
 from cpa_sim.models.state import BeamState, LaserState, PulseGrid, PulseState
 from cpa_sim.phys_pipeline_compat import PolicyBag, StageResult
 from cpa_sim.stages.base import LaserStage
+from cpa_sim.utils import maybe_emit_stage_plots
 
 
 class AnalyticLaserGenStage(LaserStage[LaserGenCfg]):
@@ -55,4 +56,5 @@ class AnalyticLaserGenStage(LaserStage[LaserGenCfg]):
             "laser.peak_intensity_au": float(np.max(intensity)),
         }
         out.metrics.update(stage_metrics)
+        out.artifacts.update(maybe_emit_stage_plots(stage_name=self.name, state=out, policy=policy))
         return StageResult(state=out, metrics=stage_metrics)
