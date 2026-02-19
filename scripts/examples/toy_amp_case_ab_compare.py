@@ -29,6 +29,7 @@ SHARED_AMP_KWARGS = {
     "length_m": 1.5,
     "beta2_s2_per_m": 0.0,
     "gamma_w_inv_m": 4e-3,
+    "gain_db": 9.0,
     "loss_db_per_m": 0.0,
     "n_steps": 20,
 }
@@ -89,19 +90,19 @@ def _build_stretcher_stage(*, length_m: float, beta2_ps2_per_m: float) -> FiberC
     )
 
 
-def _build_shared_amp_stage(*, gain_db: float) -> ToyFiberAmpCfg:
-    return ToyFiberAmpCfg(**SHARED_AMP_KWARGS, gain_db=gain_db)
+def _build_shared_amp_stage() -> ToyFiberAmpCfg:
+    return ToyFiberAmpCfg(**SHARED_AMP_KWARGS)
 
 
-def _build_case_a_config(*, seed: int, amp_gain_db: float) -> PipelineConfig:
+def _build_case_a_config(*, seed: int) -> PipelineConfig:
     return PipelineConfig(
         runtime=RuntimeCfg(seed=seed),
         laser_gen=build_shared_laser_gen(),
-        stages=[_build_shared_amp_stage(gain_db=amp_gain_db)],
+        stages=[_build_shared_amp_stage()],
     )
 
 
-def _build_case_b_config(*, seed: int, amp_gain_db: float) -> PipelineConfig:
+def _build_case_b_config(*, seed: int) -> PipelineConfig:
     target_stretch_ratio = 20.0
     input_width_ps = 2.0
     stretcher_length_m = 100.0
@@ -120,7 +121,7 @@ def _build_case_b_config(*, seed: int, amp_gain_db: float) -> PipelineConfig:
                 length_m=stretcher_length_m,
                 beta2_ps2_per_m=stretcher_beta2_ps2_per_m,
             ),
-            _build_shared_amp_stage(gain_db=amp_gain_db),
+            _build_shared_amp_stage(),
             TreacyGratingPairCfg(
                 name="compressor",
                 line_density_lpmm=600.0,
@@ -166,32 +167,31 @@ def _run_case(
     }
 
 
-def run_comparison(*, out_dir: Path, seed: int, emit_plots: bool, amp_gain_db: float) -> dict[str, Any]:
+def run_comparison(*, out_dir: Path, seed: int, emit_plots: bool) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     case_a = _run_case(
         case_name="A_direct",
         description="Direct seed pulse into shared toy fiber amp.",
-        cfg=_build_case_a_config(seed=seed, amp_gain_db=amp_gain_db),
+        cfg=_build_case_a_config(seed=seed),
         out_dir=out_dir / "case-a",
         emit_plots=emit_plots,
     )
     case_b = _run_case(
         case_name="B_cpa",
         description="CPA-style stretcher -> shared toy fiber amp -> Treacy compressor chain.",
-        cfg=_build_case_b_config(seed=seed, amp_gain_db=amp_gain_db),
+        cfg=_build_case_b_config(seed=seed),
         out_dir=out_dir / "case-b",
         emit_plots=emit_plots,
     )
 
     comparison = {
         "seed": seed,
-        "amp_gain_db": amp_gain_db,
         "laser_gen": {
             "source": "toy_amp_shared.build_shared_laser_gen",
             "shared_spec": shared_laser_spec_summary(),
         },
-        "shared_amp": {**SHARED_AMP_KWARGS, "gain_db": amp_gain_db},
+        "shared_amp": SHARED_AMP_KWARGS,
         "cases": {
             case_a["name"]: {
                 "description": case_a["description"],
@@ -218,7 +218,6 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument("--seed", type=int, default=7)
-    parser.add_argument("--amp-gain-db", type=float, default=9.0)
     parser.add_argument("--emit-plots", action="store_true")
     return parser
 
@@ -229,7 +228,6 @@ def main() -> None:
         out_dir=args.out,
         seed=args.seed,
         emit_plots=args.emit_plots,
-        amp_gain_db=args.amp_gain_db,
     )
     print(f"wrote comparison: {args.out / 'comparison_summary.json'}")
     print(f"compared metrics: {len(comparison['cases']['A_direct']['comparison_metrics'])}")
