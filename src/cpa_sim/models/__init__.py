@@ -1,5 +1,4 @@
 from cpa_sim.models.config import (
-    AmpCfg,
     AmpStageCfg,
     DispersionCfg,
     DispersionInterpolationCfg,
@@ -7,7 +6,6 @@ from cpa_sim.models.config import (
     FiberCfg,
     FiberNumericsCfg,
     FiberPhysicsCfg,
-    FiberStageCfg,
     FreeSpaceCfg,
     LaserGenCfg,
     MetricsCfg,
@@ -33,7 +31,6 @@ from cpa_sim.models.state import (
 )
 
 __all__ = [
-    "AmpCfg",
     "SimpleGainCfg",
     "AmpStageCfg",
     "BeamSpec",
@@ -44,7 +41,6 @@ __all__ = [
     "FiberCfg",
     "FiberNumericsCfg",
     "FiberPhysicsCfg",
-    "FiberStageCfg",
     "FreeSpaceCfg",
     "PhaseOnlyDispersionCfg",
     "TreacyGratingPairCfg",

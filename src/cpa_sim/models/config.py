@@ -150,33 +150,13 @@ FiberNumericsCfg = Annotated[
 ]
 
 
-class FiberStageCfg(StageConfig):
+class FiberCfg(StageConfig):
     model_config = ConfigDict(frozen=True)
 
     name: str = "fiber"
     kind: Literal["fiber"] = "fiber"
     physics: FiberPhysicsCfg = Field(default_factory=FiberPhysicsCfg)
     numerics: FiberNumericsCfg = Field(default_factory=ToyPhaseNumericsCfg)
-
-
-class FiberCfg(FiberStageCfg):
-    """Backwards-compatible alias for pre-Strategy-B configs."""
-
-    @model_validator(mode="before")
-    @classmethod
-    def _migrate_legacy_shape(cls, data: object) -> object:
-        if not isinstance(data, dict):
-            return data
-        payload = dict(data)
-        legacy_kind = payload.get("kind")
-        if legacy_kind == "glnse":
-            payload["kind"] = "fiber"
-        if "nonlinear_phase_rad" in payload and "numerics" not in payload:
-            payload["numerics"] = {
-                "backend": "toy_phase",
-                "nonlinear_phase_rad": payload.pop("nonlinear_phase_rad"),
-            }
-        return payload
 
 
 class SimpleGainCfg(StageConfig):
@@ -263,7 +243,3 @@ class PipelineConfig(BaseModel):
                 _migrate_legacy_free_space_cfg(stage_cfg) for stage_cfg in payload["stages"]
             ]
         return payload
-
-
-# Backwards-compatible alias retained for pre-rename imports.
-AmpCfg = SimpleGainCfg
