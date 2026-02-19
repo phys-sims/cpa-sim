@@ -150,7 +150,7 @@ FiberNumericsCfg = Annotated[
 ]
 
 
-class FiberStageCfg(StageConfig):
+class FiberCfg(StageConfig):
     model_config = ConfigDict(frozen=True)
 
     name: str = "fiber"
@@ -159,27 +159,7 @@ class FiberStageCfg(StageConfig):
     numerics: FiberNumericsCfg = Field(default_factory=ToyPhaseNumericsCfg)
 
 
-class FiberCfg(FiberStageCfg):
-    """Backwards-compatible alias for pre-Strategy-B configs."""
-
-    @model_validator(mode="before")
-    @classmethod
-    def _migrate_legacy_shape(cls, data: object) -> object:
-        if not isinstance(data, dict):
-            return data
-        payload = dict(data)
-        legacy_kind = payload.get("kind")
-        if legacy_kind == "glnse":
-            payload["kind"] = "fiber"
-        if "nonlinear_phase_rad" in payload and "numerics" not in payload:
-            payload["numerics"] = {
-                "backend": "toy_phase",
-                "nonlinear_phase_rad": payload.pop("nonlinear_phase_rad"),
-            }
-        return payload
-
-
-class AmpCfg(StageConfig):
+class SimpleGainCfg(StageConfig):
     model_config = ConfigDict(frozen=True)
 
     name: str = "amp"
@@ -215,7 +195,7 @@ class ToyFiberAmpCfg(StageConfig):
 
 
 AmpStageCfg = Annotated[
-    AmpCfg | ToyFiberAmpCfg,
+    SimpleGainCfg | ToyFiberAmpCfg,
     Field(discriminator="kind"),
 ]
 
@@ -242,7 +222,7 @@ class PipelineConfig(BaseModel):
         default_factory=lambda: PhaseOnlyDispersionCfg(name="stretcher")
     )
     fiber: FiberCfg = Field(default_factory=FiberCfg)
-    amp: AmpStageCfg = Field(default_factory=AmpCfg)
+    amp: AmpStageCfg = Field(default_factory=SimpleGainCfg)
     compressor: FreeSpaceCfg = Field(
         default_factory=lambda: TreacyGratingPairCfg(name="compressor")
     )

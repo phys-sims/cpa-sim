@@ -2,7 +2,13 @@ import importlib.util
 
 import pytest
 
-from cpa_sim.models import AmpCfg, FiberCfg, MetricsCfg, PhaseOnlyDispersionCfg, PipelineConfig
+from cpa_sim.models import (
+    FiberCfg,
+    MetricsCfg,
+    PhaseOnlyDispersionCfg,
+    PipelineConfig,
+    SimpleGainCfg,
+)
 from cpa_sim.pipeline import build_pipeline, run_pipeline
 
 
@@ -10,7 +16,7 @@ from cpa_sim.pipeline import build_pipeline, run_pipeline
 def test_pipeline_supports_arbitrary_stage_permutation() -> None:
     cfg = PipelineConfig(
         stages=[
-            AmpCfg(name="pre_amp", gain_linear=1.1),
+            SimpleGainCfg(name="pre_amp", gain_linear=1.1),
             FiberCfg(name="fiber_main"),
             PhaseOnlyDispersionCfg(name="post_fs", gdd_fs2=1500.0, tod_fs3=0.0),
         ],
@@ -28,7 +34,7 @@ def test_pipeline_can_run_without_stretcher_and_compressor() -> None:
     cfg = PipelineConfig(
         stages=[
             FiberCfg(name="fiber_only"),
-            AmpCfg(name="amp_only", gain_linear=1.0),
+            SimpleGainCfg(name="amp_only", gain_linear=1.0),
         ]
     )
 
@@ -46,7 +52,7 @@ def test_stage_plot_policy_emits_artifacts_for_all_stages(tmp_path) -> None:
         stages=[
             PhaseOnlyDispersionCfg(name="fs_a", gdd_fs2=500.0, tod_fs3=0.0),
             FiberCfg(name="fiber_a"),
-            AmpCfg(name="amp_a", gain_linear=1.0),
+            SimpleGainCfg(name="amp_a", gain_linear=1.0),
         ]
     )
 

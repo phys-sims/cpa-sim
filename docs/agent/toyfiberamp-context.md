@@ -10,7 +10,7 @@ the physics that matters for CPA (dispersion + Kerr SPM happening *along* the fi
 
 This doc supersedes the older “set `gain_db` directly” guidance.
 
-**Source being clarified/replaced:** `toyamp_amp_power_w_agent_context.md`. fileciteturn1file0  
+**Source being clarified/replaced:** `toyamp_amp_power_w_agent_context.md`. fileciteturn1file0
 **ADR template:** `_template-full.md`. fileciteturn1file1
 
 ---
@@ -56,7 +56,7 @@ E_\text{pulse} = \frac{P_\text{avg}}{f_\text{rep}},
 ### Field normalization (critical)
 The mapping is physically meaningful only if the simulator uses:
 - \(|A(t)|^2\) = **instantaneous power** in Watts
-- `dt` is in seconds  
+- `dt` is in seconds
 Then:
 \[
 E_\text{pulse} = \int |A(t)|^2\,dt

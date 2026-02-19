@@ -1,6 +1,6 @@
 import pytest
 
-from cpa_sim.models import AmpCfg, PhaseOnlyDispersionCfg, PipelineConfig, ToyFiberAmpCfg
+from cpa_sim.models import PhaseOnlyDispersionCfg, PipelineConfig, SimpleGainCfg, ToyFiberAmpCfg
 from cpa_sim.pipeline import run_pipeline
 
 
@@ -32,13 +32,13 @@ def test_toy_fiber_amp_gain_only_scales_energy() -> None:
 def test_toy_fiber_amp_spm_broadens_spectrum() -> None:
     no_spm = run_pipeline(
         PipelineConfig(
-            amp=AmpCfg(gain_linear=1.0),
+            amp=SimpleGainCfg(gain_linear=1.0),
             stages=[ToyFiberAmpCfg(name="toy_amp", gain_db=0.0, gamma_w_inv_m=0.0, n_steps=10)],
         )
     )
     with_spm = run_pipeline(
         PipelineConfig(
-            amp=AmpCfg(gain_linear=1.0),
+            amp=SimpleGainCfg(gain_linear=1.0),
             stages=[ToyFiberAmpCfg(name="toy_amp", gain_db=0.0, gamma_w_inv_m=3e-3, n_steps=10)],
         )
     )

@@ -3,11 +3,11 @@ import math
 import pytest
 
 from cpa_sim.models import (
-    AmpCfg,
     FiberCfg,
     MetricsCfg,
     PhaseOnlyDispersionCfg,
     PipelineConfig,
+    SimpleGainCfg,
     TreacyGratingPairCfg,
 )
 from cpa_sim.pipeline import run_pipeline
@@ -18,7 +18,7 @@ def test_freespace_compressor_metrics_present_and_finite() -> None:
     cfg = PipelineConfig(
         stretcher=PhaseOnlyDispersionCfg(name="stretcher", gdd_fs2=5000.0, tod_fs3=0.0),
         fiber=FiberCfg(),
-        amp=AmpCfg(gain_linear=1.0),
+        amp=SimpleGainCfg(gain_linear=1.0),
         compressor=TreacyGratingPairCfg(name="compressor", apply_to_pulse=True),
         metrics=MetricsCfg(name="metrics"),
     )
