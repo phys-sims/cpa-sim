@@ -12,9 +12,12 @@ behavior without introducing heavy dependencies or claiming full EDFA fidelity.
 
 Add a new amp backend config `kind: toy_fiber_amp` with parameters:
 - `length_m`, `beta2_s2_per_m`, `gamma_w_inv_m`,
-- `gain_db`, `loss_db_per_m`, `n_steps`.
+- `amp_power_w`, optional deprecated `gain_db`, `loss_db_per_m`, `n_steps`.
 
 Implementation uses a deterministic split-step method with distributed gain/loss and Kerr SPM.
+
+The preferred user knob is `amp_power_w` (average output power at stage output/measurement plane).
+The stage derives distributed gain internally using pulse energy and `rep_rate_mhz`.
 
 ## Assumptions and explicit non-goals
 

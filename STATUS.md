@@ -5,7 +5,7 @@
 ## Last updated
 - Date: 2026-02-19
 - By: @openai-codex
-- Scope: Refined the consolidated toy amp A-vs-B script so shared amplifier gain is hardwired in one shared amp stage config (no CLI gain override), and synchronized integration/docs with the fixed shared-amp behavior.
+- Scope: Rebuilt toy fiber amp controls around amp_power_w + rep_rate_mhz mapping, updated stage/tests/examples/docs, and synchronized A-vs-B comparison outputs with measurement-plane average power targets.
 
 ---
 

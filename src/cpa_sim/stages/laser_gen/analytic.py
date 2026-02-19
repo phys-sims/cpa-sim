@@ -58,6 +58,7 @@ class AnalyticLaserGenStage(LaserStage[LaserGenCfg]):
                 "spectrum_w": spectrum.tolist(),
             }
         )
+        out.meta["rep_rate_mhz"] = float(spec.pulse.rep_rate_mhz)
         stage_metrics = {
             "laser.energy_au": float(np.sum(intensity) * dt),
             "laser.peak_intensity_au": float(np.max(intensity)),

@@ -29,7 +29,7 @@ SHARED_AMP_KWARGS = {
     "length_m": 1.5,
     "beta2_s2_per_m": 0.0,
     "gamma_w_inv_m": 4e-3,
-    "gain_db": 9.0,
+    "amp_power_w": 0.12,
     "loss_db_per_m": 0.0,
     "n_steps": 20,
 }
@@ -46,6 +46,8 @@ def _extract_comparison_metrics(metrics: dict[str, Any]) -> dict[str, float | No
     return {
         "energy_in_au": _metric_by_suffix(metrics, ".energy_in_au"),
         "energy_out_au": _metric_by_suffix(metrics, ".energy_out_au"),
+        "power_in_avg_w": _metric_by_suffix(metrics, ".power_in_avg_w"),
+        "power_out_avg_w": _metric_by_suffix(metrics, ".power_out_avg_w"),
         "peak_power_in_au": _metric_by_suffix(metrics, ".peak_power_in_au"),
         "peak_power_out_au": _metric_by_suffix(metrics, ".peak_power_out_au"),
         "bandwidth_in_rad_per_fs": _metric_by_suffix(metrics, ".bandwidth_in_rad_per_fs"),

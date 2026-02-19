@@ -15,6 +15,7 @@ def build_shared_laser_gen() -> LaserGenCfg:
                 amplitude=1.0,
                 width_fs=2_000.0,
                 center_wavelength_nm=1560.0,
+                rep_rate_mhz=80.0,
                 n_samples=512,
                 time_window_fs=120_000.0,
             ),
@@ -32,6 +33,7 @@ def shared_laser_spec_summary() -> dict[str, float | str]:
         "amplitude": pulse.amplitude,
         "width_fs": pulse.width_fs,
         "center_wavelength_nm": pulse.center_wavelength_nm,
+        "rep_rate_mhz": pulse.rep_rate_mhz,
         "n_samples": pulse.n_samples,
         "time_window_fs": pulse.time_window_fs,
     }
