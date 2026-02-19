@@ -33,7 +33,7 @@ def test_toy_amp_case_ab_comparison_writes_outputs(tmp_path: Path) -> None:
     case_a = comparison["cases"]["A_direct"]
     case_b = comparison["cases"]["B_cpa"]
 
-    assert comparison["shared_amp"]["gain_db"] == pytest.approx(9.0)
+    assert comparison["shared_amp"]["amp_power_w"] == pytest.approx(0.12)
 
     assert comparison["laser_gen"]["shared_spec"]["name"] == "laser_init_case_shared"
     assert comparison["laser_gen"]["shared_spec"]["center_wavelength_nm"] == pytest.approx(1560.0)
@@ -41,6 +41,8 @@ def test_toy_amp_case_ab_comparison_writes_outputs(tmp_path: Path) -> None:
     for metric_name in (
         "energy_in_au",
         "energy_out_au",
+        "power_in_avg_w",
+        "power_out_avg_w",
         "peak_power_in_au",
         "peak_power_out_au",
         "pipeline.final_energy_au",

@@ -175,7 +175,8 @@ class ToyFiberAmpCfg(StageConfig):
     length_m: float = 1.0
     beta2_s2_per_m: float = 0.0
     gamma_w_inv_m: float = 0.0
-    gain_db: float = 0.0
+    amp_power_w: float | None = None
+    gain_db: float | None = None
     loss_db_per_m: float = 0.0
     n_steps: int = 8
 
@@ -192,6 +193,38 @@ class ToyFiberAmpCfg(StageConfig):
         if value < 1:
             raise ValueError("ToyFiberAmpCfg.n_steps must be >= 1.")
         return value
+
+    @field_validator("amp_power_w")
+    @classmethod
+    def _validate_amp_power_w(cls, value: float | None) -> float | None:
+        if value is None:
+            return value
+        if value <= 0.0:
+            raise ValueError("ToyFiberAmpCfg.amp_power_w must be > 0.")
+        return value
+
+    @field_validator("gain_db")
+    @classmethod
+    def _validate_gain_db(cls, value: float | None) -> float | None:
+        if value is None:
+            return value
+        warnings.warn(
+            "ToyFiberAmpCfg.gain_db is deprecated; use amp_power_w instead.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return value
+
+    @model_validator(mode="after")
+    def _validate_gain_knob(self) -> ToyFiberAmpCfg:
+        has_amp_power = self.amp_power_w is not None
+        has_gain_db = self.gain_db is not None
+        if has_amp_power == has_gain_db:
+            raise ValueError(
+                "ToyFiberAmpCfg requires exactly one of amp_power_w or gain_db. "
+                "Set amp_power_w for new configs; gain_db is deprecated."
+            )
+        return self
 
 
 AmpStageCfg = Annotated[

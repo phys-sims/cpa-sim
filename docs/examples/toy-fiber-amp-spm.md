@@ -5,7 +5,7 @@
 This backend (`kind: toy_fiber_amp`) is a deterministic teaching/CI model, not a full EDFA model.
 
 It includes only:
-- distributed scalar gain (`gain_db`) across length,
+- stage-derived distributed gain from target average output power (`amp_power_w`),
 - optional distributed passive loss (`loss_db_per_m`),
 - second-order dispersion (`beta2_s2_per_m`),
 - Kerr SPM (`gamma_w_inv_m`) via split-step propagation.
@@ -14,7 +14,7 @@ It does **not** include ASE, pump depletion, or wavelength-dependent gain.
 
 ## Matching criterion used in examples
 
-Both examples use **output energy matching** (same `gain_db` and physical length settings).
+Both examples use **measurement-plane average power matching** (same `amp_power_w` and physical length settings).
 Comparisons of nonlinear distortion are interpreted with that criterion.
 
 ## Example A: direct seed -> toy amp
@@ -57,7 +57,7 @@ This writes per-case summaries plus `comparison_summary.json` with the same key 
 ## Notes on metrics
 
 `toy_fiber_amp` emits stage metrics:
-- energy in/out (`energy_in_au`, `energy_out_au`),
+- energy in/out (`energy_in_au`, `energy_out_au`) and average power in/out (`power_in_avg_w`, `power_out_avg_w`),
 - peak power in/out (`peak_power_in_au`, `peak_power_out_au`),
 - RMS spectral bandwidth in/out (`bandwidth_in_rad_per_fs`, `bandwidth_out_rad_per_fs`),
 - B-integral proxy (`b_integral_proxy_rad = gamma * L * peak_power_in_au`).

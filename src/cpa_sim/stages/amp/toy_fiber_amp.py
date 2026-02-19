@@ -8,7 +8,6 @@ from cpa_sim.phys_pipeline_compat import PolicyBag, StageResult
 from cpa_sim.stages.base import LaserStage
 from cpa_sim.utils import maybe_emit_stage_plots
 
-_LOG10_DIV_10 = np.log(10.0) / 10.0
 _DB_TO_NEPER_POWER = np.log(10.0) / 10.0
 
 
@@ -27,13 +26,22 @@ class ToyFiberAmpStage(LaserStage[ToyFiberAmpCfg]):
         w = np.asarray(out.pulse.grid.w, dtype=np.float64)
 
         energy_in = _energy_au(field_t, dt=out.pulse.grid.dt)
+        rep_rate_hz = _rep_rate_hz(out.meta)
+        power_in_avg_w = energy_in * rep_rate_hz
         peak_in = float(np.max(np.abs(field_t) ** 2))
         bandwidth_in = _rms_bandwidth_rad_per_fs(
             w=w, spectrum=np.abs(np.fft.fftshift(np.fft.fft(np.fft.ifftshift(field_t)))) ** 2
         )
 
         dz = self.cfg.length_m / float(self.cfg.n_steps)
-        g_power_per_m = _power_gain_coeff_per_m(self.cfg.gain_db, self.cfg.length_m)
+        gain_db_applied = _resolve_gain_db(
+            amp_power_w=self.cfg.amp_power_w,
+            gain_db=self.cfg.gain_db,
+            power_in_avg_w=power_in_avg_w,
+            loss_db_per_m=self.cfg.loss_db_per_m,
+            length_m=self.cfg.length_m,
+        )
+        g_power_per_m = _power_gain_coeff_per_m(gain_db_applied, self.cfg.length_m)
         alpha_power_per_m = self.cfg.loss_db_per_m * _DB_TO_NEPER_POWER
         amp_half_linear = np.exp(0.25 * (g_power_per_m - alpha_power_per_m) * dz)
         linear_phase = np.exp(0.5j * self.cfg.beta2_s2_per_m * (w**2) * dz)
@@ -55,16 +63,20 @@ class ToyFiberAmpStage(LaserStage[ToyFiberAmpCfg]):
         out.pulse.spectrum_w = np.abs(out.pulse.field_w) ** 2
 
         energy_out = _energy_au(out.pulse.field_t, dt=out.pulse.grid.dt)
+        power_out_avg_w = energy_out * rep_rate_hz
         peak_out = float(np.max(out.pulse.intensity_t))
         bandwidth_out = _rms_bandwidth_rad_per_fs(w=w, spectrum=out.pulse.spectrum_w)
         b_integral_proxy = float(self.cfg.gamma_w_inv_m * self.cfg.length_m * peak_in)
 
         stage_metrics = {
-            f"{self.name}.gain_db": float(self.cfg.gain_db),
+            f"{self.name}.gain_db": float(gain_db_applied),
+            f"{self.name}.gain_db_applied": float(gain_db_applied),
             f"{self.name}.gain_linear": float(np.exp(g_power_per_m * self.cfg.length_m)),
             f"{self.name}.loss_db_per_m": float(self.cfg.loss_db_per_m),
             f"{self.name}.energy_in_au": energy_in,
             f"{self.name}.energy_out_au": energy_out,
+            f"{self.name}.power_in_avg_w": power_in_avg_w,
+            f"{self.name}.power_out_avg_w": power_out_avg_w,
             f"{self.name}.peak_power_in_au": peak_in,
             f"{self.name}.peak_power_out_au": peak_out,
             f"{self.name}.bandwidth_in_rad_per_fs": bandwidth_in,
@@ -103,3 +115,37 @@ def _rms_bandwidth_rad_per_fs(w: np.ndarray, spectrum: np.ndarray) -> float:
     mean = float(np.sum(w * spectrum) / total)
     centered = (w - mean) ** 2
     return float(np.sqrt(np.sum(centered * spectrum) / total))
+
+
+def _resolve_gain_db(
+    *,
+    amp_power_w: float | None,
+    gain_db: float | None,
+    power_in_avg_w: float,
+    loss_db_per_m: float,
+    length_m: float,
+) -> float:
+    if amp_power_w is not None:
+        if power_in_avg_w <= 0.0:
+            raise ValueError(
+                "ToyFiberAmpStage could not compute amp_power_w mapping because "
+                "input average power is not positive. Check pulse normalization, "
+                "rep_rate_mhz, and pulse window."
+            )
+        net_gain = amp_power_w / power_in_avg_w
+        if net_gain <= 0.0:
+            raise ValueError("ToyFiberAmpStage computed non-positive net gain from amp_power_w.")
+        return float(10.0 * np.log10(net_gain) + loss_db_per_m * length_m)
+    if gain_db is None:
+        raise ValueError("ToyFiberAmpCfg requires one of amp_power_w or gain_db.")
+    return float(gain_db)
+
+
+def _rep_rate_hz(meta: dict[str, object]) -> float:
+    rep_rate_mhz = meta.get("rep_rate_mhz")
+    if not isinstance(rep_rate_mhz, (float, int)):
+        raise ValueError("ToyFiberAmpStage requires meta['rep_rate_mhz'] populated by laser stage.")
+    rep_rate_hz = float(rep_rate_mhz) * 1e6
+    if rep_rate_hz <= 0.0:
+        raise ValueError("ToyFiberAmpStage requires rep_rate_mhz > 0.")
+    return rep_rate_hz

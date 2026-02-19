@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from typing import Any, Literal
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from cpa_sim.phys_pipeline_compat import State
 
@@ -30,8 +30,16 @@ class PulseSpec(BaseModel):
     amplitude: float = 1.0
     width_fs: float = 100.0
     center_wavelength_nm: float = 1030.0
+    rep_rate_mhz: float = 1.0
     n_samples: int = 256
     time_window_fs: float = 2000.0
+
+    @field_validator("rep_rate_mhz")
+    @classmethod
+    def _validate_rep_rate(cls, value: float) -> float:
+        if value <= 0.0:
+            raise ValueError("PulseSpec.rep_rate_mhz must be > 0.")
+        return value
 
 
 class BeamSpec(BaseModel):
