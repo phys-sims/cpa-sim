@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from cpa_sim.models.config import AmpCfg
+from cpa_sim.models.config import SimpleGainCfg
 from cpa_sim.models.state import LaserState
 from cpa_sim.phys_pipeline_compat import PolicyBag, StageResult
 from cpa_sim.stages.amp.utils import field_gain_from_power_gain
@@ -10,8 +10,8 @@ from cpa_sim.stages.base import LaserStage
 from cpa_sim.utils import maybe_emit_stage_plots
 
 
-class SimpleGainStage(LaserStage[AmpCfg]):
-    def __init__(self, cfg: AmpCfg):
+class SimpleGainStage(LaserStage[SimpleGainCfg]):
+    def __init__(self, cfg: SimpleGainCfg):
         super().__init__(cfg)
         self.name = cfg.name
 

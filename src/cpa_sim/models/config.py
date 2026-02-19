@@ -179,7 +179,7 @@ class FiberCfg(FiberStageCfg):
         return payload
 
 
-class AmpCfg(StageConfig):
+class SimpleGainCfg(StageConfig):
     model_config = ConfigDict(frozen=True)
 
     name: str = "amp"
@@ -215,7 +215,7 @@ class ToyFiberAmpCfg(StageConfig):
 
 
 AmpStageCfg = Annotated[
-    AmpCfg | ToyFiberAmpCfg,
+    SimpleGainCfg | ToyFiberAmpCfg,
     Field(discriminator="kind"),
 ]
 
@@ -242,7 +242,7 @@ class PipelineConfig(BaseModel):
         default_factory=lambda: PhaseOnlyDispersionCfg(name="stretcher")
     )
     fiber: FiberCfg = Field(default_factory=FiberCfg)
-    amp: AmpStageCfg = Field(default_factory=AmpCfg)
+    amp: AmpStageCfg = Field(default_factory=SimpleGainCfg)
     compressor: FreeSpaceCfg = Field(
         default_factory=lambda: TreacyGratingPairCfg(name="compressor")
     )
@@ -263,3 +263,7 @@ class PipelineConfig(BaseModel):
                 _migrate_legacy_free_space_cfg(stage_cfg) for stage_cfg in payload["stages"]
             ]
         return payload
+
+
+# Backwards-compatible alias retained for pre-rename imports.
+AmpCfg = SimpleGainCfg

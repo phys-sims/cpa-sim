@@ -15,6 +15,7 @@ from cpa_sim.models.config import (
     PipelineConfig,
     RamanCfg,
     RuntimeCfg,
+    SimpleGainCfg,
     ToyFiberAmpCfg,
     ToyPhaseNumericsCfg,
     TreacyGratingPairCfg,
@@ -33,6 +34,7 @@ from cpa_sim.models.state import (
 
 __all__ = [
     "AmpCfg",
+    "SimpleGainCfg",
     "AmpStageCfg",
     "BeamSpec",
     "BeamState",
