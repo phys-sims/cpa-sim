@@ -5,7 +5,7 @@ Use this page to present side-by-side figures for **case A (direct)** vs **case 
 ## Run once to generate artifacts
 
 ```bash
-python scripts/examples/toy_amp_case_ab_compare.py --out artifacts/toy-amp-case-ab --emit-plots
+python scripts/examples/toy_amp_case_ab_compare.py --out artifacts/toy-amp-case-ab --amp-gain-db 9.0 --emit-plots
 ```
 
 This writes:
@@ -35,3 +35,4 @@ magick artifacts/toy-amp-case-ab/case-a/stage-plots/toy_amp_time_intensity.svg \
 
 - Both cases use explicit `LaserGenCfg` setup (same pulse/beam spec) so the only difference is chain topology.
 - Use `comparison_summary.json` to quote numeric side-by-side metrics.
+- `--amp-gain-db` is provided directly in dB and shared by both case A and case B.

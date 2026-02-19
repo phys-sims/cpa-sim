@@ -13,6 +13,8 @@ def test_toy_amp_case_ab_comparison_writes_outputs(tmp_path: Path) -> None:
             "scripts/examples/toy_amp_case_ab_compare.py",
             "--out",
             str(tmp_path),
+            "--amp-gain-db",
+            "12.5",
         ],
         check=False,
         capture_output=True,
@@ -32,6 +34,9 @@ def test_toy_amp_case_ab_comparison_writes_outputs(tmp_path: Path) -> None:
     comparison = json.loads(comparison_path.read_text())
     case_a = comparison["cases"]["A_direct"]
     case_b = comparison["cases"]["B_cpa"]
+
+    assert comparison["amp_gain_db"] == pytest.approx(12.5)
+    assert comparison["shared_amp"]["gain_db"] == pytest.approx(12.5)
 
     assert comparison["laser_gen"]["shared_spec"]["name"] == "laser_init_case_shared"
     assert comparison["laser_gen"]["shared_spec"]["center_wavelength_nm"] == pytest.approx(1560.0)

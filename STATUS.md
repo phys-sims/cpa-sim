@@ -3,9 +3,9 @@
 > **Source of truth:** Update this file whenever behavior, tests, schemas, or canonical examples change.
 
 ## Last updated
-- Date: 2026-02-18
+- Date: 2026-02-19
 - By: @openai-codex
-- Scope: Refactored toy amp A/B example scripts to share one canonical laser seed config, made A/B comparison metrics schema stage-name-agnostic, and strengthened integration coverage for non-brittle comparison outputs.
+- Scope: Consolidated toy amp A/B tooling into one A-vs-B script, made the amplifier configuration explicitly shared between cases, removed implicit gain conversions in favor of direct dB input, and updated integration/docs accordingly.
 
 ---
 
@@ -13,9 +13,9 @@
 
 | Check | Command | Status | Last run | Notes |
 | --- | --- | --- | --- | --- |
-| Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-02-18 | Passed; pre-commit reported only a deprecation warning for `default_stages`. |
-| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-02-18 | Success: no issues found in 37 source files. |
-| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-18 | Passed after adding toy amp backend/tests. |
+| Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-02-19 | Passed; pre-commit reported only a deprecation warning for `default_stages`. |
+| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-02-19 | Success: no issues found in 38 source files. |
+| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-19 | Passed after consolidating toy amp A/B comparison script and integration assertions. |
 | Pytest physics (supplemental) | `python -m pytest -q -m physics --durations=10` | ⬜ | — | Not rerun in this change set. |
 | Pytest slow (supplemental) | `python -m pytest -q -m slow --durations=10` | ⬜ | — |  |
 | Pytest gnlse optional (supplemental) | `python -m pytest -q -m gnlse --durations=10` | ✅ | 2026-02-17 | 4 passed, 15 deselected (includes new example artifact test). |
