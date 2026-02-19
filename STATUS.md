@@ -5,7 +5,7 @@
 ## Last updated
 - Date: 2026-02-19
 - By: @openai-codex
-- Scope: Added catalog spec schema models/loaders with unit normalization + nonlinear validation rules, and introduced unit coverage for parsing and conversions.
+- Scope: Added catalog spec schema models/loaders with unit normalization + nonlinear validation rules, introduced unit coverage for parsing/conversions, and made `specs` importable for test/runtime schema loading.
 
 ---
 
