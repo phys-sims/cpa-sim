@@ -82,7 +82,7 @@ The top-level `PipelineConfig` includes these sections:
 - `laser_gen` (initial pulse/beam specification),
 - `stretcher` / `compressor` defaults (free-space configs used when `stages` is not set),
 - `fiber` (`FiberStageCfg` with stable `physics` plus backend-specific `numerics`),
-- `amp` (amplifier backend + gain; supports `simple_gain` and `toy_fiber_amp`),
+- `amp` (amplifier backend config; supports `simple_gain` and `toy_fiber_amp` with `amp_power_w` control),
 - `stages` (optional arbitrary ordered list of `free_space`, `fiber`, and `amp` stage configs),
 - `metrics` (summary metric backend; always appended at pipeline end).
 
