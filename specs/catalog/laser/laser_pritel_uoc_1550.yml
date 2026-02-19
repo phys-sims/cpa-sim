@@ -1,0 +1,82 @@
+# Raw vendor datasheet extract (no unit normalization). Intended for examples/demos only.
+id: pritel_uoc_1550_ultrafast_optical_clock
+type: laser
+vendor:
+  manufacturer: "PriTel, Inc."
+  product_line: "UOC Series — Ultrafast Optical Clocks (1550 nm band)"
+  notes:
+    - "Actively-mode-locked fiber laser with external RF clock/synthesizer input (per datasheets)."
+    - "Pulsewidth is user-changeable via optional Quick-Change BPF filter cartridges."
+  sources:
+    - title: "UOC_1550nm (UOC Series ULTRAFAST OPTICAL CLOCKS)"
+      content_type: "application/pdf"
+      source_url: "https://www.pritel.com/pdfs/UOC_1550nm.pdf"
+      date_accessed: "2026-02-19"
+    - title: "UOC_2U_2025 (specifications sheet, mirrored distributor copy)"
+      content_type: "application/pdf"
+      source_url: "https://www.sun-ins.com/pickup/uoc/UOC_2U_2025.pdf"
+      date_accessed: "2026-02-19"
+    - title: "1550nm Ultrafast Optical Clocks (product page)"
+      content_type: "text/html"
+      source_url: "https://www.pritel.com/uoc1550.html"
+      date_accessed: "2026-02-19"
+
+specs:
+  wavelength_band_nm: [1530, 1565]
+
+  pulse_repetition_rate:
+    # NOTE: The older PriTel PDF lists 1 GHz and higher ranges, and says "Please inquire about other repetition rates."
+    # The newer 2U 2025 sheet explicitly lists 0.5 GHz as an available option.
+    listed_options_ghz:
+      pritel_uoc_1550nm_pdf: ["1", "5-14", "5-20", "38-43"]
+      uoc_2u_2025_pdf: ["0.5", "1", "2.5", "0.5-10", "0.5-20", "40 (tunable)"]
+
+  temporal_pulsewidth_fwhm:
+    pritel_uoc_1550nm_pdf:
+      default_filter: "< 1.5 ps"
+      optional_quick_change_bpf_cartridges: "1.5–10 ps"
+    uoc_2u_2025_pdf:
+      minimum: "< 1.6 ps"
+      optional_bpf_filter_cartridges: "1–15 ps"
+
+  optical_spectral_width_fwhm:
+    pritel_uoc_1550nm_pdf: "1.7 nm @ 1.5 ps"
+    uoc_2u_2025_pdf: "1.7 nm @ 1.6 ps"
+
+  output_polarization:
+    polarization_maintaining_output: true
+    per_db: 22
+    comment: "PER for linear polarization (datasheets)."
+
+  noise_and_jitter:
+    amplitude_noise: "< 1%"
+    timing_jitter: "< 50 fs (limited by external RF clock)"
+
+  power_examples:
+    average_output_power_example: "> 20 mW @ 1.6 ps, 10 GHz"
+    peak_power_example: "Typical = 1 W @ 10 GHz"
+    comment: "Output power varies with pulsewidth and pulse repetition rate (datasheets)."
+
+  rf_input:
+    pritel_uoc_1550nm_pdf: "< 10 dBm"
+    uoc_2u_2025_pdf: "< 0 dBm @ 10 GHz"
+    comment: "RF input requirement depends on model/config; see vendor docs."
+
+  optical_design_notes:
+    gain_medium: "Er-doped silica fiber"
+    pump_source: "Diode laser"
+    connectors: "PM-FC/APC key along slow axis (default)"
+
+example_operating_point_for_sim_demo:
+  # This section defines a *demo-friendly* operating point consistent with the UOC series capabilities.
+  # Pulsewidth selection at ~2 ps is achieved via optional filter cartridge, per vendor docs.
+  center_wavelength_nm: 1550
+  repetition_rate_hz: 5.0e8   # 0.5 GHz
+  pulsewidth_fwhm_ps: 2.0
+  output_polarization: "PM"
+  modeling_assumptions:
+    pulse_intensity_shape: "sech^2"
+    comment: "Vendor sheets specify pulsewidth via autocorrelation/filters but do not explicitly state the analytic pulse shape; sech^2 is a common simulation assumption for picosecond fiber lasers."
+  notes:
+    - "2 ps operation uses an optional BPF filter cartridge (Quick-Change feature)."
+    - "Average output power at 0.5 GHz is not specified on the brief sheets; treat average power as a tunable demo parameter."

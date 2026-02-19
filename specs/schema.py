@@ -1,2 +1,2 @@
 # placeholder
-# pydantic models + unit normalization from catalog
+# pydantic models + unit normalization 
