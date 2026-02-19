@@ -1,0 +1,69 @@
+# Raw vendor datasheet extract (no unit normalization). Intended for examples/demos only.
+id: thorlabs_pmdcf_1550
+type: fiber
+vendor:
+  manufacturer: Thorlabs
+  part_number: PMDCF
+  product_name: "Polarization-Maintaining, Dispersion-Compensating Fiber"
+  datasheet:
+    title: "PMDCF Spec Sheet"
+    doc_id: "TTN171092-S01"
+    revision: "Rev B"
+    date: "2020-12-10"
+    source_url: "https://lenlasers.ru/upload/iblock/9ca/PMDCF_SpecSheet.pdf"
+  notes:
+    - "Typical values along the slow axis at 1550 nm unless otherwise noted."
+specs:
+  dispersion:
+    reference_wavelength_nm: 1550
+    dispersion_ps_per_nm_km:
+      value: -100
+      tolerance: 10
+      unit: "ps/(nm·km)"
+    dispersion_slope_ps_per_nm2_km:
+      value: -0.34
+      unit: "ps/(nm^2·km)"
+    relative_dispersion_slope_per_nm:
+      value: 0.0034
+      tolerance: 0.0004
+      unit: "1/nm"
+    group_velocity_dispersion_fs2_per_m:
+      value: 1.275e5
+      unit: "fs^2/m"
+    beta3_over_beta2_fs:
+      value: -6
+      unit: "fs"
+  optical:
+    operating_wavelength_slow_axis_nm: [1510, 1620]
+    mode_field_diameter_um:
+      value: 5
+      unit: "µm"
+    effective_area_um2:
+      value: 20
+      unit: "µm^2"
+    cut_off_wavelength_slow_axis_nm: 1400
+    attenuation_db_per_km:
+      typical: 0.40
+      max: 0.45
+      unit: "dB/km"
+    beat_length_mm:
+      value: 5
+      unit: "mm"
+    differential_group_delay_ps_per_m:
+      value: 2
+      unit: "ps/m"
+    splicing_loss_direct_db:
+      value: 1
+      unit: "dB"
+      comment: "Between PM1550-XP and PMDCF optical fibers."
+  physical:
+    cladding_diameter_um:
+      value: 125
+      tolerance: 1.5
+      unit: "µm"
+    coating_diameter_um:
+      value: 250
+      tolerance: 10
+      unit: "µm"
+    core_diameter: "Proprietary"
+    numerical_aperture: "Proprietary"

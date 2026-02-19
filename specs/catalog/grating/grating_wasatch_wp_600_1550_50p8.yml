@@ -1,0 +1,42 @@
+# Raw vendor datasheet extract (no unit normalization). Intended for examples/demos only.
+id: wasatch_wp_600lmm_1550_vph_50p8
+type: grating
+vendor:
+  manufacturer: Wasatch Photonics
+  product_name: "VPH Grating: 600 l/mm @ 1550 nm"
+  model_numbers:
+    - "WP-600/1550-50.8"
+  datasheet:
+    title: "WP-PS_600lpmm-1550nm-50.8mm"
+    revision: "RevA"
+    source_url: "https://wasatchphotonics.com/wp-content/uploads/WP-PS_600lpmm-1550nm-50.8mm_RevA.pdf"
+  notes:
+    - "VPH transmission grating; diffraction efficiency curves are theoretical; actual performance may vary."
+specs:
+  center_wavelength_nm: 1550
+  spatial_frequency_lines_per_mm:
+    value: 600
+    tolerance: 0.5
+    unit: "lines/mm"
+  wavelength_range_nm: [1300, 1800]
+  angle_of_incidence_deg:
+    value: 27.7
+    unit: "deg"
+  ar_coating: "Yes"
+  substrate: "N-BK7 or equivalent"
+  surface_quality: "60/40"
+  wavefront:
+    value: "λ/5 RMS at 633 nm over any 25 mm diameter"
+  clear_aperture_mm:
+    value: 44.8
+    tolerance: {plus: 1.0, minus: 0.0}
+    unit: "mm"
+  dimensions:
+    diameter_mm:
+      value: 50.8
+      tolerance: {plus: 0.0, minus: 0.15}
+      unit: "mm"
+    thickness_mm:
+      value: 6
+      tolerance: {plus: 0.25, minus: 0.25}
+      unit: "mm"

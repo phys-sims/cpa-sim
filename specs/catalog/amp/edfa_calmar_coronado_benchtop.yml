@@ -1,0 +1,73 @@
+# Raw vendor datasheet extract (no unit normalization). Intended for examples/demos only.
+id: calmar_coronado_benchtop_edfa_1550
+type: edfa
+vendor:
+  manufacturer: "Calmar Laser"
+  product_name: "CORONADO 1550 nm Benchtop Erbium-doped Fiber Amplifier"
+  datasheet:
+    title: "Benchtop.1550.EDFA"
+    revision: "Rev.B 8/15/20"
+    source_url: "https://www.calmarlaser.com/docs/datasheets/benchtop/Benchtop.1550.EDFA.pdf"
+  notes:
+    - "Broadband gain over C-band (1530–1565 nm)."
+    - "Saturated output power levels up to 37 dBm; noise figure as low as 6 dB."
+specs:
+  wavelength_range_nm: [1530, 1565]
+  interface: "RS232 (9 pin D-sub connector)"
+  supply_voltage_vac: [85, 264]
+  supply_frequency_hz: [47, 63]
+  operating_temperature_c: [0, 50]
+  warmup_time_min: "< 10"
+  fiber_io:
+    pm_models: "PM 1550 fiber pigtail with FC/APC connector"
+    non_pm_models: "Fiber pigtail with FC/APC connector"
+  models_pm:
+    AMP-PM18:
+      output_power_dbm: 18
+      small_signal_gain_db: 30
+      input_power_range_dbm: [-25, 10]
+      noise_figure_db: "< 5.0"
+      polarization_extinction_ratio_db: "> 20"
+    AMP-PM23:
+      output_power_dbm: 23
+      small_signal_gain_db: 35
+      input_power_range_dbm: [-25, 10]
+      noise_figure_db: "< 5.5"
+      polarization_extinction_ratio_db: "> 20"
+    AMP-PM30:
+      output_power_dbm: 30
+      small_signal_gain_db: 35
+      input_power_range_dbm: [0, 3]
+      noise_figure_db: "< 6.5"
+      polarization_extinction_ratio_db: "> 17"
+    AMP-PM37:
+      output_power_dbm: 37
+      small_signal_gain_db: 35
+      input_power_range_dbm: [0, 3]
+      noise_figure_db: "< 6.5"
+      polarization_extinction_ratio_db: "> 17"
+  models_non_pm:
+    AMP-ST18:
+      output_power_dbm: 18
+      small_signal_gain_db: 30
+      input_power_range_dbm: [-25, 10]
+      noise_figure_db: "< 5.5"
+      polarization_state: "Arbitrary"
+    AMP-ST23:
+      output_power_dbm: 23
+      small_signal_gain_db: 35
+      input_power_range_dbm: [-25, 10]
+      noise_figure_db: "< 6.0"
+      polarization_state: "Arbitrary"
+    AMP-ST30:
+      output_power_dbm: 30
+      small_signal_gain_db: 35
+      input_power_range_dbm: [0, 3]
+      noise_figure_db: "< 6.5"
+      polarization_state: "Arbitrary"
+    AMP-ST37:
+      output_power_dbm: 37
+      small_signal_gain_db: 35
+      input_power_range_dbm: [0, 3]
+      noise_figure_db: "< 6.5"
+      polarization_state: "Arbitrary"
