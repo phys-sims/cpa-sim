@@ -24,12 +24,14 @@ class AnalyticLaserGenStage(LaserStage[LaserGenCfg]):
             spec.pulse.n_samples,
         )
         dt = float(t[1] - t[0])
-        sigma = spec.pulse.width_fs / (2.0 * np.sqrt(2.0 * np.log(2.0)))
+        i0 = spec.pulse.amplitude**2
         if spec.pulse.shape == "gaussian":
-            envelope = np.exp(-(t**2) / (2.0 * sigma**2))
+            intensity = i0 * np.exp(-4.0 * np.log(2.0) * (t / spec.pulse.width_fs) ** 2)
         else:
-            envelope = (1.0 / np.cosh(t / max(spec.pulse.width_fs, 1e-9))) ** 2
-        field_t = spec.pulse.amplitude * envelope.astype(np.complex128)
+            sech_fwhm_factor = 2.0 * np.arccosh(np.sqrt(2.0))
+            t0 = spec.pulse.width_fs / sech_fwhm_factor
+            intensity = i0 / np.cosh(t / t0) ** 2
+        field_t = np.sqrt(intensity).astype(np.complex128)
         field_w = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(field_t)))
         w = np.fft.fftshift(2.0 * np.pi * np.fft.fftfreq(t.size, d=dt))
         dw = float(w[1] - w[0])
