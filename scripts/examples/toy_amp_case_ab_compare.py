@@ -1,38 +1,44 @@
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
-import numpy as np
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from cpa_sim.models import (
-    DispersionTaylorCfg,
-    FiberCfg,
-    FiberPhysicsCfg,
     PipelineConfig,
     RuntimeCfg,
+    LaserGenCfg,
     ToyFiberAmpCfg,
     TreacyGratingPairCfg,
-    WustGnlseNumericsCfg,
 )
+from cpa_sim.models.state import BeamSpec, LaserSpec, PulseSpec
 from cpa_sim.pipeline import run_pipeline
-from toy_amp_shared import build_shared_laser_gen, shared_laser_spec_summary
+from specs.schema import AmpSpecRecord, FiberSpecRecord, GratingSpecRecord, LaserSpecRecord, load_catalog
 
 DEFAULT_OUT_DIR = Path("artifacts/toy-amp-case-ab")
 
-# Shared toy amp used in both A (direct) and B (CPA) chains.
-SHARED_AMP_KWARGS = {
-    "name": "toy_amp",
-    "length_m": 1.5,
-    "beta2_s2_per_m": 0.0,
-    "gamma_w_inv_m": 4e-3,
-    "amp_power_w": 0.12,
-    "loss_db_per_m": 0.0,
-    "n_steps": 20,
+CATALOG_IDS = {
+    "laser": "pritel_uoc_1550_ultrafast_optical_clock",
+    "amp": "calmar_coronado_benchtop_edfa_1550",
+    "fiber": "thorlabs_pmdcf_1550",
+    "grating": "wasatch_wp_600lmm_1550_vph_50p8",
 }
+
+TARGET_AMP_POWER_W = 5.0
+AMP_LENGTH_M = 1.5
+AMP_GAMMA_W_INV_M = 4e-3
+STRETCHER_LENGTH_M = 100.0
+COMPRESSOR_SEPARATION_UM = 120_000.0
+
+
+def _as_float(value: Any) -> float:
+    return float(value)
 
 
 def _metric_by_suffix(metrics: dict[str, Any], suffix: str) -> float | None:
@@ -61,75 +67,96 @@ def _extract_comparison_metrics(metrics: dict[str, Any]) -> dict[str, float | No
     }
 
 
-def _gnlse_available() -> bool:
-    return importlib.util.find_spec("gnlse") is not None
+def _load_catalog_records() -> tuple[LaserSpecRecord, AmpSpecRecord, FiberSpecRecord, GratingSpecRecord]:
+    catalog = load_catalog()
+    laser = catalog[CATALOG_IDS["laser"]]
+    amp = catalog[CATALOG_IDS["amp"]]
+    fiber = catalog[CATALOG_IDS["fiber"]]
+    grating = catalog[CATALOG_IDS["grating"]]
+
+    assert isinstance(laser, LaserSpecRecord)
+    assert isinstance(amp, AmpSpecRecord)
+    assert isinstance(fiber, FiberSpecRecord)
+    assert isinstance(grating, GratingSpecRecord)
+    return laser, amp, fiber, grating
 
 
-def _build_stretcher_stage(*, length_m: float, beta2_ps2_per_m: float) -> FiberCfg | ToyFiberAmpCfg:
-    if _gnlse_available():
-        return FiberCfg(
-            name="stretcher",
-            physics=FiberPhysicsCfg(
-                length_m=length_m,
-                gamma_1_per_w_m=0.0,
-                dispersion=DispersionTaylorCfg(betas_psn_per_m=[beta2_ps2_per_m]),
+def _build_laser_gen(laser_record: LaserSpecRecord) -> LaserGenCfg:
+    operating_point = laser_record.model_extra["example_operating_point_for_sim_demo"]
+    return LaserGenCfg(
+        name=f"laser_init_{laser_record.id}",
+        spec=LaserSpec(
+            pulse=PulseSpec(
+                shape="sech2",
+                amplitude=1.0,
+                width_fs=float(operating_point["pulsewidth_fwhm_ps"]) * 1_000.0,
+                center_wavelength_nm=float(operating_point["center_wavelength_nm"]),
+                rep_rate_mhz=float(operating_point["repetition_rate_hz"]) / 1e6,
+                n_samples=512,
+                time_window_fs=120_000.0,
             ),
-            numerics=WustGnlseNumericsCfg(
-                backend="wust_gnlse",
-                grid_policy="force_pow2",
-                z_saves=64,
-            ),
-        )
+            beam=BeamSpec(radius_mm=1.0, m2=1.0),
+        ),
+    )
 
+
+def _build_shared_amp_stage() -> ToyFiberAmpCfg:
     return ToyFiberAmpCfg(
-        name="stretcher",
-        length_m=length_m,
-        beta2_s2_per_m=beta2_ps2_per_m * 1e-24,
-        gamma_w_inv_m=0.0,
-        gain_db=0.0,
+        name="edfa",
+        length_m=AMP_LENGTH_M,
+        beta2_s2_per_m=0.0,
+        gamma_w_inv_m=AMP_GAMMA_W_INV_M,
+        amp_power_w=TARGET_AMP_POWER_W,
         loss_db_per_m=0.0,
         n_steps=20,
     )
 
 
-def _build_shared_amp_stage() -> ToyFiberAmpCfg:
-    return ToyFiberAmpCfg(**SHARED_AMP_KWARGS)
+def _build_stretcher_stage(fiber_record: FiberSpecRecord) -> ToyFiberAmpCfg:
+    gvd_raw = fiber_record.specs["dispersion"]["group_velocity_dispersion_fs2_per_m"]["value"]
+    beta2_s2_per_m = _as_float(gvd_raw) * 1e-30
+    loss_db_per_m = float(fiber_record.normalized["loss_db_per_m"]["value_db_per_m"])
+    return ToyFiberAmpCfg(
+        name="stretcher_fiber",
+        length_m=STRETCHER_LENGTH_M,
+        beta2_s2_per_m=beta2_s2_per_m,
+        gamma_w_inv_m=0.0,
+        amp_power_w=1e-6,
+        loss_db_per_m=loss_db_per_m,
+        n_steps=24,
+    )
 
 
-def _build_case_a_config(*, seed: int) -> PipelineConfig:
+def _build_case_a_config(*, seed: int, laser_gen: LaserGenCfg) -> PipelineConfig:
     return PipelineConfig(
         runtime=RuntimeCfg(seed=seed),
-        laser_gen=build_shared_laser_gen(),
+        laser_gen=laser_gen,
         stages=[_build_shared_amp_stage()],
     )
 
 
-def _build_case_b_config(*, seed: int) -> PipelineConfig:
-    target_stretch_ratio = 20.0
-    input_width_ps = 2.0
-    stretcher_length_m = 100.0
-    stretcher_beta2_s2_per_m = (
-        np.sqrt(target_stretch_ratio**2 - 1.0)
-        * (input_width_ps * 1e-12) ** 2
-        / (4.0 * np.log(2.0) * stretcher_length_m)
-    )
-    stretcher_beta2_ps2_per_m = float(stretcher_beta2_s2_per_m * 1e24)
-
+def _build_case_b_config(
+    *,
+    seed: int,
+    laser_gen: LaserGenCfg,
+    fiber_record: FiberSpecRecord,
+    grating_record: GratingSpecRecord,
+) -> PipelineConfig:
+    line_density_lpmm = float(grating_record.specs["spatial_frequency_lines_per_mm"]["value"])
+    incidence_angle_deg = float(grating_record.specs["angle_of_incidence_deg"]["value"])
+    wavelength_nm = float(grating_record.specs["center_wavelength_nm"])
     return PipelineConfig(
         runtime=RuntimeCfg(seed=seed),
-        laser_gen=build_shared_laser_gen(),
+        laser_gen=laser_gen,
         stages=[
-            _build_stretcher_stage(
-                length_m=stretcher_length_m,
-                beta2_ps2_per_m=stretcher_beta2_ps2_per_m,
-            ),
+            _build_stretcher_stage(fiber_record),
             _build_shared_amp_stage(),
             TreacyGratingPairCfg(
                 name="compressor",
-                line_density_lpmm=600.0,
-                incidence_angle_deg=20.0,
-                separation_um=120_000.0,
-                wavelength_nm=1560.0,
+                line_density_lpmm=line_density_lpmm,
+                incidence_angle_deg=incidence_angle_deg,
+                separation_um=COMPRESSOR_SEPARATION_UM,
+                wavelength_nm=wavelength_nm,
                 n_passes=2,
                 include_tod=True,
                 apply_to_pulse=True,
@@ -171,18 +198,25 @@ def _run_case(
 
 def run_comparison(*, out_dir: Path, seed: int, emit_plots: bool) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
+    laser_record, amp_record, fiber_record, grating_record = _load_catalog_records()
+    laser_gen = _build_laser_gen(laser_record)
 
     case_a = _run_case(
         case_name="A_direct",
-        description="Direct seed pulse into shared toy fiber amp.",
-        cfg=_build_case_a_config(seed=seed),
+        description="Catalog 2 ps seed pulse -> EDFA (5 W target) -> metrics.",
+        cfg=_build_case_a_config(seed=seed, laser_gen=laser_gen),
         out_dir=out_dir / "case-a",
         emit_plots=emit_plots,
     )
     case_b = _run_case(
         case_name="B_cpa",
-        description="CPA-style stretcher -> shared toy fiber amp -> Treacy compressor chain.",
-        cfg=_build_case_b_config(seed=seed),
+        description="Catalog 2 ps seed -> PMDCF stretcher -> EDFA (5 W target) -> Treacy compressor.",
+        cfg=_build_case_b_config(
+            seed=seed,
+            laser_gen=laser_gen,
+            fiber_record=fiber_record,
+            grating_record=grating_record,
+        ),
         out_dir=out_dir / "case-b",
         emit_plots=emit_plots,
     )
@@ -190,10 +224,28 @@ def run_comparison(*, out_dir: Path, seed: int, emit_plots: bool) -> dict[str, A
     comparison = {
         "seed": seed,
         "laser_gen": {
-            "source": "toy_amp_shared.build_shared_laser_gen",
-            "shared_spec": shared_laser_spec_summary(),
+            "source": f"catalog:{laser_record.id}",
+            "shared_spec": {
+                "name": laser_gen.name,
+                "width_fs": laser_gen.spec.pulse.width_fs,
+                "center_wavelength_nm": laser_gen.spec.pulse.center_wavelength_nm,
+                "rep_rate_hz": laser_gen.spec.pulse.rep_rate_mhz * 1e6,
+            },
         },
-        "shared_amp": SHARED_AMP_KWARGS,
+        "catalog": {
+            "laser": laser_record.id,
+            "amp": amp_record.id,
+            "fiber": fiber_record.id,
+            "grating": grating_record.id,
+        },
+        "shared_amp": {
+            "name": "edfa",
+            "kind": "toy_fiber_amp",
+            "catalog_source": amp_record.id,
+            "length_m": AMP_LENGTH_M,
+            "gamma_w_inv_m": AMP_GAMMA_W_INV_M,
+            "amp_power_w": TARGET_AMP_POWER_W,
+        },
         "cases": {
             case_a["name"]: {
                 "description": case_a["description"],

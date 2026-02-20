@@ -33,10 +33,16 @@ def test_toy_amp_case_ab_comparison_writes_outputs(tmp_path: Path) -> None:
     case_a = comparison["cases"]["A_direct"]
     case_b = comparison["cases"]["B_cpa"]
 
-    assert comparison["shared_amp"]["amp_power_w"] == pytest.approx(0.12)
+    assert comparison["shared_amp"]["amp_power_w"] == pytest.approx(5.0)
 
-    assert comparison["laser_gen"]["shared_spec"]["name"] == "laser_init_case_shared"
-    assert comparison["laser_gen"]["shared_spec"]["center_wavelength_nm"] == pytest.approx(1560.0)
+    assert (
+        comparison["laser_gen"]["shared_spec"]["name"]
+        == "laser_init_pritel_uoc_1550_ultrafast_optical_clock"
+    )
+    assert comparison["laser_gen"]["shared_spec"]["center_wavelength_nm"] == pytest.approx(1550.0)
+
+    assert comparison["catalog"]["laser"] == "pritel_uoc_1550_ultrafast_optical_clock"
+    assert comparison["catalog"]["amp"] == "calmar_coronado_benchtop_edfa_1550"
 
     for metric_name in (
         "energy_in_au",
