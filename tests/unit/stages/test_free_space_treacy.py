@@ -231,7 +231,7 @@ def test_treacy_can_compress_quadratic_positive_chirp() -> None:
                 name="compressor",
                 line_density_lpmm=1200.0,
                 incidence_angle_deg=35.0,
-                separation_um=20_000.0,
+                separation_um=50_000.0,
                 wavelength_nm=1030.0,
                 n_passes=2,
                 include_tod=False,

@@ -26,9 +26,18 @@ class PulseGrid(BaseModel):
 class PulseSpec(BaseModel):
     model_config = ConfigDict(frozen=True)
 
-    shape: Literal["gaussian", "sech2"] = "gaussian"
+    shape: Literal["gaussian", "sech2"] = Field(
+        default="gaussian",
+        description=(
+            "Pulse intensity profile family in time: 'gaussian' means "
+            "I(t) ∝ exp(-4 ln 2 (t/FWHM)^2), 'sech2' means I(t) ∝ sech^2(t/T0)."
+        ),
+    )
     amplitude: float = 1.0
-    width_fs: float = 100.0
+    width_fs: float = Field(
+        default=100.0,
+        description="Intensity full width at half maximum (FWHM) in femtoseconds.",
+    )
     center_wavelength_nm: float = 1030.0
     rep_rate_mhz: float = 1.0
     n_samples: int = 256

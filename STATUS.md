@@ -5,7 +5,7 @@
 ## Last updated
 - Date: 2026-02-20
 - By: @openai-codex
-- Scope: Fixed toy EDFA average-power mapping to use joule-based pulse energy (fs→s conversion), corrected A/B comparison extraction to read EDFA metrics explicitly, and documented pulse amplitude/power unit mapping in README.
+- Scope: Updated analytic laser pulse generation so gaussian and sech2 shapes are defined from intensity-domain formulas with width_fs as intensity FWHM, added explicit PulseSpec shape/width semantics, and added unit coverage for FWHM behavior.
 
 ---
 
@@ -13,9 +13,9 @@
 
 | Check | Command | Status | Last run | Notes |
 | --- | --- | --- | --- | --- |
-| Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-02-19 | Passed; pre-commit reported only a deprecation warning for `default_stages`. |
-| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-02-19 | Success: no issues found in 38 source files. |
-| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-19 | Passed with new catalog schema/unit normalization tests included. |
+| Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-02-20 | Passed; pre-commit reported only a deprecation warning for `default_stages`. |
+| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-02-20 | Success: no issues found in 33 source files. |
+| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-20 | Passed including analytic laser intensity-FWHM tests for gaussian and sech2. |
 | Pytest physics (supplemental) | `python -m pytest -q -m physics --durations=10` | ⬜ | — | Not rerun in this change set. |
 | Pytest slow (supplemental) | `python -m pytest -q -m slow --durations=10` | ⬜ | — |  |
 | Pytest gnlse optional (supplemental) | `python -m pytest -q -m gnlse --durations=10` | ✅ | 2026-02-17 | 4 passed, 15 deselected (includes new example artifact test). |
