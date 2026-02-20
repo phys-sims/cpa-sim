@@ -44,6 +44,9 @@ def test_toy_amp_case_ab_comparison_writes_outputs(tmp_path: Path) -> None:
     assert comparison["catalog"]["laser"] == "pritel_uoc_1550_ultrafast_optical_clock"
     assert comparison["catalog"]["amp"] == "calmar_coronado_benchtop_edfa_1550"
 
+    assert case_a["comparison_metrics"]["power_out_avg_w"] == pytest.approx(5.0, rel=2e-3)
+    assert case_b["comparison_metrics"]["power_out_avg_w"] == pytest.approx(5.0, rel=2e-3)
+
     for metric_name in (
         "energy_in_au",
         "energy_out_au",
