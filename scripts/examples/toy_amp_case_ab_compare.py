@@ -48,17 +48,31 @@ def _metric_by_suffix(metrics: dict[str, Any], suffix: str) -> float | None:
     return None
 
 
+def _stage_metric(metrics: dict[str, Any], *, stage_name: str, metric_name: str) -> float | None:
+    key = f"cpa.{stage_name}.{stage_name}.{metric_name}"
+    value = metrics.get(key)
+    return float(value) if isinstance(value, (float, int)) else None
+
+
 def _extract_comparison_metrics(metrics: dict[str, Any]) -> dict[str, float | None]:
     return {
-        "energy_in_au": _metric_by_suffix(metrics, ".energy_in_au"),
-        "energy_out_au": _metric_by_suffix(metrics, ".energy_out_au"),
-        "power_in_avg_w": _metric_by_suffix(metrics, ".power_in_avg_w"),
-        "power_out_avg_w": _metric_by_suffix(metrics, ".power_out_avg_w"),
-        "peak_power_in_au": _metric_by_suffix(metrics, ".peak_power_in_au"),
-        "peak_power_out_au": _metric_by_suffix(metrics, ".peak_power_out_au"),
-        "bandwidth_in_rad_per_fs": _metric_by_suffix(metrics, ".bandwidth_in_rad_per_fs"),
-        "bandwidth_out_rad_per_fs": _metric_by_suffix(metrics, ".bandwidth_out_rad_per_fs"),
-        "b_integral_proxy_rad": _metric_by_suffix(metrics, ".b_integral_proxy_rad"),
+        "energy_in_au": _stage_metric(metrics, stage_name="edfa", metric_name="energy_in_au"),
+        "energy_out_au": _stage_metric(metrics, stage_name="edfa", metric_name="energy_out_au"),
+        "energy_in_j": _stage_metric(metrics, stage_name="edfa", metric_name="energy_in_j"),
+        "energy_out_j": _stage_metric(metrics, stage_name="edfa", metric_name="energy_out_j"),
+        "power_in_avg_w": _stage_metric(metrics, stage_name="edfa", metric_name="power_in_avg_w"),
+        "power_out_avg_w": _stage_metric(metrics, stage_name="edfa", metric_name="power_out_avg_w"),
+        "peak_power_in_au": _stage_metric(metrics, stage_name="edfa", metric_name="peak_power_in_au"),
+        "peak_power_out_au": _stage_metric(metrics, stage_name="edfa", metric_name="peak_power_out_au"),
+        "bandwidth_in_rad_per_fs": _stage_metric(
+            metrics, stage_name="edfa", metric_name="bandwidth_in_rad_per_fs"
+        ),
+        "bandwidth_out_rad_per_fs": _stage_metric(
+            metrics, stage_name="edfa", metric_name="bandwidth_out_rad_per_fs"
+        ),
+        "b_integral_proxy_rad": _stage_metric(
+            metrics, stage_name="edfa", metric_name="b_integral_proxy_rad"
+        ),
         "pipeline.final_energy_au": _metric_by_suffix(metrics, ".summary.energy_au"),
         "pipeline.final_peak_power_au": _metric_by_suffix(metrics, ".summary.peak_intensity_au"),
         "pipeline.final_bandwidth_rad_per_fs": _metric_by_suffix(

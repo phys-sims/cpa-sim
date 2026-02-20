@@ -3,9 +3,9 @@
 > **Source of truth:** Update this file whenever behavior, tests, schemas, or canonical examples change.
 
 ## Last updated
-- Date: 2026-02-19
+- Date: 2026-02-20
 - By: @openai-codex
-- Scope: Added catalog spec schema models/loaders with unit normalization + nonlinear validation rules, introduced unit coverage for parsing/conversions, and made `specs` importable for test/runtime schema loading.
+- Scope: Fixed toy EDFA average-power mapping to use joule-based pulse energy (fs→s conversion), corrected A/B comparison extraction to read EDFA metrics explicitly, and documented pulse amplitude/power unit mapping in README.
 
 ---
 

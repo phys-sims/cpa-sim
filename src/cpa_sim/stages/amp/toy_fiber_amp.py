@@ -9,6 +9,7 @@ from cpa_sim.stages.base import LaserStage
 from cpa_sim.utils import maybe_emit_stage_plots
 
 _DB_TO_NEPER_POWER = np.log(10.0) / 10.0
+_FS_TO_S = 1e-15
 
 
 class ToyFiberAmpStage(LaserStage[ToyFiberAmpCfg]):
@@ -25,9 +26,10 @@ class ToyFiberAmpStage(LaserStage[ToyFiberAmpCfg]):
         field_t = np.asarray(out.pulse.field_t, dtype=np.complex128)
         w = np.asarray(out.pulse.grid.w, dtype=np.float64)
 
-        energy_in = _energy_au(field_t, dt=out.pulse.grid.dt)
+        energy_in_au = _energy_au(field_t, dt=out.pulse.grid.dt)
+        energy_in_j = _energy_j(field_t, dt_fs=out.pulse.grid.dt)
         rep_rate_hz = _rep_rate_hz(out.meta)
-        power_in_avg_w = energy_in * rep_rate_hz
+        power_in_avg_w = energy_in_j * rep_rate_hz
         peak_in = float(np.max(np.abs(field_t) ** 2))
         bandwidth_in = _rms_bandwidth_rad_per_fs(
             w=w, spectrum=np.abs(np.fft.fftshift(np.fft.fft(np.fft.ifftshift(field_t)))) ** 2
@@ -62,8 +64,9 @@ class ToyFiberAmpStage(LaserStage[ToyFiberAmpCfg]):
         out.pulse.intensity_t = np.abs(out.pulse.field_t) ** 2
         out.pulse.spectrum_w = np.abs(out.pulse.field_w) ** 2
 
-        energy_out = _energy_au(out.pulse.field_t, dt=out.pulse.grid.dt)
-        power_out_avg_w = energy_out * rep_rate_hz
+        energy_out_au = _energy_au(out.pulse.field_t, dt=out.pulse.grid.dt)
+        energy_out_j = _energy_j(out.pulse.field_t, dt_fs=out.pulse.grid.dt)
+        power_out_avg_w = energy_out_j * rep_rate_hz
         peak_out = float(np.max(out.pulse.intensity_t))
         bandwidth_out = _rms_bandwidth_rad_per_fs(w=w, spectrum=out.pulse.spectrum_w)
         b_integral_proxy = float(self.cfg.gamma_w_inv_m * self.cfg.length_m * peak_in)
@@ -73,8 +76,10 @@ class ToyFiberAmpStage(LaserStage[ToyFiberAmpCfg]):
             f"{self.name}.gain_db_applied": float(gain_db_applied),
             f"{self.name}.gain_linear": float(np.exp(g_power_per_m * self.cfg.length_m)),
             f"{self.name}.loss_db_per_m": float(self.cfg.loss_db_per_m),
-            f"{self.name}.energy_in_au": energy_in,
-            f"{self.name}.energy_out_au": energy_out,
+            f"{self.name}.energy_in_au": energy_in_au,
+            f"{self.name}.energy_out_au": energy_out_au,
+            f"{self.name}.energy_in_j": energy_in_j,
+            f"{self.name}.energy_out_j": energy_out_j,
             f"{self.name}.power_in_avg_w": power_in_avg_w,
             f"{self.name}.power_out_avg_w": power_out_avg_w,
             f"{self.name}.peak_power_in_au": peak_in,
@@ -101,6 +106,10 @@ def _half_linear_step(
 
 def _energy_au(field_t: np.ndarray, *, dt: float) -> float:
     return float(np.sum(np.abs(field_t) ** 2) * dt)
+
+
+def _energy_j(field_t: np.ndarray, *, dt_fs: float) -> float:
+    return float(np.sum(np.abs(field_t) ** 2) * dt_fs * _FS_TO_S)
 
 
 def _power_gain_coeff_per_m(gain_db: float, length_m: float) -> float:

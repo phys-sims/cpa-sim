@@ -108,6 +108,21 @@ runs without stretching/compression can be expressed by omitting free-space entr
 Pass runtime policy `{"cpa.emit_stage_plots": true}` to emit per-stage time/spectrum SVG plots.
 Use `"cpa.stage_plot_dir"` to control the output directory (default: `artifacts/stage-plots`).
 
+### Pulse amplitude and units
+
+`laser_gen.spec.pulse.amplitude` is treated as a **field amplitude** in `sqrt(W)` units.
+That means `|E(t)|^2` is instantaneous power in watts, and pulse energy is
+`sum(|E|^2 * dt_fs * 1e-15)` joules.
+
+Practical mapping:
+
+- choose pulse shape + width (`width_fs`) + window/grid (`time_window_fs`, `n_samples`),
+- set `amplitude = sqrt(target_peak_power_w)` for the desired initial peak power,
+- set `rep_rate_mhz` to your laser repetition rate; average power is then
+  `pulse_energy_j * rep_rate_hz`.
+
+For `toy_fiber_amp`, `amp_power_w` is the target **output average power in watts** at the stage output plane.
+
 
 ## Fiber stage example (WUST `gnlse`)
 
