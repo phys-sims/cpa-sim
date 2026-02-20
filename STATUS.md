@@ -5,7 +5,7 @@
 ## Last updated
 - Date: 2026-02-19
 - By: @openai-codex
-- Scope: Rebuilt toy fiber amp controls around amp_power_w + rep_rate_mhz mapping, updated stage/tests/examples/docs, and synchronized A-vs-B comparison outputs with measurement-plane average power targets.
+- Scope: Added catalog spec schema models/loaders with unit normalization + nonlinear validation rules, introduced unit coverage for parsing/conversions, and made `specs` importable for test/runtime schema loading.
 
 ---
 
@@ -15,7 +15,7 @@
 | --- | --- | --- | --- | --- |
 | Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-02-19 | Passed; pre-commit reported only a deprecation warning for `default_stages`. |
 | Type checking (mypy) | `python -m mypy src` | ✅ | 2026-02-19 | Success: no issues found in 38 source files. |
-| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-19 | Passed after hardwiring shared toy amp gain in the consolidated A/B comparison workflow. |
+| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-19 | Passed with new catalog schema/unit normalization tests included. |
 | Pytest physics (supplemental) | `python -m pytest -q -m physics --durations=10` | ⬜ | — | Not rerun in this change set. |
 | Pytest slow (supplemental) | `python -m pytest -q -m slow --durations=10` | ⬜ | — |  |
 | Pytest gnlse optional (supplemental) | `python -m pytest -q -m gnlse --durations=10` | ✅ | 2026-02-17 | 4 passed, 15 deselected (includes new example artifact test). |
