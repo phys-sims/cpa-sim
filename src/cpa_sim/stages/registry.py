@@ -9,7 +9,6 @@ from cpa_sim.stages.metrics import StandardMetricsStage
 
 LASER_GEN_BACKENDS = {"analytic": AnalyticLaserGenStage}
 FREE_SPACE_BACKENDS = {
-    "treacy_grating": TreacyGratingStage,
     "phase_only_dispersion": TreacyGratingStage,
     "treacy_grating_pair": TreacyGratingStage,
 }

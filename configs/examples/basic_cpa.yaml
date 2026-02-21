@@ -14,9 +14,15 @@ laser_gen:
       time_window_fs: 400.0
 stretcher:
   name: stretcher
-  kind: phase_only_dispersion
-  gdd_fs2: 3000.0
-  tod_fs3: 0.0
+  kind: treacy_grating_pair
+  line_density_lpmm: 1200.0
+  incidence_angle_deg: 35.0
+  separation_um: 60000.0
+  wavelength_nm: 1030.0
+  diffraction_order: -1
+  n_passes: 2
+  include_tod: true
+  apply_to_pulse: true
 fiber:
   name: fiber
   kind: fiber
