@@ -206,4 +206,4 @@ def test_wust_interpolation_dispersion_mapping(
         )
     )
     result = stage.process(s)
-    assert result.state.metrics["fiber.energy_out"] > 0.0
+    assert result.state.metrics["fiber.energy_out_au"] > 0.0

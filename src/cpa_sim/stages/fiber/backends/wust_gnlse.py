@@ -23,6 +23,7 @@ from cpa_sim.stages.fiber.utils.grid import (
 from cpa_sim.stages.fiber.utils.units import fs_to_ps
 
 _LIGHT_SPEED_M_PER_S = 299792458.0
+_FS_TO_S = 1e-15
 
 
 def _ensure_numpy_math_compat() -> None:
@@ -191,15 +192,21 @@ def run_wust_gnlse(
             artifacts[f"{stage_name}.backend_version"] = "unknown"
     out.artifacts.update(artifacts)
 
-    energy_in = float(np.sum(np.abs(np.asarray(state.pulse.field_t)) ** 2) * state.pulse.grid.dt)
-    energy_out = float(np.sum(np.abs(out.pulse.field_t) ** 2) * out.pulse.grid.dt)
+    energy_in_au = float(np.sum(np.abs(np.asarray(state.pulse.field_t)) ** 2) * state.pulse.grid.dt)
+    energy_out_au = float(np.sum(np.abs(out.pulse.field_t) ** 2) * out.pulse.grid.dt)
+    energy_in_j = energy_in_au * _FS_TO_S
+    energy_out_j = energy_out_au * _FS_TO_S
     spectral_rms = float(np.sqrt(np.mean(np.abs(out.pulse.field_w) ** 2)))
     metrics = {
-        f"{stage_name}.energy_in": energy_in,
-        f"{stage_name}.energy_out": energy_out,
-        f"{stage_name}.energy_ratio": energy_out / energy_in if energy_in > 0.0 else float("nan"),
+        f"{stage_name}.energy_in_au": energy_in_au,
+        f"{stage_name}.energy_out_au": energy_out_au,
+        f"{stage_name}.energy_in_j": energy_in_j,
+        f"{stage_name}.energy_out_j": energy_out_j,
+        f"{stage_name}.energy_ratio": energy_out_au / energy_in_au
+        if energy_in_au > 0.0
+        else float("nan"),
         f"{stage_name}.grid_points": float(out.pulse.field_t.size),
-        f"{stage_name}.spectral_rms": spectral_rms,
+        f"{stage_name}.spectral_rms_au": spectral_rms,
     }
     out.metrics.update(metrics)
     return StageResult(state=out, metrics=metrics)
