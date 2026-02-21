@@ -54,12 +54,22 @@ def test_treacy_canonical_geometry_pins_gdd_tod_and_chirp_sign_behavior(
     )
 
     canonical_metrics = TreacyGratingStage(canonical_metrics_stage).process(generated_laser).metrics
-    assert canonical_metrics["canonical.gdd_fs2"] == pytest.approx(-1.33e6, abs=tolerances["gdd_abs_fs2"])
-    assert canonical_metrics["canonical.tod_fs3"] == pytest.approx(5.35e6, abs=tolerances["tod_abs_fs3"])
+    assert canonical_metrics["canonical.gdd_fs2"] == pytest.approx(
+        -1.33e6, abs=tolerances["gdd_abs_fs2"]
+    )
+    assert canonical_metrics["canonical.tod_fs3"] == pytest.approx(
+        5.35e6, abs=tolerances["tod_abs_fs3"]
+    )
 
-    prechirped = TreacyGratingStage(
-        PhaseOnlyDispersionCfg(name="prechirp", gdd_fs2=1.33e6, tod_fs3=0.0, apply_to_pulse=True)
-    ).process(generated_laser).state
+    prechirped = (
+        TreacyGratingStage(
+            PhaseOnlyDispersionCfg(
+                name="prechirp", gdd_fs2=1.33e6, tod_fs3=0.0, apply_to_pulse=True
+            )
+        )
+        .process(generated_laser)
+        .state
+    )
 
     chirp_sign_stage = TreacyGratingPairCfg(
         name="canonical",
