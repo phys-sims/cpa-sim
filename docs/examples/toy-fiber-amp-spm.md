@@ -17,42 +17,19 @@ It does **not** include ASE, pump depletion, or wavelength-dependent gain.
 Both examples use **measurement-plane average power matching** (same `amp_power_w` and physical length settings).
 Comparisons of nonlinear distortion are interpreted with that criterion.
 
-## Example A: direct seed -> toy amp
+## Cases A and B in one standardized entrypoint
 
-Run:
+The standardized runner executes both cases via one module entrypoint:
 
 ```bash
-python scripts/examples/toy_amp_case_a_direct.py --out artifacts/toy-amp-case-a --emit-plots
+python -m cpa_sim.examples.toy_amp_case_ab_compare --out artifacts/toy-amp-case-ab --emit-plots
 ```
 
 Expected qualitative behavior:
-- strong SPM from high peak power at amp input,
-- spectral broadening relative to a `gamma=0` run,
-- higher B-integral proxy.
+- Case A (direct seed -> toy amp): stronger SPM from high peak power at amp input,
+- Case B (CPA-style stretcher -> toy amp -> Treacy compressor): lower B-integral proxy during amplification,
+- Comparison summary makes side-by-side inspection deterministic and repeatable.
 
-## Example B: CPA-style seed -> stretcher -> toy amp -> Treacy compressor
-
-Run:
-
-```bash
-python scripts/examples/toy_amp_case_b_cpa.py --out artifacts/toy-amp-case-b --emit-plots
-```
-
-Expected qualitative behavior:
-- stretched pulse enters the amp with reduced peak power,
-- reduced B-integral proxy during amplification vs Example A,
-- after compression, pulse remains amplified but with less nonlinear distortion than direct amplification.
-
-
-## Combined runner (A vs B side-by-side)
-
-Run both cases in one command and emit a comparison summary:
-
-```bash
-python scripts/examples/toy_amp_case_ab_compare.py --out artifacts/toy-amp-case-ab --emit-plots
-```
-
-This writes per-case summaries plus `comparison_summary.json` with the same key metrics for direct side-by-side review.
 
 ## Notes on metrics
 

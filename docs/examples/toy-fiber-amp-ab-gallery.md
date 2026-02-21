@@ -5,7 +5,7 @@ Use this page to present side-by-side figures for **case A (direct)** vs **case 
 ## Run once to generate artifacts
 
 ```bash
-python scripts/examples/toy_amp_case_ab_compare.py --out artifacts/toy-amp-case-ab --emit-plots
+python -m cpa_sim.examples.toy_amp_case_ab_compare --out artifacts/toy-amp-case-ab --emit-plots
 ```
 
 This writes:
@@ -45,4 +45,4 @@ magick artifacts/toy-amp-case-ab/case-a/stage-plots/toy_amp_time_intensity.svg \
 
 - Both cases use explicit `LaserGenCfg` setup (same pulse/beam spec) so the only difference is chain topology.
 - Use `comparison_summary.json` to quote numeric side-by-side metrics.
-- The shared toy amp gain is hardwired in `scripts/examples/toy_amp_case_ab_compare.py` and reused by both case A and case B.
+- The shared toy amp gain is hardwired in `src/cpa_sim/examples/toy_amp_case_ab_compare.py` and reused by both case A and case B.
