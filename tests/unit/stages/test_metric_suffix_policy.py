@@ -61,7 +61,6 @@ def test_stage_metric_keys_follow_suffix_policy() -> None:
             stretcher=PhaseOnlyDispersionCfg(name="stretcher", gdd_fs2=1.0, tod_fs3=0.0),
             fiber=FiberCfg(name="fiber"),
             amp=SimpleGainCfg(name="amp", gain_linear=1.1),
-            stages=[],
         )
     )
 
@@ -73,6 +72,10 @@ def test_stage_metric_keys_follow_suffix_policy() -> None:
     )
     stage_keys = [k for k in result.metrics if k.startswith(stage_prefixes)]
     assert stage_keys
+    for prefix in stage_prefixes:
+        assert any(key.startswith(prefix) for key in stage_keys), (
+            f"Expected metrics for stage prefix {prefix!r}, but none were emitted."
+        )
 
     invalid = []
     for key in stage_keys:
