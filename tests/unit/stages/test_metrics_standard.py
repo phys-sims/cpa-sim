@@ -20,7 +20,9 @@ def test_interpolated_fwhm_matches_analytic_gaussian() -> None:
     t_fs = np.linspace(-400.0, 400.0, 8192)
     intensity = np.exp(-4.0 * np.log(2.0) * (t_fs / expected_fwhm_fs) ** 2)
 
-    measured_fwhm_fs = _interpolated_fwhm_fs(t=t_fs, intensity=intensity, peak=float(np.max(intensity)))
+    measured_fwhm_fs = _interpolated_fwhm_fs(
+        t=t_fs, intensity=intensity, peak=float(np.max(intensity))
+    )
 
     assert measured_fwhm_fs == pytest.approx(expected_fwhm_fs, rel=0.0, abs=0.02)
 
@@ -32,7 +34,9 @@ def test_interpolated_fwhm_matches_analytic_sech2() -> None:
     t_fs = np.linspace(-400.0, 400.0, 8192)
     intensity = (1.0 / np.cosh(t_fs / t0_fs)) ** 2
 
-    measured_fwhm_fs = _interpolated_fwhm_fs(t=t_fs, intensity=intensity, peak=float(np.max(intensity)))
+    measured_fwhm_fs = _interpolated_fwhm_fs(
+        t=t_fs, intensity=intensity, peak=float(np.max(intensity))
+    )
 
     assert measured_fwhm_fs == pytest.approx(expected_fwhm_fs, rel=0.0, abs=0.02)
 
