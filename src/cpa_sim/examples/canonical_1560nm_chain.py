@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Any
 
 from cpa_sim.models import (
-    SimpleGainCfg,
     DispersionTaylorCfg,
     FiberCfg,
     FiberPhysicsCfg,
@@ -15,6 +14,7 @@ from cpa_sim.models import (
     PipelineConfig,
     PulseSpec,
     RuntimeCfg,
+    SimpleGainCfg,
     TreacyGratingPairCfg,
 )
 from cpa_sim.pipeline import run_pipeline

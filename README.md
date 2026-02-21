@@ -136,7 +136,7 @@ For `toy_fiber_amp`, `amp_power_w` is the target **output average power in watts
 
 ## Fiber stage example (WUST `gnlse`)
 
-Example policy: core runnable logic lives in `src/cpa_sim/examples/*`; `scripts/examples/*` are thin compatibility wrappers.
+Example policy: runnable example logic lives in `src/cpa_sim/examples/*` and is invoked via module entrypoints.
 
 A runnable fiber-stage example module is available at:
 

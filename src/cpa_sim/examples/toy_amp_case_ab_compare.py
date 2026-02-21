@@ -7,7 +7,13 @@ import sys
 from pathlib import Path
 from typing import Any, Literal, cast
 
-from cpa_sim.models import LaserGenCfg, PipelineConfig, RuntimeCfg, ToyFiberAmpCfg, TreacyGratingPairCfg
+from cpa_sim.models import (
+    LaserGenCfg,
+    PipelineConfig,
+    RuntimeCfg,
+    ToyFiberAmpCfg,
+    TreacyGratingPairCfg,
+)
 from cpa_sim.models.config import recommended_n_samples_for_pulse, validate_pulse_sampling
 from cpa_sim.models.state import BeamSpec, LaserSpec, PulseSpec
 from cpa_sim.pipeline import run_pipeline
@@ -54,7 +60,9 @@ def _stage_metric(metrics: dict[str, Any], *, stage_name: str, metric_name: str)
     return float(value) if isinstance(value, (float, int)) else None
 
 
-def _extract_comparison_metrics(metrics: dict[str, Any], observables: dict[str, Any]) -> dict[str, float | None]:
+def _extract_comparison_metrics(
+    metrics: dict[str, Any], observables: dict[str, Any]
+) -> dict[str, float | None]:
     return {
         "energy_in_au": _stage_metric(metrics, stage_name="edfa", metric_name="energy_in_au"),
         "energy_out_au": _stage_metric(metrics, stage_name="edfa", metric_name="energy_out_au"),
@@ -63,20 +71,30 @@ def _extract_comparison_metrics(metrics: dict[str, Any], observables: dict[str, 
         "power_in_avg_w": _stage_metric(metrics, stage_name="edfa", metric_name="power_in_avg_w"),
         "power_out_avg_w": _stage_metric(metrics, stage_name="edfa", metric_name="power_out_avg_w"),
         "peak_power_in_w": _stage_metric(metrics, stage_name="edfa", metric_name="peak_power_in_w"),
-        "peak_power_out_w": _stage_metric(metrics, stage_name="edfa", metric_name="peak_power_out_w"),
+        "peak_power_out_w": _stage_metric(
+            metrics, stage_name="edfa", metric_name="peak_power_out_w"
+        ),
         "bandwidth_in_rad_per_fs": _stage_metric(
             metrics, stage_name="edfa", metric_name="bandwidth_in_rad_per_fs"
         ),
         "bandwidth_out_rad_per_fs": _stage_metric(
             metrics, stage_name="edfa", metric_name="bandwidth_out_rad_per_fs"
         ),
-        "b_integral_proxy_rad": _stage_metric(metrics, stage_name="edfa", metric_name="b_integral_proxy_rad"),
+        "b_integral_proxy_rad": _stage_metric(
+            metrics, stage_name="edfa", metric_name="b_integral_proxy_rad"
+        ),
         "pipeline.final_energy_au": _metric_by_suffix(metrics, ".summary.energy_au"),
         "pipeline.final_peak_power_au": _metric_by_suffix(metrics, ".summary.peak_intensity_au"),
-        "pipeline.final_bandwidth_rad_per_fs": _metric_by_suffix(metrics, ".summary.bandwidth_rad_per_fs"),
+        "pipeline.final_bandwidth_rad_per_fs": _metric_by_suffix(
+            metrics, ".summary.bandwidth_rad_per_fs"
+        ),
         "pipeline.observable_fwhm_fs": _observable_value(observables, "intensity_fwhm"),
-        "pipeline.observable_ac_fwhm_fs": _observable_value(observables, "intensity_autocorrelation_fwhm"),
-        "pipeline.observable_spectral_rms_rad_per_fs": _observable_value(observables, "spectral_rms_width"),
+        "pipeline.observable_ac_fwhm_fs": _observable_value(
+            observables, "intensity_autocorrelation_fwhm"
+        ),
+        "pipeline.observable_spectral_rms_rad_per_fs": _observable_value(
+            observables, "spectral_rms_width"
+        ),
     }
 
 
@@ -273,7 +291,9 @@ def run_comparison(*, out_dir: Path, seed: int, emit_plots: bool) -> dict[str, A
     )
     case_b = _run_case(
         case_name="B_cpa",
-        description="Catalog 2 ps seed -> PMDCF stretcher -> EDFA (5 W target) -> Treacy compressor.",
+        description=(
+            "Catalog 2 ps seed -> PMDCF stretcher -> EDFA (5 W target) -> Treacy compressor."
+        ),
         cfg=_build_case_b_config(
             seed=seed,
             laser_gen=laser_gen,
@@ -325,7 +345,9 @@ def run_comparison(*, out_dir: Path, seed: int, emit_plots: bool) -> dict[str, A
         },
     }
 
-    (out_dir / "comparison_summary.json").write_text(json.dumps(comparison, indent=2, sort_keys=True) + "\n")
+    (out_dir / "comparison_summary.json").write_text(
+        json.dumps(comparison, indent=2, sort_keys=True) + "\n"
+    )
     return comparison
 
 

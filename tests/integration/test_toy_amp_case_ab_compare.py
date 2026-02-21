@@ -10,7 +10,8 @@ def test_toy_amp_case_ab_comparison_writes_outputs(tmp_path: Path) -> None:
     result = run(
         [
             "python",
-            "scripts/examples/toy_amp_case_ab_compare.py",
+            "-m",
+            "cpa_sim.examples.toy_amp_case_ab_compare",
             "--out",
             str(tmp_path),
         ],
