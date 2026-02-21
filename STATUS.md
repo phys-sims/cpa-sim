@@ -8,6 +8,7 @@
 - Scope: Updated analytic laser pulse generation so gaussian and sech2 shapes are defined from intensity-domain formulas with width_fs as intensity FWHM, added explicit PulseSpec shape/width semantics, and added unit coverage for FWHM behavior.
 - Scope: Added pulse sampling-policy helpers (minimum points per FWHM plus optional Nyquist/window checks), tightened toy amp example laser-grid construction to target denser short-pulse sampling, and documented rationale in the toy A/B gallery doc.
 - Scope: Audited stage metric naming under src/cpa_sim/stages, enforced explicit energy/power suffixes for WUST-GNLSE fiber backend metrics with fs→s Joule conversion, and added unit tests for metric-key suffix policy across laser/free-space/fiber/amp stages.
+- Scope: Added new canonical physics regressions for analytic laser TBP/FWHM targets, Treacy free-space geometry + chirp-sign behavior, and WUST-GNLSE fiber summary metrics; expanded ADR-0003 with explicit canonical cases and tolerances.
 
 ---
 
@@ -18,7 +19,7 @@
 | Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-02-21 | Passed; pre-commit reported only a deprecation warning for `default_stages`. |
 | Type checking (mypy) | `python -m mypy src` | ✅ | 2026-02-21 | Success: no issues found in 33 source files. |
 | Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-21 | Passed, including new pulse sampling policy unit coverage. |
-| Pytest physics (supplemental) | `python -m pytest -q -m physics --durations=10` | ⬜ | — | Not rerun in this change set. |
+| Pytest physics (supplemental) | `python -m pytest -q -m physics --durations=10` | ✅ | 2026-02-21 | Passed with canonical laser/free-space/fiber physics checks. |
 | Pytest slow (supplemental) | `python -m pytest -q -m slow --durations=10` | ⬜ | — |  |
 | Pytest gnlse optional (supplemental) | `python -m pytest -q -m gnlse --durations=10` | ✅ | 2026-02-17 | 4 passed, 15 deselected (includes new example artifact test). |
 | Pip editable install with extras (supplemental) | `pip install -e .[dev,gnlse]` | ⚠️ | 2026-02-17 | Failed in this environment due proxy/network restrictions when resolving build dependencies. |
@@ -74,7 +75,7 @@ Fill these in after first green run; keep them current.
 ### QA / determinism
 - [x] Determinism tests (same config + seed)
 - [x] Integration smoke test (fast, CI)
-- [ ] Physics golden tests (free-space + fiber)
+- [x] Physics golden tests (free-space + fiber)
 
 ### Docs / ADRs
 - [x] ADR-0001 conventions (units, FFT, sign)
