@@ -10,6 +10,7 @@ import yaml  # type: ignore[import-untyped]
 
 from cpa_sim.models import PipelineConfig
 from cpa_sim.pipeline import run_pipeline
+from cpa_sim.reporting import build_validation_report, render_markdown_report
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -113,6 +114,10 @@ def main(argv: list[str] | None = None) -> int:
             "paths": artifacts,
         },
     )
+
+    report = build_validation_report(cfg=cfg, result=result, artifacts=artifacts)
+    _write_json(out_dir / "report.json", report.model_dump(mode="json"))
+    (out_dir / "report.md").write_text(render_markdown_report(report), encoding="utf-8")
 
     return 0
 

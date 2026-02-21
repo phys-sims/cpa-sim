@@ -37,11 +37,14 @@ def test_cli_run_writes_canonical_outputs(tmp_path: Path) -> None:
 
     metrics = out_dir / "metrics.json"
     artifacts = out_dir / "artifacts.json"
-    for path in [metrics, artifacts]:
+    report_json = out_dir / "report.json"
+    report_md = out_dir / "report.md"
+    for path in [metrics, artifacts, report_json, report_md]:
         assert path.exists(), f"Missing expected output file: {path.name}"
 
     metrics_payload = json.loads(metrics.read_text(encoding="utf-8"))
     artifacts_payload = json.loads(artifacts.read_text(encoding="utf-8"))
+    report_payload = json.loads(report_json.read_text(encoding="utf-8"))
 
     assert metrics_payload["schema_version"] == "cpa.metrics.v1"
     assert "cpa.metrics.summary.energy_au" in metrics_payload["overall"]
@@ -52,6 +55,13 @@ def test_cli_run_writes_canonical_outputs(tmp_path: Path) -> None:
     assert "paths" in artifacts_payload
     artifact_paths = artifacts_payload["paths"]
     assert isinstance(artifact_paths, dict)
+
+    assert report_payload["schema_version"] == "cpa.validation_report.v1"
+    assert report_payload["provenance"]["seed"] == 7
+    assert "validation_tiers" in report_payload
+    assert any(stage["stage"] == "metrics" for stage in report_payload["stages"])
+
+    assert "# CPA Simulation Validation Report" in report_md.read_text(encoding="utf-8")
 
     assert not (out_dir / "metrics_overall.json").exists()
     assert not (out_dir / "metrics_stages.json").exists()
