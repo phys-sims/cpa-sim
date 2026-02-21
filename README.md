@@ -172,12 +172,6 @@ Toy amplifier A/B example documentation is available at:
   - `<stage>_spectrum.svg`
 - `state_final.npz` (optional via `--dump-state-npz`)
 
-Migration behavior:
-
-- Legacy files `metrics_overall.json`, `metrics_stages.json`, and `artifacts_index.json`
-  are still emitted for compatibility and marked deprecated.
-- New integrations should read `metrics.json` and `artifacts.json` as the single source of truth.
-
 A run returns a `StageResult` with deterministic `state`, `metrics`, and provenance metadata in `state.meta`.
 
 ## Validation strategy

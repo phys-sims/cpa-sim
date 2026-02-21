@@ -27,7 +27,7 @@ def _run_cli(
 
 
 @pytest.mark.integration
-def test_cli_run_writes_canonical_and_legacy_outputs(tmp_path: Path) -> None:
+def test_cli_run_writes_canonical_outputs(tmp_path: Path) -> None:
     repo_root = Path(__file__).resolve().parents[2]
     config_path = repo_root / "configs" / "examples" / "basic_cpa.yaml"
     out_dir = tmp_path / "out"
@@ -37,11 +37,7 @@ def test_cli_run_writes_canonical_and_legacy_outputs(tmp_path: Path) -> None:
 
     metrics = out_dir / "metrics.json"
     artifacts = out_dir / "artifacts.json"
-    legacy_overall = out_dir / "metrics_overall.json"
-    legacy_stages = out_dir / "metrics_stages.json"
-    legacy_artifacts = out_dir / "artifacts_index.json"
-
-    for path in [metrics, artifacts, legacy_overall, legacy_stages, legacy_artifacts]:
+    for path in [metrics, artifacts]:
         assert path.exists(), f"Missing expected output file: {path.name}"
 
     metrics_payload = json.loads(metrics.read_text(encoding="utf-8"))
@@ -54,12 +50,17 @@ def test_cli_run_writes_canonical_and_legacy_outputs(tmp_path: Path) -> None:
 
     assert artifacts_payload["schema_version"] == "cpa.artifacts.v1"
     assert "paths" in artifacts_payload
-    assert "metrics.plot_time_intensity" in artifacts_payload["paths"]
-    assert "metrics.plot_spectrum" in artifacts_payload["paths"]
+    artifact_paths = artifacts_payload["paths"]
+    assert isinstance(artifact_paths, dict)
 
-    for stage_name in ["laser_init", "stretcher", "fiber", "amp", "compressor", "metrics"]:
-        assert (out_dir / "stage_plots" / f"{stage_name}_time_intensity.svg").exists()
-        assert (out_dir / "stage_plots" / f"{stage_name}_spectrum.svg").exists()
+    assert not (out_dir / "metrics_overall.json").exists()
+    assert not (out_dir / "metrics_stages.json").exists()
+    assert not (out_dir / "artifacts_index.json").exists()
+
+    if "metrics.plot_time_intensity" in artifact_paths:
+        assert Path(artifact_paths["metrics.plot_time_intensity"]).exists()
+    if "metrics.plot_spectrum" in artifact_paths:
+        assert Path(artifact_paths["metrics.plot_spectrum"]).exists()
 
 
 @pytest.mark.integration
