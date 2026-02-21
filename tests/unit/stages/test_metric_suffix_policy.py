@@ -19,7 +19,6 @@ from cpa_sim.models.state import BeamState, LaserState, PulseGrid, PulseState
 from cpa_sim.pipeline import run_pipeline
 from cpa_sim.stages.fiber import FiberStage
 
-
 _DIMENSIONLESS_LEAF_KEYS = {
     "apply_to_pulse",
     "diffraction_order",
