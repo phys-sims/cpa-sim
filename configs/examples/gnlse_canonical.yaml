@@ -1,0 +1,37 @@
+runtime:
+  seed: 23
+laser_gen:
+  name: laser_init
+  kind: analytic
+  spec:
+    pulse:
+      shape: gaussian
+      amplitude: 5.0
+      width_fs: 120.0
+      center_wavelength_nm: 1030.0
+      rep_rate_mhz: 1.0
+      n_samples: 256
+      time_window_fs: 2000.0
+stages:
+  - name: fiber
+    kind: fiber
+    physics:
+      length_m: 0.2
+      loss_db_per_m: 0.0
+      gamma_1_per_w_m: 0.01
+      dispersion:
+        kind: taylor
+        betas_psn_per_m: [0.0]
+    numerics:
+      backend: wust_gnlse
+      grid_policy: use_state
+      z_saves: 16
+      method: RK45
+      rtol: 1.0e-5
+      atol: 1.0e-8
+      keep_full_solution: false
+      keep_aw: true
+      record_backend_version: true
+metrics:
+  name: metrics
+  kind: standard

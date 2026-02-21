@@ -1,0 +1,28 @@
+runtime:
+  seed: 11
+laser_gen:
+  name: laser_init
+  kind: analytic
+  spec:
+    pulse:
+      shape: gaussian
+      amplitude: 1.0
+      width_fs: 100.0
+      center_wavelength_nm: 1030.0
+      rep_rate_mhz: 1.0
+      n_samples: 128
+      time_window_fs: 1200.0
+stages:
+  - name: canonical
+    kind: treacy_grating_pair
+    line_density_lpmm: 1200.0
+    incidence_angle_deg: 35.0
+    separation_um: 100000.0
+    wavelength_nm: 1030.0
+    diffraction_order: -1
+    n_passes: 2
+    include_tod: true
+    apply_to_pulse: false
+metrics:
+  name: metrics
+  kind: standard

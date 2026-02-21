@@ -10,22 +10,9 @@ import pytest
 
 @pytest.mark.integration
 def test_cli_run_writes_expected_outputs(tmp_path: Path) -> None:
-    config_path = tmp_path / "config.yaml"
+    repo_root = Path(__file__).resolve().parents[2]
+    config_path = repo_root / "configs" / "examples" / "basic_cpa.yaml"
     out_dir = tmp_path / "out"
-
-    config_path.write_text(
-        """
-runtime:
-  seed: 123
-laser_gen:
-  spec:
-    pulse:
-      n_samples: 64
-      time_window_fs: 200.0
-""".strip()
-        + "\n",
-        encoding="utf-8",
-    )
 
     proc = subprocess.run(
         [
