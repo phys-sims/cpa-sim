@@ -165,8 +165,8 @@ Where:
 ## Phase 5 — Example scripts + docs (A/B narrative)
 
 ### Target files
-- `scripts/examples/toy_amp_case_a_direct.py` (new)
-- `scripts/examples/toy_amp_case_b_cpa.py` (new)
+- `src/cpa_sim/examples/toy_amp_case_a_direct.py` (new)
+- `src/cpa_sim/examples/toy_amp_case_b_cpa.py` (new)
 - `docs/examples/toy-fiber-amp-spm.md` (new)
 - optional `src/cpa_sim/examples/` wrappers if that pattern is needed
 

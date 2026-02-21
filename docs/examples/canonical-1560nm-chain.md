@@ -6,7 +6,7 @@ This guide shows how to run the canonical 1560 nm CPA chain example and publish 
 
 ## What this example does
 
-The script `scripts/examples/canonical_1560nm_chain.py` builds and runs a deterministic CPA chain with explicit stage ordering:
+The core module `src/cpa_sim/examples/canonical_1560nm_chain.py` builds and runs a deterministic CPA chain with explicit stage ordering:
 
 1. **Fiber broadening**: regular-dispersion `FiberCfg` at **1560 nm** (`beta2 > 0`) with enough length to create significant positive chirp
 2. **Amplification**: EDFA-like gain using current `simple_gain` (`AmpCfg`)
@@ -24,7 +24,7 @@ The script writes `run_summary.json` with metrics and an artifact index.
 From repo root:
 
 ```bash
-python scripts/examples/canonical_1560nm_chain.py \
+python -m cpa_sim.examples.canonical_1560nm_chain \
   --ci-safe \
   --out artifacts/canonical-1560nm-chain-ci \
   --plot-dir artifacts/canonical-1560nm-chain-ci/plots
@@ -35,7 +35,7 @@ Use `--ci-safe` for tiny-grid runtime suitable for CI/docs workflows.
 For a larger run:
 
 ```bash
-python scripts/examples/canonical_1560nm_chain.py \
+python -m cpa_sim.examples.canonical_1560nm_chain \
   --out artifacts/canonical-1560nm-chain \
   --plot-dir artifacts/canonical-1560nm-chain/stage-plots \
   --seed 1560
@@ -44,7 +44,7 @@ python scripts/examples/canonical_1560nm_chain.py \
 
 ## Treacy compressor debug/probe script
 
-To debug compressor behavior directly, use `scripts/examples/treacy_compressor_probe.py`.
+To debug compressor behavior directly, use `python -m cpa_sim.examples.treacy_compressor_probe`.
 This script scans Treacy grating separation while keeping the 1560 nm regular-dispersion broadening path fixed, and writes:
 
 - `probe_summary.json` (full scan + best point)
@@ -53,7 +53,7 @@ This script scans Treacy grating separation while keeping the 1560 nm regular-di
 Example:
 
 ```bash
-python scripts/examples/treacy_compressor_probe.py \
+python -m cpa_sim.examples.treacy_compressor_probe \
   --ci-safe \
   --out artifacts/treacy-compressor-probe-ci \
   --start-um 60000 \

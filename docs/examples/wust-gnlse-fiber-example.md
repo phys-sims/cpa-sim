@@ -19,7 +19,7 @@ pip install -e .[dev,gnlse]
 ## Run
 
 ```bash
-python scripts/examples/wust_gnlse_fiber_example.py --out artifacts/fiber-example --format svg
+python -m cpa_sim.examples.wust_gnlse_fiber_example --out artifacts/fiber-example --format svg
 ```
 
 Expected outputs:

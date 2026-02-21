@@ -1,19 +1,16 @@
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import sys
 from pathlib import Path
-from typing import Any, Literal
-
-ROOT = Path(__file__).resolve().parents[2]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+from typing import Any, Literal, cast
 
 from cpa_sim.models import (
+    LaserGenCfg,
     PipelineConfig,
     RuntimeCfg,
-    LaserGenCfg,
     ToyFiberAmpCfg,
     TreacyGratingPairCfg,
 )
@@ -21,13 +18,6 @@ from cpa_sim.models.config import recommended_n_samples_for_pulse, validate_puls
 from cpa_sim.models.state import BeamSpec, LaserSpec, PulseSpec
 from cpa_sim.pipeline import run_pipeline
 from cpa_sim.specs.mapping import LaserPulseWidthMapping, map_laser_pulse_width_to_sim_width
-from specs.schema import (
-    AmpSpecRecord,
-    FiberSpecRecord,
-    GratingSpecRecord,
-    LaserSpecRecord,
-    load_catalog,
-)
 
 DEFAULT_OUT_DIR = Path("artifacts/toy-amp-case-ab")
 
@@ -108,24 +98,26 @@ def _extract_comparison_metrics(
     }
 
 
-def _load_catalog_records() -> tuple[
-    LaserSpecRecord, AmpSpecRecord, FiberSpecRecord, GratingSpecRecord
-]:
-    catalog = load_catalog()
-    laser = catalog[CATALOG_IDS["laser"]]
-    amp = catalog[CATALOG_IDS["amp"]]
-    fiber = catalog[CATALOG_IDS["fiber"]]
-    grating = catalog[CATALOG_IDS["grating"]]
-
-    assert isinstance(laser, LaserSpecRecord)
-    assert isinstance(amp, AmpSpecRecord)
-    assert isinstance(fiber, FiberSpecRecord)
-    assert isinstance(grating, GratingSpecRecord)
+def _load_catalog_records() -> tuple[Any, Any, Any, Any]:
+    try:
+        schema_mod = importlib.import_module("specs.schema")
+    except ModuleNotFoundError:
+        repo_root = Path(__file__).resolve().parents[3]
+        if str(repo_root) not in sys.path:
+            sys.path.insert(0, str(repo_root))
+        schema_mod = importlib.import_module("specs.schema")
+    catalog = schema_mod.load_catalog()
+    catalog_by_id = cast(dict[str, Any], catalog)
+    laser = catalog_by_id[CATALOG_IDS["laser"]]
+    amp = catalog_by_id[CATALOG_IDS["amp"]]
+    fiber = catalog_by_id[CATALOG_IDS["fiber"]]
+    grating = catalog_by_id[CATALOG_IDS["grating"]]
     return laser, amp, fiber, grating
 
 
-def _build_laser_gen(laser_record: LaserSpecRecord) -> tuple[LaserGenCfg, LaserPulseWidthMapping]:
-    operating_point = laser_record.model_extra["example_operating_point_for_sim_demo"]
+def _build_laser_gen(laser_record: Any) -> tuple[LaserGenCfg, LaserPulseWidthMapping]:
+    model_extra = laser_record.model_extra or {}
+    operating_point = model_extra["example_operating_point_for_sim_demo"]
     pulse_shape = str(operating_point["modeling_assumptions"]["pulse_intensity_shape"]).strip()
     mapped_shape: Literal["gaussian", "sech2"]
     if pulse_shape == "sech^2":
@@ -181,7 +173,7 @@ def _build_shared_amp_stage() -> ToyFiberAmpCfg:
     )
 
 
-def _build_stretcher_stage(fiber_record: FiberSpecRecord) -> ToyFiberAmpCfg:
+def _build_stretcher_stage(fiber_record: Any) -> ToyFiberAmpCfg:
     gvd_raw = fiber_record.specs["dispersion"]["group_velocity_dispersion_fs2_per_m"]["value"]
     beta2_s2_per_m = _as_float(gvd_raw) * 1e-30
     loss_db_per_m = float(fiber_record.normalized["loss_db_per_m"]["value_db_per_m"])
@@ -208,8 +200,8 @@ def _build_case_b_config(
     *,
     seed: int,
     laser_gen: LaserGenCfg,
-    fiber_record: FiberSpecRecord,
-    grating_record: GratingSpecRecord,
+    fiber_record: Any,
+    grating_record: Any,
 ) -> PipelineConfig:
     line_density_lpmm = float(grating_record.specs["spatial_frequency_lines_per_mm"]["value"])
     incidence_angle_deg = float(grating_record.specs["angle_of_incidence_deg"]["value"])
@@ -299,7 +291,9 @@ def run_comparison(*, out_dir: Path, seed: int, emit_plots: bool) -> dict[str, A
     )
     case_b = _run_case(
         case_name="B_cpa",
-        description="Catalog 2 ps seed -> PMDCF stretcher -> EDFA (5 W target) -> Treacy compressor.",
+        description=(
+            "Catalog 2 ps seed -> PMDCF stretcher -> EDFA (5 W target) -> Treacy compressor."
+        ),
         cfg=_build_case_b_config(
             seed=seed,
             laser_gen=laser_gen,

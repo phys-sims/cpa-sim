@@ -136,14 +136,16 @@ For `toy_fiber_amp`, `amp_power_w` is the target **output average power in watts
 
 ## Fiber stage example (WUST `gnlse`)
 
-A runnable fiber-stage example script is available at:
+Example policy: runnable example logic lives in `src/cpa_sim/examples/*` and is invoked via module entrypoints.
 
-- `scripts/examples/wust_gnlse_fiber_example.py`
+A runnable fiber-stage example module is available at:
+
+- `src/cpa_sim/examples/wust_gnlse_fiber_example.py`
 
 Run it with:
 
 ```bash
-python scripts/examples/wust_gnlse_fiber_example.py --out artifacts/fiber-example --format svg
+python -m cpa_sim.examples.wust_gnlse_fiber_example --out artifacts/fiber-example --format svg
 ```
 
 For configuration/units details, see `docs/examples/wust-gnlse-fiber-example.md`.

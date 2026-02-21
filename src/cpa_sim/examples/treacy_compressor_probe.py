@@ -33,7 +33,7 @@ def _rms_width_fs(*, t_fs: np.ndarray, intensity: np.ndarray) -> float:
     return float(np.sqrt(max(variance, 0.0)))
 
 
-def _build_cfg(*, seed: int, separation_um: float, ci_safe: bool) -> PipelineConfig:
+def build_config(*, seed: int, separation_um: float, ci_safe: bool) -> PipelineConfig:
     if ci_safe:
         n_samples = 256
         time_window_fs = 2400.0
@@ -96,7 +96,7 @@ def run_probe(
     results: list[dict[str, float]] = []
 
     for separation_um in separations:
-        cfg = _build_cfg(seed=seed, separation_um=float(separation_um), ci_safe=ci_safe)
+        cfg = build_config(seed=seed, separation_um=float(separation_um), ci_safe=ci_safe)
         result = run_pipeline(cfg)
         t_fs = np.asarray(result.state.pulse.grid.t)
         i_t = np.asarray(result.state.pulse.intensity_t)
@@ -106,8 +106,12 @@ def run_probe(
                 "separation_um": float(separation_um),
                 "rms_width_fs": width_fs,
                 "peak_intensity_au": float(np.max(i_t)),
-                "compressor_gdd_fs2": float(result.metrics["cpa.treacy_compressor.treacy_compressor.gdd_fs2"]),
-                "compressor_tod_fs3": float(result.metrics["cpa.treacy_compressor.treacy_compressor.tod_fs3"]),
+                "compressor_gdd_fs2": float(
+                    result.metrics["cpa.treacy_compressor.treacy_compressor.gdd_fs2"]
+                ),
+                "compressor_tod_fs3": float(
+                    result.metrics["cpa.treacy_compressor.treacy_compressor.tod_fs3"]
+                ),
             }
         )
 
@@ -129,7 +133,9 @@ def run_probe(
         json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     with (out_dir / "probe_results.csv").open("w", encoding="utf-8") as fh:
-        fh.write("separation_um,rms_width_fs,peak_intensity_au,compressor_gdd_fs2,compressor_tod_fs3\n")
+        fh.write(
+            "separation_um,rms_width_fs,peak_intensity_au,compressor_gdd_fs2,compressor_tod_fs3\n"
+        )
         for item in results:
             fh.write(
                 f"{item['separation_um']:.1f},{item['rms_width_fs']:.6f},{item['peak_intensity_au']:.6f},"
@@ -141,7 +147,10 @@ def run_probe(
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Scan Treacy separation to debug compressor behavior against regular-dispersion fiber chirp."
+        description=(
+            "Scan Treacy separation to debug compressor behavior against "
+            "regular-dispersion fiber chirp."
+        )
     )
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument("--seed", type=int, default=1560)
@@ -165,9 +174,9 @@ def main() -> None:
     best = payload["best"]
     print(f"wrote summary: {args.out / 'probe_summary.json'}")
     print(
-        "best separation: "
-        f"{best['separation_um']:.1f} um "
-        f"(rms_width_fs={best['rms_width_fs']:.4f}, peak_intensity_au={best['peak_intensity_au']:.4f})"
+        f"best separation: {best['separation_um']:.1f} um "
+        f"(rms_width_fs={best['rms_width_fs']:.4f}, "
+        f"peak_intensity_au={best['peak_intensity_au']:.4f})"
     )
 
 

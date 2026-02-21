@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 from importlib import import_module
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,8 @@ from cpa_sim.models import (
 from cpa_sim.models.state import BeamState, LaserSpec, LaserState, PulseGrid, PulseSpec, PulseState
 from cpa_sim.stages.fiber import FiberStage
 from cpa_sim.stages.laser_gen import AnalyticLaserGenStage
+
+DEFAULT_OUT_DIR = Path("artifacts/fiber-example")
 
 
 def _build_empty_state() -> LaserState:
@@ -99,3 +102,23 @@ def run_example(out_dir: Path, *, plot_format: str = "svg") -> dict[str, Path]:
     plt.close(fig)
 
     return paths
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Run a small WUST gnlse fiber example and save plots."
+    )
+    parser.add_argument("--out", type=Path, default=DEFAULT_OUT_DIR)
+    parser.add_argument("--format", choices=["svg", "pdf"], default="svg")
+    return parser
+
+
+def main() -> None:
+    args = _build_parser().parse_args()
+    outputs = run_example(args.out, plot_format=args.format)
+    for name, path in outputs.items():
+        print(f"wrote {name}: {path}")
+
+
+if __name__ == "__main__":
+    main()

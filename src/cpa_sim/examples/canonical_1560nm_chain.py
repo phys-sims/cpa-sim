@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Any
 
 from cpa_sim.models import (
-    AmpCfg,
     DispersionTaylorCfg,
     FiberCfg,
     FiberPhysicsCfg,
@@ -15,6 +14,7 @@ from cpa_sim.models import (
     PipelineConfig,
     PulseSpec,
     RuntimeCfg,
+    SimpleGainCfg,
     TreacyGratingPairCfg,
 )
 from cpa_sim.pipeline import run_pipeline
@@ -47,7 +47,7 @@ def build_config(*, seed: int, ci_safe: bool) -> PipelineConfig:
         )
     )
 
-    stages = [
+    stages: list[Any] = [
         FiberCfg(
             name="fiber_regular_disp_1560nm",
             physics=FiberPhysicsCfg(
@@ -55,12 +55,11 @@ def build_config(*, seed: int, ci_safe: bool) -> PipelineConfig:
                 loss_db_per_m=0.2,
                 gamma_1_per_w_m=0.003,
                 dispersion=DispersionTaylorCfg(
-                    # Regular-dispersion broadening for positive chirp before Treacy compression.
                     betas_psn_per_m=[0.022],
                 ),
             ),
         ),
-        AmpCfg(
+        SimpleGainCfg(
             name="edfa_like_gain",
             kind="simple_gain",
             gain_linear=4.0,
@@ -84,13 +83,7 @@ def build_config(*, seed: int, ci_safe: bool) -> PipelineConfig:
     )
 
 
-def run_example(
-    *,
-    out_dir: Path,
-    plot_dir: Path,
-    seed: int,
-    ci_safe: bool,
-) -> dict[str, Any]:
+def run_example(*, out_dir: Path, plot_dir: Path, seed: int, ci_safe: bool) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     cfg = build_config(seed=seed, ci_safe=ci_safe)
     policy = {
@@ -118,29 +111,10 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run a canonical 1560 nm CPA chain with DCF prechirp and Treacy compression."
     )
-    parser.add_argument(
-        "--out",
-        type=Path,
-        default=DEFAULT_OUT_DIR,
-        help="Directory for run_summary.json and other emitted files.",
-    )
-    parser.add_argument(
-        "--plot-dir",
-        type=Path,
-        default=DEFAULT_PLOT_DIR,
-        help="Directory for per-stage time/spectrum plots.",
-    )
-    parser.add_argument(
-        "--seed",
-        type=int,
-        default=DEFAULT_SEED,
-        help="Deterministic runtime seed.",
-    )
-    parser.add_argument(
-        "--ci-safe",
-        action="store_true",
-        help="Use a tiny-grid, short-fiber configuration for CI-safe runtime.",
-    )
+    parser.add_argument("--out", type=Path, default=DEFAULT_OUT_DIR)
+    parser.add_argument("--plot-dir", type=Path, default=DEFAULT_PLOT_DIR)
+    parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
+    parser.add_argument("--ci-safe", action="store_true")
     return parser
 
 
