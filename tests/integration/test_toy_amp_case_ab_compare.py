@@ -52,8 +52,8 @@ def test_toy_amp_case_ab_comparison_writes_outputs(tmp_path: Path) -> None:
         "energy_out_au",
         "power_in_avg_w",
         "power_out_avg_w",
-        "peak_power_in_au",
-        "peak_power_out_au",
+        "peak_power_in_w",
+        "peak_power_out_w",
         "pipeline.final_energy_au",
         "pipeline.final_peak_power_au",
     ):

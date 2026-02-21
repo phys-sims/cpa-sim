@@ -192,10 +192,15 @@ def run_wust_gnlse(
             artifacts[f"{stage_name}.backend_version"] = "unknown"
     out.artifacts.update(artifacts)
 
-    energy_in_au = float(np.sum(np.abs(np.asarray(state.pulse.field_t)) ** 2) * state.pulse.grid.dt)
-    energy_out_au = float(np.sum(np.abs(out.pulse.field_t) ** 2) * out.pulse.grid.dt)
-    energy_in_j = energy_in_au * _FS_TO_S
-    energy_out_j = energy_out_au * _FS_TO_S
+    power_in_w = np.abs(np.asarray(state.pulse.field_t)) ** 2
+    power_out_w = np.abs(out.pulse.field_t) ** 2
+    dt_in_fs = float(state.pulse.grid.dt)
+    dt_out_fs = float(out.pulse.grid.dt)
+
+    energy_in_au = float(np.sum(power_in_w) * dt_in_fs)
+    energy_out_au = float(np.sum(power_out_w) * dt_out_fs)
+    energy_in_j = float(np.sum(power_in_w) * dt_in_fs * _FS_TO_S)
+    energy_out_j = float(np.sum(power_out_w) * dt_out_fs * _FS_TO_S)
     spectral_rms = float(np.sqrt(np.mean(np.abs(out.pulse.field_w) ** 2)))
     metrics = {
         f"{stage_name}.energy_in_au": energy_in_au,
