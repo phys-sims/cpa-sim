@@ -32,6 +32,16 @@ Adopt the ECO-0002 canonical result surface for `cpa-sim`, with `schema_version:
 - Large arrays (fields, spectra, temporal traces) are written as file artifacts and referenced by path.
 - `metrics` remains scalar-only for dashboards and optimization loops.
 - Stage records must include stage identity, stage config hash, scalar metrics, and artifact references.
+- Add an additive `observables` contract (schema `cpa.observables.v0.1`) that separates latent simulation arrays from measured scalar observables with explicit method/assumption tags.
+
+### Observable contract (additive)
+- **Latent simulation state** (`field_t`, `field_w`, grid axes/units) remains in internal stage state and array artifacts; these are not treated as direct measured outputs.
+- **Measured observables** are emitted as a structured list where each measurement includes:
+  - `name` (e.g., `intensity_fwhm`, `intensity_autocorrelation_fwhm`, `spectral_rms_width`)
+  - `value` and `unit`
+  - `method` (calculation procedure)
+  - `assumptions` (explicit interpretation caveats)
+- Existing scalar `metrics` keys remain valid for backwards compatibility; `observables` is additive and preferred for method-aware reporting.
 
 ### Failure semantics
 Failed runs must still emit schema-valid `result.json` with actionable `error` metadata and any available partial stage outputs.

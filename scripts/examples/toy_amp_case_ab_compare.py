@@ -21,7 +21,13 @@ from cpa_sim.models.config import recommended_n_samples_for_pulse, validate_puls
 from cpa_sim.models.state import BeamSpec, LaserSpec, PulseSpec
 from cpa_sim.pipeline import run_pipeline
 from cpa_sim.specs.mapping import LaserPulseWidthMapping, map_laser_pulse_width_to_sim_width
-from specs.schema import AmpSpecRecord, FiberSpecRecord, GratingSpecRecord, LaserSpecRecord, load_catalog
+from specs.schema import (
+    AmpSpecRecord,
+    FiberSpecRecord,
+    GratingSpecRecord,
+    LaserSpecRecord,
+    load_catalog,
+)
 
 DEFAULT_OUT_DIR = Path("artifacts/toy-amp-case-ab")
 
@@ -50,13 +56,23 @@ def _metric_by_suffix(metrics: dict[str, Any], suffix: str) -> float | None:
     return None
 
 
+def _observable_value(observables: dict[str, Any], measurement_name: str) -> float | None:
+    for measurement in observables.get("measurements", []):
+        if measurement.get("name") == measurement_name:
+            value = measurement.get("value")
+            return float(value) if isinstance(value, (float, int)) else None
+    return None
+
+
 def _stage_metric(metrics: dict[str, Any], *, stage_name: str, metric_name: str) -> float | None:
     key = f"cpa.{stage_name}.{stage_name}.{metric_name}"
     value = metrics.get(key)
     return float(value) if isinstance(value, (float, int)) else None
 
 
-def _extract_comparison_metrics(metrics: dict[str, Any]) -> dict[str, float | None]:
+def _extract_comparison_metrics(
+    metrics: dict[str, Any], observables: dict[str, Any]
+) -> dict[str, float | None]:
     return {
         "energy_in_au": _stage_metric(metrics, stage_name="edfa", metric_name="energy_in_au"),
         "energy_out_au": _stage_metric(metrics, stage_name="edfa", metric_name="energy_out_au"),
@@ -65,7 +81,9 @@ def _extract_comparison_metrics(metrics: dict[str, Any]) -> dict[str, float | No
         "power_in_avg_w": _stage_metric(metrics, stage_name="edfa", metric_name="power_in_avg_w"),
         "power_out_avg_w": _stage_metric(metrics, stage_name="edfa", metric_name="power_out_avg_w"),
         "peak_power_in_w": _stage_metric(metrics, stage_name="edfa", metric_name="peak_power_in_w"),
-        "peak_power_out_w": _stage_metric(metrics, stage_name="edfa", metric_name="peak_power_out_w"),
+        "peak_power_out_w": _stage_metric(
+            metrics, stage_name="edfa", metric_name="peak_power_out_w"
+        ),
         "bandwidth_in_rad_per_fs": _stage_metric(
             metrics, stage_name="edfa", metric_name="bandwidth_in_rad_per_fs"
         ),
@@ -80,10 +98,19 @@ def _extract_comparison_metrics(metrics: dict[str, Any]) -> dict[str, float | No
         "pipeline.final_bandwidth_rad_per_fs": _metric_by_suffix(
             metrics, ".summary.bandwidth_rad_per_fs"
         ),
+        "pipeline.observable_fwhm_fs": _observable_value(observables, "intensity_fwhm"),
+        "pipeline.observable_ac_fwhm_fs": _observable_value(
+            observables, "intensity_autocorrelation_fwhm"
+        ),
+        "pipeline.observable_spectral_rms_rad_per_fs": _observable_value(
+            observables, "spectral_rms_width"
+        ),
     }
 
 
-def _load_catalog_records() -> tuple[LaserSpecRecord, AmpSpecRecord, FiberSpecRecord, GratingSpecRecord]:
+def _load_catalog_records() -> tuple[
+    LaserSpecRecord, AmpSpecRecord, FiberSpecRecord, GratingSpecRecord
+]:
     catalog = load_catalog()
     laser = catalog[CATALOG_IDS["laser"]]
     amp = catalog[CATALOG_IDS["amp"]]
@@ -225,11 +252,13 @@ def _run_case(
         "cpa.stage_plot_dir": str(out_dir / "stage-plots"),
     }
     result = run_pipeline(cfg, policy=policy)
+    observables = result.state.meta.get("observable_contract", {})
     payload = {
         "matching_criterion": "output_energy",
         "description": description,
-        "comparison_metrics": _extract_comparison_metrics(result.metrics),
+        "comparison_metrics": _extract_comparison_metrics(result.metrics, observables),
         "metrics": result.metrics,
+        "observables": observables,
         "assumptions": {
             "laser_measurement_model": width_mapping.model_dump(mode="json"),
         },
