@@ -1,0 +1,39 @@
+name: Optional gnlse
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * *"
+
+jobs:
+  gnlse_optional:
+    name: optional gnlse integration
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install FFTW
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfftw3-dev
+
+      - name: Install package + optional gnlse backend deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+          # gnlse 2.0.0 currently imports pkg_resources at build time;
+          # install setuptools explicitly and disable build isolation for this package.
+          pip install "setuptools<81"
+          pip install --no-build-isolation gnlse
+
+      - name: Run optional gnlse tests
+        run: python -m pytest -q -m gnlse --durations=10
