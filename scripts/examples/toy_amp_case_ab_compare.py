@@ -4,7 +4,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -20,6 +20,7 @@ from cpa_sim.models import (
 from cpa_sim.models.config import recommended_n_samples_for_pulse, validate_pulse_sampling
 from cpa_sim.models.state import BeamSpec, LaserSpec, PulseSpec
 from cpa_sim.pipeline import run_pipeline
+from cpa_sim.specs.mapping import LaserPulseWidthMapping, map_laser_pulse_width_to_sim_width
 from specs.schema import AmpSpecRecord, FiberSpecRecord, GratingSpecRecord, LaserSpecRecord, load_catalog
 
 DEFAULT_OUT_DIR = Path("artifacts/toy-amp-case-ab")
@@ -96,18 +97,36 @@ def _load_catalog_records() -> tuple[LaserSpecRecord, AmpSpecRecord, FiberSpecRe
     return laser, amp, fiber, grating
 
 
-def _build_laser_gen(laser_record: LaserSpecRecord) -> LaserGenCfg:
+def _build_laser_gen(laser_record: LaserSpecRecord) -> tuple[LaserGenCfg, LaserPulseWidthMapping]:
     operating_point = laser_record.model_extra["example_operating_point_for_sim_demo"]
-    width_fs = float(operating_point["pulsewidth_fwhm_ps"]) * 1_000.0
+    pulse_shape = str(operating_point["modeling_assumptions"]["pulse_intensity_shape"]).strip()
+    mapped_shape: Literal["gaussian", "sech2"]
+    if pulse_shape == "sech^2":
+        mapped_shape = "sech2"
+    elif pulse_shape == "gaussian":
+        mapped_shape = "gaussian"
+    else:
+        raise ValueError(f"Unsupported pulse_intensity_shape for mapping: {pulse_shape!r}")
+    width_mapping = map_laser_pulse_width_to_sim_width(
+        source_width_ps=float(operating_point["pulsewidth_fwhm_ps"]),
+        source_measurement_type="autocorrelation_fwhm",
+        assumed_pulse_shape=mapped_shape,
+        uncertainty_rel=0.15,
+        assumptions=[
+            f"Catalog operating point source: laser record {laser_record.id}",
+            "Vendor pulsewidth is interpreted as autocorrelation FWHM for this demo mapping.",
+        ],
+    )
+
     time_window_fs = 120_000.0
     pulse = PulseSpec(
-        shape="sech2",
+        shape=mapped_shape,
         amplitude=1.0,
-        width_fs=width_fs,
+        width_fs=width_mapping.simulation_width_fs,
         center_wavelength_nm=float(operating_point["center_wavelength_nm"]),
         rep_rate_mhz=float(operating_point["repetition_rate_hz"]) / 1e6,
         n_samples=recommended_n_samples_for_pulse(
-            width_fs=width_fs,
+            width_fs=width_mapping.simulation_width_fs,
             time_window_fs=time_window_fs,
             min_points_per_fwhm=24,
         ),
@@ -120,7 +139,7 @@ def _build_laser_gen(laser_record: LaserSpecRecord) -> LaserGenCfg:
             pulse=pulse,
             beam=BeamSpec(radius_mm=1.0, m2=1.0),
         ),
-    )
+    ), width_mapping
 
 
 def _build_shared_amp_stage() -> ToyFiberAmpCfg:
@@ -195,8 +214,12 @@ def _run_case(
     cfg: PipelineConfig,
     out_dir: Path,
     emit_plots: bool,
+    width_mapping: LaserPulseWidthMapping,
 ) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
+    assumptions_path = out_dir / "laser_measurement_assumptions.json"
+    assumptions_path.write_text(json.dumps(width_mapping.model_dump(mode="json"), indent=2) + "\n")
+
     policy = {
         "cpa.emit_stage_plots": emit_plots,
         "cpa.stage_plot_dir": str(out_dir / "stage-plots"),
@@ -207,7 +230,20 @@ def _run_case(
         "description": description,
         "comparison_metrics": _extract_comparison_metrics(result.metrics),
         "metrics": result.metrics,
-        "artifacts": {**result.artifacts, **result.state.artifacts},
+        "assumptions": {
+            "laser_measurement_model": width_mapping.model_dump(mode="json"),
+        },
+        "artifacts": {
+            **result.artifacts,
+            **result.state.artifacts,
+            "cpa.assumptions.laser_measurement_model": str(assumptions_path),
+        },
+        "metadata": {
+            **result.state.meta,
+            "assumptions": {
+                "laser_measurement_model": width_mapping.model_dump(mode="json"),
+            },
+        },
     }
     (out_dir / "run_summary.json").write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
 
@@ -222,7 +258,7 @@ def _run_case(
 def run_comparison(*, out_dir: Path, seed: int, emit_plots: bool) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     laser_record, amp_record, fiber_record, grating_record = _load_catalog_records()
-    laser_gen = _build_laser_gen(laser_record)
+    laser_gen, width_mapping = _build_laser_gen(laser_record)
 
     case_a = _run_case(
         case_name="A_direct",
@@ -230,6 +266,7 @@ def run_comparison(*, out_dir: Path, seed: int, emit_plots: bool) -> dict[str, A
         cfg=_build_case_a_config(seed=seed, laser_gen=laser_gen),
         out_dir=out_dir / "case-a",
         emit_plots=emit_plots,
+        width_mapping=width_mapping,
     )
     case_b = _run_case(
         case_name="B_cpa",
@@ -242,6 +279,7 @@ def run_comparison(*, out_dir: Path, seed: int, emit_plots: bool) -> dict[str, A
         ),
         out_dir=out_dir / "case-b",
         emit_plots=emit_plots,
+        width_mapping=width_mapping,
     )
 
     comparison = {
@@ -254,6 +292,7 @@ def run_comparison(*, out_dir: Path, seed: int, emit_plots: bool) -> dict[str, A
                 "center_wavelength_nm": laser_gen.spec.pulse.center_wavelength_nm,
                 "rep_rate_hz": laser_gen.spec.pulse.rep_rate_mhz * 1e6,
             },
+            "measurement_mapping": width_mapping.model_dump(mode="json"),
         },
         "catalog": {
             "laser": laser_record.id,

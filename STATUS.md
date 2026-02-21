@@ -9,6 +9,7 @@
 - Scope: Added pulse sampling-policy helpers (minimum points per FWHM plus optional Nyquist/window checks), tightened toy amp example laser-grid construction to target denser short-pulse sampling, and documented rationale in the toy A/B gallery doc.
 - Scope: Audited stage metric naming under src/cpa_sim/stages, enforced explicit energy/power suffixes for WUST-GNLSE fiber backend metrics with fs→s Joule conversion, and added unit tests for metric-key suffix policy across laser/free-space/fiber/amp stages.
 - Scope: Added new canonical physics regressions for analytic laser TBP/FWHM targets, Treacy free-space geometry + chirp-sign behavior, and WUST-GNLSE fiber summary metrics; expanded ADR-0003 with explicit canonical cases and tolerances.
+- Scope: Added a laser measurement mapping module to convert vendor pulsewidth measurements (including autocorrelation deconvolution and uncertainty bounds) into simulation width, wired this mapping into the toy amp A/B example, and persisted mapping assumptions into per-run metadata/artifacts for auditability.
 
 ---
 
