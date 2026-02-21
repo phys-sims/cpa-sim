@@ -138,26 +138,6 @@ FreeSpaceCfg = Annotated[
 ]
 
 
-def _migrate_legacy_free_space_cfg(data: object) -> object:
-    if not isinstance(data, dict):
-        return data
-    if data.get("kind") != "treacy_grating":
-        return data
-    warnings.warn(
-        "Free-space kind='treacy_grating' is deprecated; use kind='phase_only_dispersion' "
-        "or kind='treacy_grating_pair'.",
-        DeprecationWarning,
-        stacklevel=3,
-    )
-    return {
-        "name": data.get("name", "free_space"),
-        "kind": "phase_only_dispersion",
-        "gdd_fs2": data.get("gdd_fs2", 0.0),
-        "tod_fs3": data.get("tod_fs3", 0.0),
-        "apply_to_pulse": data.get("apply_to_pulse", True),
-    }
-
-
 class DispersionTaylorCfg(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -343,18 +323,3 @@ class PipelineConfig(BaseModel):
     )
     stages: list[PipelineStageCfg] | None = None
     metrics: MetricsCfg = Field(default_factory=MetricsCfg)
-
-    @model_validator(mode="before")
-    @classmethod
-    def _migrate_legacy_free_space(cls, data: object) -> object:
-        if not isinstance(data, dict):
-            return data
-        payload = dict(data)
-        for key in ("stretcher", "compressor"):
-            if key in payload:
-                payload[key] = _migrate_legacy_free_space_cfg(payload[key])
-        if "stages" in payload and isinstance(payload["stages"], list):
-            payload["stages"] = [
-                _migrate_legacy_free_space_cfg(stage_cfg) for stage_cfg in payload["stages"]
-            ]
-        return payload

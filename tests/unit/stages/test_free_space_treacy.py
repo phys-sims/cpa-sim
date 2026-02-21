@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import warnings
 from pathlib import Path
 
 import numpy as np
@@ -81,16 +80,9 @@ def _rms_width_fs(state: LaserState) -> float:
 
 
 @pytest.mark.unit
-def test_legacy_freespace_cfg_migrates() -> None:
-    with warnings.catch_warnings(record=True) as caught:
-        warnings.simplefilter("always")
-        cfg = PipelineConfig(
-            stretcher={"name": "stretcher", "kind": "treacy_grating", "gdd_fs2": 42.0}
-        )
-
-    assert cfg.stretcher.kind == "phase_only_dispersion"
-    assert cfg.stretcher.gdd_fs2 == pytest.approx(42.0)
-    assert any(issubclass(w.category, DeprecationWarning) for w in caught)
+def test_legacy_freespace_kind_rejected() -> None:
+    with pytest.raises(ValueError, match="treacy_grating"):
+        PipelineConfig(stretcher={"name": "stretcher", "kind": "treacy_grating", "gdd_fs2": 42.0})
 
 
 @pytest.mark.unit
