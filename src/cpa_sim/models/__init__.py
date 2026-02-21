@@ -18,6 +18,8 @@ from cpa_sim.models.config import (
     ToyPhaseNumericsCfg,
     TreacyGratingPairCfg,
     WustGnlseNumericsCfg,
+    recommended_n_samples_for_pulse,
+    validate_pulse_sampling,
 )
 from cpa_sim.models.state import (
     BeamSpec,
@@ -48,6 +50,8 @@ __all__ = [
     "LaserSpec",
     "LaserState",
     "MetricsCfg",
+    "recommended_n_samples_for_pulse",
+    "validate_pulse_sampling",
     "PipelineConfig",
     "ToyFiberAmpCfg",
     "PulseGrid",

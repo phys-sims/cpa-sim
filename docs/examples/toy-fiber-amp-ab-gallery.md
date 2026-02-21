@@ -14,6 +14,16 @@ This writes:
 - `artifacts/toy-amp-case-ab/case-b/run_summary.json`
 - stage SVG plots under each case's `stage-plots/`
 
+## Sampling policy for short pulses
+
+The toy A/B scripts now enforce a pulse-grid policy before running the pipeline:
+
+- temporal sampling must satisfy `dt_fs <= width_fs / N_min` (default `N_min=24`, i.e. 20–40+ points across FWHM),
+- optional FFT safety checks verify both a minimum time-window-to-FWHM ratio and a Nyquist spectral margin tied to pulse shape (`gaussian` or `sech2`).
+
+This guardrail prevents under-resolved short pulses from producing misleading peak power and spectral broadening metrics in the gallery outputs.
+If a config violates policy, examples raise early with a clear error; for exploratory use, the same helper can emit warnings in non-strict mode.
+
 ## Optional: convert SVG stage plots to PNG
 
 If you want PNG files for slides/docs:
