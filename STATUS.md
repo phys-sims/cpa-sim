@@ -14,6 +14,7 @@
 - Scope: Added a minimal observable contract model (`cpa.observables.v0.1`) that separates latent field state from measured observables (FWHM, autocorrelation FWHM, spectral RMS width), emitted observable metadata from the metrics stage, extended ADR-0001/0002 with the contract, and updated example scripts for observable-aware reporting.
 - Scope: Added canonical YAML configs under `configs/examples/` (`basic_cpa`, `tracy_golden`, and `gnlse_canonical`), wired integration tests to load these files directly (including optional gnlse skip behavior), and updated README quickstart CLI commands accordingly.
 - Scope: Defined canonical CLI output layout (`metrics.json`, `artifacts.json`, `stage_plots/`, optional `state_final.npz`), added legacy filename deprecation fallback, documented migration in README + ADR-0008, and expanded CLI integration tests for exact filenames/required keys.
+- Scope: Added lightweight reporting package (`cpa_sim.reporting`) with `cpa.validation_report.v1` schema models, report builders/markdown renderer, CLI emission of `report.json` + `report.md`, and unit/integration test coverage for report serialization and output creation.
 
 ---
 
@@ -71,7 +72,7 @@ Fill these in after first green run; keep them current.
 - [x] FiberStage: Strategy B `FiberStageCfg(physics, numerics)` with `toy_phase` and `wust_gnlse` backends
 - [x] AmpStage: `simple_gain` and `toy_fiber_amp` backends
 - [x] MetricsStage (energy, FWHM, bandwidth, B-integral proxy)
-- [ ] Report/Validation schema (tiered validation records)
+- [x] Report/Validation schema (tiered validation records)
 
 ### Backends + adapters
 - [x] External solver adapter isolated (no scattered third-party calls)

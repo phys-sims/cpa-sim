@@ -23,6 +23,8 @@ Adopt ECO-0003 marker-aligned validation tiers:
 
 Required markers: `unit`, `integration`, `physics`, `slow`.
 
+Run artifacts should expose these tier labels in machine-readable form via `report.json` (`cpa.validation_report.v1`) so downstream consumers can reason about what level of validation was executed/referenced.
+
 
 ### CI workflow mapping
 - **Required PR gate (`.github/workflows/ci.yml`)** runs only:

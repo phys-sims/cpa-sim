@@ -43,6 +43,16 @@ Adopt the ECO-0002 canonical result surface for `cpa-sim`, with `schema_version:
   - `assumptions` (explicit interpretation caveats)
 - Existing scalar `metrics` keys remain valid for backwards compatibility; `observables` is additive and preferred for method-aware reporting.
 
+
+### Validation report schema (additive)
+Add a lightweight validation report artifact (`report.json`) with schema `cpa.validation_report.v1` to summarize:
+
+- run provenance (`seed`, `config_hash`, run/version/git metadata when available),
+- validation tier labels and references (`unit`, `integration`, `physics`),
+- stage-level artifact pointers and summary scalar metrics.
+
+`report.json` is additive and does not replace `metrics.json` or `artifacts.json`; it provides a compact consumer-facing manifest for validation context.
+
 ### Failure semantics
 Failed runs must still emit schema-valid `result.json` with actionable `error` metadata and any available partial stage outputs.
 

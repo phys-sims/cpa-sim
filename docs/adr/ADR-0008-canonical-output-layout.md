@@ -27,6 +27,11 @@ For `cpa-sim run config.yaml --out out/`, define a canonical layout under `out/`
   - per-stage files:
     - `<stage_name>_time_intensity.svg`
     - `<stage_name>_spectrum.svg`
+- `report.json` (required)
+  - schema version: `cpa.validation_report.v1`
+  - includes run provenance, validation-tier labels/references, summary metrics, and stage artifact pointers
+- `report.md` (optional-but-emitted by CLI)
+  - human-readable rendering of `report.json`
 - `state_final.npz` (optional)
   - emitted only when `--dump-state-npz` is passed
 
@@ -50,4 +55,5 @@ When legacy files are emitted, CLI raises a `DeprecationWarning`. Consumers shou
 - Integration tests assert exact canonical filenames.
 - Integration tests verify required keys in `metrics.json` and `artifacts.json`.
 - Integration tests verify per-stage plot filenames.
+- Integration tests verify `report.json`/`report.md` creation and required report keys.
 - Integration tests verify optional `state_final.npz` contents and artifact registration.
