@@ -33,7 +33,7 @@ The CPA simulator owns **domain models** (`LaserSpec`, `LaserState`, pulse/beam 
 - **Positive:** shared behavior and API expectations across simulation repos; lower maintenance overhead.
 - **Positive:** direct compatibility with future phys-pipeline upgrades (DAG, scheduler, cache) as additive layers.
 - **Negative:** runtime environments must provide a compatible `phys-pipeline` installation.
-- **Mitigation:** maintain a compatibility import surface that prefers canonical imports and fails with clear errors when unavailable.
+- **Mitigation:** keep direct imports from `phys_pipeline.*` and raise a concise install-time error when runtime dependencies are missing.
 
 ### Validation
 - Unit test for deterministic runs with same config/seed.
