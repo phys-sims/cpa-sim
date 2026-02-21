@@ -5,43 +5,90 @@ import subprocess
 import sys
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 
+def _run_cli(
+    *, config_path: Path, out_dir: Path, dump_state_npz: bool = False
+) -> subprocess.CompletedProcess[str]:
+    cmd = [
+        sys.executable,
+        "-m",
+        "cpa_sim.cli",
+        "run",
+        str(config_path),
+        "--out",
+        str(out_dir),
+    ]
+    if dump_state_npz:
+        cmd.append("--dump-state-npz")
+    return subprocess.run(cmd, capture_output=True, text=True, check=False)
+
+
 @pytest.mark.integration
-def test_cli_run_writes_expected_outputs(tmp_path: Path) -> None:
+def test_cli_run_writes_canonical_and_legacy_outputs(tmp_path: Path) -> None:
     repo_root = Path(__file__).resolve().parents[2]
     config_path = repo_root / "configs" / "examples" / "basic_cpa.yaml"
     out_dir = tmp_path / "out"
 
-    proc = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "cpa_sim.cli",
-            "run",
-            str(config_path),
-            "--out",
-            str(out_dir),
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
+    proc = _run_cli(config_path=config_path, out_dir=out_dir)
     assert proc.returncode == 0, proc.stderr
 
-    overall = out_dir / "metrics_overall.json"
-    stages = out_dir / "metrics_stages.json"
-    artifacts = out_dir / "artifacts_index.json"
+    metrics = out_dir / "metrics.json"
+    artifacts = out_dir / "artifacts.json"
+    legacy_overall = out_dir / "metrics_overall.json"
+    legacy_stages = out_dir / "metrics_stages.json"
+    legacy_artifacts = out_dir / "artifacts_index.json"
 
-    assert overall.exists()
-    assert stages.exists()
-    assert artifacts.exists()
+    for path in [metrics, artifacts, legacy_overall, legacy_stages, legacy_artifacts]:
+        assert path.exists(), f"Missing expected output file: {path.name}"
 
-    overall_payload = json.loads(overall.read_text(encoding="utf-8"))
-    stage_payload = json.loads(stages.read_text(encoding="utf-8"))
+    metrics_payload = json.loads(metrics.read_text(encoding="utf-8"))
+    artifacts_payload = json.loads(artifacts.read_text(encoding="utf-8"))
 
-    assert "cpa.metrics.summary.energy_au" in overall_payload
-    assert "metrics" in stage_payload
-    assert "energy_au" in stage_payload["metrics"]
+    assert metrics_payload["schema_version"] == "cpa.metrics.v1"
+    assert "cpa.metrics.summary.energy_au" in metrics_payload["overall"]
+    assert "metrics" in metrics_payload["per_stage"]
+    assert "energy_au" in metrics_payload["per_stage"]["metrics"]
+
+    assert artifacts_payload["schema_version"] == "cpa.artifacts.v1"
+    assert "paths" in artifacts_payload
+    assert "metrics.plot_time_intensity" in artifacts_payload["paths"]
+    assert "metrics.plot_spectrum" in artifacts_payload["paths"]
+
+    for stage_name in ["laser_init", "stretcher", "fiber", "amp", "compressor", "metrics"]:
+        assert (out_dir / "stage_plots" / f"{stage_name}_time_intensity.svg").exists()
+        assert (out_dir / "stage_plots" / f"{stage_name}_spectrum.svg").exists()
+
+
+@pytest.mark.integration
+def test_cli_run_optionally_dumps_final_state_npz(tmp_path: Path) -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    config_path = repo_root / "configs" / "examples" / "basic_cpa.yaml"
+    out_dir = tmp_path / "out"
+
+    proc = _run_cli(config_path=config_path, out_dir=out_dir, dump_state_npz=True)
+    assert proc.returncode == 0, proc.stderr
+
+    state_dump = out_dir / "state_final.npz"
+    assert state_dump.exists()
+
+    with np.load(state_dump) as payload:
+        for required in [
+            "t",
+            "w",
+            "field_t_real",
+            "field_t_imag",
+            "field_w_real",
+            "field_w_imag",
+            "intensity_t",
+            "spectrum_w",
+            "meta_json",
+            "metrics_json",
+            "artifacts_json",
+        ]:
+            assert required in payload.files
+
+    artifacts_payload = json.loads((out_dir / "artifacts.json").read_text(encoding="utf-8"))
+    assert artifacts_payload["paths"]["run.state_dump_npz"].endswith("state_final.npz")

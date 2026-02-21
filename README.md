@@ -114,8 +114,9 @@ runs without stretching/compression can be expressed by omitting free-space entr
 
 ### Stage plot policy
 
-Pass runtime policy `{"cpa.emit_stage_plots": true}` to emit per-stage time/spectrum SVG plots.
-Use `"cpa.stage_plot_dir"` to control the output directory (default: `artifacts/stage-plots`).
+CLI runs now emit per-stage time/spectrum SVG plots by default into `<out>/stage_plots/`.
+If you use the Python API directly, pass runtime policy `{"cpa.emit_stage_plots": true}` and
+optionally set `"cpa.stage_plot_dir"`.
 
 ### Pulse amplitude and units
 
@@ -159,13 +160,25 @@ Toy amplifier A/B example documentation is available at:
 
 ## Outputs and provenance
 
-A run returns a `StageResult` with:
+`cpa-sim run ... --out <dir>` uses this canonical output layout:
 
-- `state`: pulse/beam state plus `meta`, `metrics`, and `artifacts`,
-- `metrics`: stage and aggregate metric namespace entries,
-- `meta`: provenance data including deterministic run metadata.
+- `metrics.json` (schema `cpa.metrics.v1`)
+  - `overall`: aggregate flat metric map
+  - `per_stage`: stage-grouped metric map
+- `artifacts.json` (schema `cpa.artifacts.v1`)
+  - `paths`: artifact-name to file-path map
+- `stage_plots/`
+  - `<stage>_time_intensity.svg`
+  - `<stage>_spectrum.svg`
+- `state_final.npz` (optional via `--dump-state-npz`)
 
-At minimum, the package aims to keep summary metrics finite and reproducible for fixed config/seed pairs.
+Migration behavior:
+
+- Legacy files `metrics_overall.json`, `metrics_stages.json`, and `artifacts_index.json`
+  are still emitted for compatibility and marked deprecated.
+- New integrations should read `metrics.json` and `artifacts.json` as the single source of truth.
+
+A run returns a `StageResult` with deterministic `state`, `metrics`, and provenance metadata in `state.meta`.
 
 ## Validation strategy
 
