@@ -122,4 +122,4 @@ def test_wust_gnlse_raman_toggle_produces_finite_output() -> None:
 
     assert np.all(np.isfinite(result.state.pulse.intensity_t))
     assert np.all(np.isfinite(result.state.pulse.spectrum_w))
-    assert np.isfinite(result.metrics["fiber.energy_out"])
+    assert np.isfinite(result.metrics["fiber.energy_out_au"])
