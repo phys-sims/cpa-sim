@@ -24,12 +24,12 @@ The default v1 chain is shown below.
 
 ```mermaid
 flowchart LR
-    A[PulseInitStage\nInitialize pulse and grid] --> B[FreeSpaceStage\nStretcher]
-    B --> C[FiberStage\nNonlinear propagation]
-    C --> D[AmpStage\nGain model]
-    D --> E[FreeSpaceStage\nCompressor]
-    E --> F[MetricsStage\nCompute metrics and plots]
-    F --> G[ReportStage (optional)\nSummarize provenance and validation]
+    A["PulseInitStage<br/>Initialize pulse and grid"] --> B["FreeSpaceStage<br/>Stretcher"]
+    B --> C["FiberStage<br/>Nonlinear propagation"]
+    C --> D["AmpStage<br/>Gain model"]
+    D --> E["FreeSpaceStage<br/>Compressor"]
+    E --> F["MetricsStage<br/>Compute metrics and plots"]
+    F --> G["ReportStage (optional)<br/>Summarize provenance and validation"]
 ```
 
 ## Current implementation snapshot
