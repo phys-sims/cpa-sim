@@ -59,18 +59,55 @@ pip install -e .[dev]
 pip install -e .[gnlse]
 ```
 
-## Quickstart (CLI + example configs)
+## Quickstart (CLI first)
 
-Run the checked-in example configs directly with the CLI:
+### 1) Install
+
+```bash
+pip install -e .
+```
+
+For development tooling and optional WUST-FOG `gnlse` backend support:
+
+```bash
+pip install -e .[dev]
+pip install -e .[gnlse]
+```
+
+### 2) Run a canonical config from `configs/examples/`
 
 ```bash
 cpa-sim run configs/examples/basic_cpa.yaml --out out/basic
+```
+
+Other canonical examples:
+
+```bash
 cpa-sim run configs/examples/tracy_golden.yaml --out out/tracy-golden
 # optional: requires the WUST-FOG gnlse dependency
 cpa-sim run configs/examples/gnlse_canonical.yaml --out out/gnlse-canonical
 ```
 
-## Quickstart (Python API)
+### 3) Inspect output artifacts
+
+Each run writes these CLI artifacts into `--out`:
+
+- `metrics.json` (overall + per-stage metrics),
+- `artifacts.json` (artifact path registry),
+- `stage_plots/` with per-stage SVG time-intensity and spectrum plots,
+- optional `state_final.npz` when `--dump-state-npz` is passed.
+
+Example with NPZ state dump enabled:
+
+```bash
+cpa-sim run configs/examples/basic_cpa.yaml --out out/basic --dump-state-npz
+```
+
+### 4) Reproducibility note (fixed seed)
+
+Use a fixed `runtime.seed` in your YAML config to keep summary outputs deterministic for a given config + backend setup. The checked-in configs under `configs/examples/` are intended as stable starting points for reproducible runs.
+
+## Quickstart (Python API, secondary)
 
 ```python
 from cpa_sim.models import PipelineConfig
@@ -82,6 +119,21 @@ result = run_pipeline(cfg)
 print(result.metrics)
 print(result.state.meta)
 ```
+
+## v1 support matrix
+
+| Stage type | `kind` values available now | Notes |
+| --- | --- | --- |
+| `laser_gen` | `analytic` | Deterministic pulse/grid initialization backend. |
+| `free_space` | `treacy_grating_pair`, `phase_only_dispersion` | Used for stretcher/compressor roles depending on stage placement. |
+| `fiber` | `fiber` | Physics/numerics split with `numerics.kind` (`toy_phase` or `wust_gnlse`). |
+| `amp` | `simple_gain`, `toy_fiber_amp` | Simple gain and toy fiber-amp backends. |
+| `metrics` | `standard` | Canonical metrics/artifact recording backend (always final stage in pipeline). |
+
+Related docs:
+
+- Examples: `docs/examples/canonical-1560nm-chain.md`, `docs/examples/wust-gnlse-fiber-example.md`, `docs/examples/toy-fiber-amp-spm.md`
+- ADRs: `docs/adr/ADR-0001-conventions-units.md`, `docs/adr/ADR-0002-result-schema-contract.md`, `docs/adr/ADR-0003-validation-tiers-ci-policy.md`, `docs/adr/ADR-0008-canonical-output-layout.md`
 
 ## Configuration model (high-level)
 
