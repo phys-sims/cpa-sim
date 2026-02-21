@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import warnings
 from pathlib import Path
 from typing import Any
 
@@ -114,16 +113,6 @@ def main(argv: list[str] | None = None) -> int:
             "paths": artifacts,
         },
     )
-
-    warnings.warn(
-        "Legacy output files metrics_overall.json, metrics_stages.json, and artifacts_index.json "
-        "are deprecated and will be removed in a future release.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    _write_json(out_dir / "metrics_overall.json", result.metrics)
-    _write_json(out_dir / "metrics_stages.json", _build_stage_metrics(result.metrics))
-    _write_json(out_dir / "artifacts_index.json", artifacts)
 
     return 0
 
