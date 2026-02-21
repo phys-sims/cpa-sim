@@ -21,6 +21,7 @@ Adopt the ECO-0001 convention set for all internal `cpa-sim` calculations and ex
 4. **Envelope normalization:** the complex envelope is represented in `sqrt(W)` so `|E|^2` is power in `W`; energy integrates as `sum(|E|^2 * dt_fs * 1e-15)`.
 5. **FFT/scaling:** use NumPy FFT sign convention with explicit time-step scaling (`Ew = dt_s * FFT(Et)`, `Et = (1/dt_s) * IFFT(Ew)`).
 6. **Sign conventions:** positive chirp means `dω_inst/dt > 0`; GDD sign follows `d²φ/dω²`; free-space grating equation signs are documented and tested per backend.
+7. **Observable/latent split:** latent complex fields (`field_t`, `field_w`) remain simulation state, while reported observables (e.g., FWHM/autocorrelation/spectral width) must declare method and assumptions in an observable contract surface.
 
 ### Consequences
 - **Positive:** laser, free-space, fiber, and amp stages can share one stable state contract without hidden conversions.

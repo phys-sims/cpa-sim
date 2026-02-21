@@ -21,6 +21,11 @@ from cpa_sim.models.config import (
     recommended_n_samples_for_pulse,
     validate_pulse_sampling,
 )
+from cpa_sim.models.observables import (
+    LatentFieldContract,
+    ObservableContract,
+    ObservableMeasurement,
+)
 from cpa_sim.models.state import (
     BeamSpec,
     BeamState,
@@ -50,6 +55,9 @@ __all__ = [
     "LaserSpec",
     "LaserState",
     "MetricsCfg",
+    "ObservableContract",
+    "ObservableMeasurement",
+    "LatentFieldContract",
     "recommended_n_samples_for_pulse",
     "validate_pulse_sampling",
     "PipelineConfig",

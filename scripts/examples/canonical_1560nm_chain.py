@@ -104,6 +104,7 @@ def run_example(
         "ci_safe": ci_safe,
         "policy": policy,
         "metrics": result.metrics,
+        "observables": result.state.meta.get("observable_contract", {}),
         "artifacts": {**result.artifacts, **result.state.artifacts},
     }
     (out_dir / "run_summary.json").write_text(
