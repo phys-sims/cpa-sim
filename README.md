@@ -59,9 +59,18 @@ pip install -e .[dev]
 pip install -e .[gnlse]
 ```
 
-## Quickstart (Python API)
+## Quickstart (CLI + example configs)
 
-> CLI ergonomics are on the roadmap; current usage is Python-first.
+Run the checked-in example configs directly with the CLI:
+
+```bash
+cpa-sim run configs/examples/basic_cpa.yaml --out out/basic
+cpa-sim run configs/examples/tracy_golden.yaml --out out/tracy-golden
+# optional: requires the WUST-FOG gnlse dependency
+cpa-sim run configs/examples/gnlse_canonical.yaml --out out/gnlse-canonical
+```
+
+## Quickstart (Python API)
 
 ```python
 from cpa_sim.models import PipelineConfig

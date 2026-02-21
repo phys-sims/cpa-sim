@@ -11,6 +11,7 @@
 - Scope: Added new canonical physics regressions for analytic laser TBP/FWHM targets, Treacy free-space geometry + chirp-sign behavior, and WUST-GNLSE fiber summary metrics; expanded ADR-0003 with explicit canonical cases and tolerances.
 - Scope: Added a laser measurement mapping module to convert vendor pulsewidth measurements (including autocorrelation deconvolution and uncertainty bounds) into simulation width, wired this mapping into the toy amp A/B example, and persisted mapping assumptions into per-run metadata/artifacts for auditability.
 - Scope: Added a minimal observable contract model (`cpa.observables.v0.1`) that separates latent field state from measured observables (FWHM, autocorrelation FWHM, spectral RMS width), emitted observable metadata from the metrics stage, extended ADR-0001/0002 with the contract, and updated example scripts for observable-aware reporting.
+- Scope: Added canonical YAML configs under `configs/examples/` (`basic_cpa`, `tracy_golden`, and `gnlse_canonical`), wired integration tests to load these files directly (including optional gnlse skip behavior), and updated README quickstart CLI commands accordingly.
 
 ---
 
@@ -54,9 +55,9 @@ Fill these in after first green run; keep them current.
 
 | Example | Config validate | Runtime validate | Notes |
 | --- | --- | --- | --- |
-| `configs/examples/basic_cpa.yaml` | ⬜ | ⬜ | Tiny grid, CI-friendly end-to-end smoke. |
-| `configs/examples/gnlse_canonical.yaml` | ⬜ | ⬜ | Reproduces one upstream solver canonical example (pinned metrics). |
-| `configs/examples/tracy_golden.yaml` | ⬜ | ⬜ | Free-space golden case with pinned metrics. |
+| `configs/examples/basic_cpa.yaml` | ✅ | ✅ | Tiny grid, CI-friendly end-to-end smoke; validated via integration config-loading test. |
+| `configs/examples/gnlse_canonical.yaml` | ✅ | ✅ | Fiber canonical config runs in integration when `gnlse` is installed; test uses optional dependency guard. |
+| `configs/examples/tracy_golden.yaml` | ✅ | ✅ | Free-space canonical config validated by integration load/run test with Treacy metrics assertions. |
 
 ---
 
@@ -87,7 +88,7 @@ Fill these in after first green run; keep them current.
 - [x] ADR-0005 phys-pipeline contract adoption
 
 ### Release readiness
-- [ ] README quickstart + one runnable config
+- [x] README quickstart + one runnable config
 - [x] CLI stable (`cpa-sim run ...`)
 - [ ] CHANGELOG + versioning policy
 - [ ] PyPI build passes (`python -m build`)
@@ -101,5 +102,5 @@ Fill these in after first green run; keep them current.
 
 ## Next actions
 - [x] Run initial CI commands locally and populate the CI health checklist rows.
-- [ ] Add minimal canonical configs under `configs/examples/`.
+- [x] Add minimal canonical configs under `configs/examples/`.
 - [x] Land first end-to-end smoke test and record runtimes here.
