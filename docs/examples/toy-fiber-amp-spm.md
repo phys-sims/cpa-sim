@@ -58,8 +58,8 @@ This writes per-case summaries plus `comparison_summary.json` with the same key 
 
 `toy_fiber_amp` emits stage metrics:
 - energy in/out (`energy_in_au`, `energy_out_au`) and average power in/out (`power_in_avg_w`, `power_out_avg_w`),
-- peak power in/out (`peak_power_in_au`, `peak_power_out_au`),
+- peak power in/out (`peak_power_in_w`, `peak_power_out_w`),
 - RMS spectral bandwidth in/out (`bandwidth_in_rad_per_fs`, `bandwidth_out_rad_per_fs`),
-- B-integral proxy (`b_integral_proxy_rad = gamma * L * peak_power_in_au`).
+- B-integral proxy (`b_integral_proxy_rad = gamma * L * peak_power_in_w`).
 
 The B-integral value is a proxy and should be interpreted qualitatively.

@@ -63,8 +63,8 @@ def _extract_comparison_metrics(metrics: dict[str, Any]) -> dict[str, float | No
         "energy_out_j": _stage_metric(metrics, stage_name="edfa", metric_name="energy_out_j"),
         "power_in_avg_w": _stage_metric(metrics, stage_name="edfa", metric_name="power_in_avg_w"),
         "power_out_avg_w": _stage_metric(metrics, stage_name="edfa", metric_name="power_out_avg_w"),
-        "peak_power_in_au": _stage_metric(metrics, stage_name="edfa", metric_name="peak_power_in_au"),
-        "peak_power_out_au": _stage_metric(metrics, stage_name="edfa", metric_name="peak_power_out_au"),
+        "peak_power_in_w": _stage_metric(metrics, stage_name="edfa", metric_name="peak_power_in_w"),
+        "peak_power_out_w": _stage_metric(metrics, stage_name="edfa", metric_name="peak_power_out_w"),
         "bandwidth_in_rad_per_fs": _stage_metric(
             metrics, stage_name="edfa", metric_name="bandwidth_in_rad_per_fs"
         ),
