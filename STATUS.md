@@ -12,6 +12,7 @@
 - Scope: Added a laser measurement mapping module to convert vendor pulsewidth measurements (including autocorrelation deconvolution and uncertainty bounds) into simulation width, wired this mapping into the toy amp A/B example, and persisted mapping assumptions into per-run metadata/artifacts for auditability.
 - Scope: Added a minimal observable contract model (`cpa.observables.v0.1`) that separates latent field state from measured observables (FWHM, autocorrelation FWHM, spectral RMS width), emitted observable metadata from the metrics stage, extended ADR-0001/0002 with the contract, and updated example scripts for observable-aware reporting.
 - Scope: Added canonical YAML configs under `configs/examples/` (`basic_cpa`, `tracy_golden`, and `gnlse_canonical`), wired integration tests to load these files directly (including optional gnlse skip behavior), and updated README quickstart CLI commands accordingly.
+- Scope: Defined canonical CLI output layout (`metrics.json`, `artifacts.json`, `stage_plots/`, optional `state_final.npz`), added legacy filename deprecation fallback, documented migration in README + ADR-0008, and expanded CLI integration tests for exact filenames/required keys.
 
 ---
 
@@ -86,6 +87,7 @@ Fill these in after first green run; keep them current.
 - [x] ADR-0003 validation tiers + CI policy
 - [x] ADR-0004 stage/domain boundaries (laser, free-space, fiber, amp)
 - [x] ADR-0005 phys-pipeline contract adoption
+- [x] ADR-0008 canonical output layout + migration behavior
 
 ### Release readiness
 - [x] README quickstart + one runnable config

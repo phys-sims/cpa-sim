@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import warnings
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import yaml  # type: ignore[import-untyped]
 
 from cpa_sim.models import PipelineConfig
@@ -18,6 +20,11 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     run_parser = subparsers.add_parser("run", help="Run a pipeline configuration")
     run_parser.add_argument("config", type=Path, help="Path to YAML pipeline config")
     run_parser.add_argument("--out", type=Path, required=True, help="Output directory")
+    run_parser.add_argument(
+        "--dump-state-npz",
+        action="store_true",
+        help="Write final state arrays to out/state_final.npz.",
+    )
 
     return parser.parse_args(argv)
 
@@ -49,21 +56,73 @@ def _write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def _canonical_metrics_payload(result_metrics: dict[str, float]) -> dict[str, Any]:
+    return {
+        "schema_version": "cpa.metrics.v1",
+        "overall": result_metrics,
+        "per_stage": _build_stage_metrics(result_metrics),
+    }
+
+
+def _write_state_dump(path: Path, *, state: Any) -> None:
+    pulse = state.pulse
+    np.savez_compressed(
+        path,
+        t=np.asarray(pulse.grid.t, dtype=float),
+        w=np.asarray(pulse.grid.w, dtype=float),
+        field_t_real=np.asarray(np.real(pulse.field_t), dtype=float),
+        field_t_imag=np.asarray(np.imag(pulse.field_t), dtype=float),
+        field_w_real=np.asarray(np.real(pulse.field_w), dtype=float),
+        field_w_imag=np.asarray(np.imag(pulse.field_w), dtype=float),
+        intensity_t=np.asarray(pulse.intensity_t, dtype=float),
+        spectrum_w=np.asarray(pulse.spectrum_w, dtype=float),
+        meta_json=json.dumps(state.meta, sort_keys=True),
+        metrics_json=json.dumps(state.metrics, sort_keys=True),
+        artifacts_json=json.dumps(state.artifacts, sort_keys=True),
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     if args.command != "run":
         return 2
 
     cfg = _load_config(args.config)
-    result = run_pipeline(cfg)
-
     out_dir: Path = args.out
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    _write_json(out_dir / "metrics_overall.json", result.metrics)
-    _write_json(out_dir / "metrics_stages.json", _build_stage_metrics(result.metrics))
+    stage_plot_dir = out_dir / "stage_plots"
+    policy = {
+        "cpa.emit_stage_plots": True,
+        "cpa.stage_plot_dir": str(stage_plot_dir),
+    }
+
+    result = run_pipeline(cfg, policy=policy)
+
+    _write_json(out_dir / "metrics.json", _canonical_metrics_payload(result.metrics))
 
     artifacts = {**result.artifacts, **result.state.artifacts}
+    state_dump_path = out_dir / "state_final.npz"
+    if args.dump_state_npz:
+        _write_state_dump(state_dump_path, state=result.state)
+        artifacts["run.state_dump_npz"] = str(state_dump_path)
+
+    _write_json(
+        out_dir / "artifacts.json",
+        {
+            "schema_version": "cpa.artifacts.v1",
+            "paths": artifacts,
+        },
+    )
+
+    warnings.warn(
+        "Legacy output files metrics_overall.json, metrics_stages.json, and artifacts_index.json "
+        "are deprecated and will be removed in a future release.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    _write_json(out_dir / "metrics_overall.json", result.metrics)
+    _write_json(out_dir / "metrics_stages.json", _build_stage_metrics(result.metrics))
     _write_json(out_dir / "artifacts_index.json", artifacts)
 
     return 0
