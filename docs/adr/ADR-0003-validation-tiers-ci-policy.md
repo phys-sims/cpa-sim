@@ -18,10 +18,20 @@ Adopt ECO-0003 marker-aligned validation tiers:
 - **Tier 0 (PR-gated):** fast deterministic unit/integration checks.
   - Command: `python -m pytest -q -m "not slow and not physics" --durations=10`
 - **Tier 1 (nightly/manual):** canonical theoretical physics regressions.
-  - Command: `python -m pytest -q -m "physics" --durations=10`
+  - Command: `python -m pytest -q -m physics --durations=10`
 - **Tier 2 (manual/report):** experimental comparisons with uncertainty accounting.
 
 Required markers: `unit`, `integration`, `physics`, `slow`.
+
+
+### CI workflow mapping
+- **Required PR gate (`.github/workflows/ci.yml`)** runs only:
+  - `python -m pre_commit run -a`
+  - `python -m mypy src`
+  - `python -m pytest -q -m "not slow and not physics" --durations=10`
+- **Physics workflow (`.github/workflows/physics.yml`)** is manual/nightly and runs:
+  - `python -m pytest -q -m physics --durations=10`
+- **Optional gnlse workflow (`.github/workflows/gnlse-optional.yml`)** is isolated from required gates and remains non-blocking unless intentionally made required in branch protection.
 
 ### Tolerance policy
 - Tier 0 uses strict deterministic tolerances.
