@@ -3,12 +3,13 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import warnings
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Literal
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from cpa_sim.phys_pipeline_compat import State
 
@@ -33,10 +34,36 @@ class PulseSpec(BaseModel):
             "I(t) ∝ exp(-4 ln 2 (t/FWHM)^2), 'sech2' means I(t) ∝ sech^2(t/T0)."
         ),
     )
-    amplitude: float = 1.0
+    amplitude: float = Field(
+        default=1.0,
+        description=(
+            "Legacy envelope amplitude scaling in sqrt(W), where instantaneous power is "
+            "|E(t)|^2 in W. Deprecated: prefer peak_power_w or avg_power_w."
+        ),
+        json_schema_extra={"deprecated": True},
+    )
+    avg_power_w: float | None = Field(
+        default=None,
+        description="Average power in watts (W).",
+    )
+    pulse_energy_j: float | None = Field(
+        default=None,
+        description="Energy per pulse in joules (J).",
+    )
+    peak_power_w: float | None = Field(
+        default=None,
+        description="Peak instantaneous power in watts (W).",
+    )
     width_fs: float = Field(
         default=100.0,
         description="Intensity full width at half maximum (FWHM) in femtoseconds.",
+    )
+    intensity_autocorr_fwhm_fs: float | None = Field(
+        default=None,
+        description=(
+            "Intensity autocorrelation FWHM in femtoseconds (fs), as read from an "
+            "autocorrelator before shape-dependent deconvolution to pulse intensity FWHM."
+        ),
     )
     center_wavelength_nm: float = 1030.0
     rep_rate_mhz: float = 1.0
@@ -49,6 +76,63 @@ class PulseSpec(BaseModel):
         if value <= 0.0:
             raise ValueError("PulseSpec.rep_rate_mhz must be > 0.")
         return value
+
+    @field_validator(
+        "avg_power_w",
+        "pulse_energy_j",
+        "peak_power_w",
+    )
+    @classmethod
+    def _validate_nonnegative_power_and_energy(cls, value: float | None) -> float | None:
+        if value is None:
+            return value
+        if value < 0.0:
+            raise ValueError("PulseSpec power/energy values must be >= 0.")
+        return value
+
+    @field_validator("width_fs", "intensity_autocorr_fwhm_fs")
+    @classmethod
+    def _validate_positive_widths(cls, value: float | None) -> float | None:
+        if value is None:
+            return value
+        if value <= 0.0:
+            raise ValueError("PulseSpec width values must be > 0.")
+        return value
+
+    @model_validator(mode="after")
+    def _validate_exclusive_inputs(self) -> PulseSpec:
+        explicitly_set = set(self.model_fields_set)
+
+        explicit_power_fields = {
+            "avg_power_w",
+            "pulse_energy_j",
+            "peak_power_w",
+            "amplitude",
+        } & explicitly_set
+        if "amplitude" in explicit_power_fields and len(explicit_power_fields) > 1:
+            raise ValueError(
+                "PulseSpec.amplitude cannot be set together with avg_power_w, "
+                "pulse_energy_j, or peak_power_w."
+            )
+        if len(explicit_power_fields) > 1:
+            raise ValueError(
+                "Exactly one pulse normalization input may be explicitly set: one of "
+                "avg_power_w, pulse_energy_j, peak_power_w, amplitude."
+            )
+        if explicit_power_fields == {"amplitude"}:
+            warnings.warn(
+                "PulseSpec.amplitude is deprecated; use peak_power_w or avg_power_w instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+        explicit_width_fields = {"width_fs", "intensity_autocorr_fwhm_fs"} & explicitly_set
+        if len(explicit_width_fields) > 1:
+            raise ValueError(
+                "Only one pulse width input may be explicitly set: width_fs or "
+                "intensity_autocorr_fwhm_fs."
+            )
+        return self
 
 
 class BeamSpec(BaseModel):

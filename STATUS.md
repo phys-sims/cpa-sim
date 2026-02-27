@@ -5,6 +5,7 @@
 ## Last updated
 - Date: 2026-02-27
 - By: @openai-codex
+- Scope: Extended `PulseSpec` with user-friendly pulse normalization inputs (`avg_power_w`, `pulse_energy_j`, `peak_power_w`), optional intensity-autocorrelation width input, explicit mutual-exclusion validation for normalization/width inputs using explicit field-set detection, and deprecation schema/warning behavior for explicit `amplitude`; added focused unit tests for conflicts, warning emission, and schema deprecation metadata.
 - Scope: Removed the deprecated toy fiber amp A/B gallery example doc, switched the canonical 1560 nm chain example to use the `fiber_amp_wrap` amplifier backend, and configured canonical fiber/amp fiber stages to run on the WUST-FOG `wust_gnlse` backend with docs updated for the optional dependency.
 - Scope: Updated CI workflow policy alignment: required PR gate now runs pre-commit, mypy on `src`, and fast pytest marker gate; moved physics and optional gnlse checks to isolated workflows.
 - Scope: Reworked `FiberAmpWrapStage` to compute net gain from input pulse energy/rep-rate, map to effective+intrinsic distributed loss, delegate propagation strictly through `FiberStage`, and emit wrapper gain/loss/energy/power metrics with explicit error handling for invalid rep rate/power/length cases; updated unit coverage accordingly.
@@ -27,9 +28,9 @@
 
 | Check | Command | Status | Last run | Notes |
 | --- | --- | --- | --- | --- |
-| Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-02-21 | Passed; pre-commit reported only a deprecation warning for `default_stages`. |
-| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-02-21 | Success: no issues found in 41 source files. |
-| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-21 | Passed, including new pulse sampling policy unit coverage. |
+| Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-02-27 | Passed; pre-commit reported only a deprecation warning for `default_stages`. |
+| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-02-27 | Success: no issues found in 42 source files. |
+| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-02-27 | Passed, including new PulseSpec validation + schema coverage. |
 | Pytest physics (nightly/manual) | `python -m pytest -q -m physics --durations=10` | ✅ | 2026-02-21 | Runs in `.github/workflows/physics.yml` (manual + nightly), not in required PR gate. |
 | Pytest slow (supplemental) | `python -m pytest -q -m slow --durations=10` | ⬜ | — |  |
 | Pytest gnlse optional (isolated/non-blocking) | `python -m pytest -q -m gnlse --durations=10` | ✅ | 2026-02-17 | Runs only in `.github/workflows/gnlse-optional.yml`; keep non-blocking unless branch protection intentionally requires it. |
