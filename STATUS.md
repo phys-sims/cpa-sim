@@ -6,6 +6,7 @@
 - Date: 2026-02-27
 - By: @openai-codex
 - Scope: Updated CI workflow policy alignment: required PR gate now runs pre-commit, mypy on `src`, and fast pytest marker gate; moved physics and optional gnlse checks to isolated workflows.
+- Scope: Reworked `FiberAmpWrapStage` to compute net gain from input pulse energy/rep-rate, map to effective+intrinsic distributed loss, delegate propagation strictly through `FiberStage`, and emit wrapper gain/loss/energy/power metrics with explicit error handling for invalid rep rate/power/length cases; updated unit coverage accordingly.
 - Scope: Updated the WUST-GNLSE fiber example (script + canonical YAML) to a 1550 nm, 1 ps pulse with explicit Kerr nonlinearity and Blow-Wood Raman response to better demonstrate nonlinear evolution.
 - Scope: Updated analytic laser pulse generation so gaussian and sech2 shapes are defined from intensity-domain formulas with width_fs as intensity FWHM, added explicit PulseSpec shape/width semantics, and added unit coverage for FWHM behavior.
 - Scope: Added pulse sampling-policy helpers (minimum points per FWHM plus optional Nyquist/window checks), tightened toy amp example laser-grid construction to target denser short-pulse sampling, and documented rationale in the toy A/B gallery doc.
