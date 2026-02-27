@@ -42,6 +42,32 @@ def test_resolve_energy_and_peak_power_sech2_from_average_power() -> None:
 
 
 @pytest.mark.unit
+def test_peak_power_w_from_energy_j_matches_gaussian_numeric_reference() -> None:
+    energy_j = 0.3 / (1_155.0 * 1e6)
+
+    peak_power_w = peak_power_w_from_energy_j(
+        energy_j=energy_j,
+        width_fs=7_200.0,
+        shape="gaussian",
+    )
+
+    assert peak_power_w == pytest.approx(33.8902337193)
+
+
+@pytest.mark.unit
+def test_peak_power_w_from_energy_j_matches_sech2_numeric_reference() -> None:
+    energy_j = 0.3 / (1_155.0 * 1e6)
+
+    peak_power_w = peak_power_w_from_energy_j(
+        energy_j=energy_j,
+        width_fs=7_200.0,
+        shape="sech2",
+    )
+
+    assert peak_power_w == pytest.approx(31.7955839473)
+
+
+@pytest.mark.unit
 def test_resolve_intensity_fwhm_fs_deconvolves_sech2_autocorrelation_width() -> None:
     pulse = PulseSpec(shape="sech2", intensity_autocorr_fwhm_fs=11_111.111111)
 

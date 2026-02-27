@@ -163,3 +163,51 @@ def test_analytic_laser_autocorr_width_is_deconvolved_and_audited() -> None:
     assert measured_fwhm_fs == pytest.approx(intensity_fwhm_fs, rel=0.0, abs=0.2)
     assert out.meta["laser.intensity_fwhm_fs"] == pytest.approx(intensity_fwhm_fs, rel=0.0, abs=0.2)
     assert out.meta["laser.intensity_autocorr_fwhm_fs_input"] == pytest.approx(autocorr_fwhm_fs)
+
+
+@pytest.mark.unit
+def test_analytic_laser_gaussian_avg_power_case_matches_energy_and_peak_targets() -> None:
+    cfg = PipelineConfig(
+        laser_gen={
+            "spec": {
+                "pulse": {
+                    "shape": "gaussian",
+                    "avg_power_w": 0.3,
+                    "rep_rate_mhz": 1_155.0,
+                    "width_fs": 7_200.0,
+                    "n_samples": 16384,
+                    "time_window_fs": 80_000.0,
+                }
+            }
+        }
+    )
+
+    out = AnalyticLaserGenStage(cfg.laser_gen).process(_empty_state()).state
+    dt_s = float(out.pulse.grid.dt) * 1e-15
+    energy_j = float(np.sum(np.abs(out.pulse.field_t) ** 2) * dt_s)
+    expected_energy_j = 0.3 / (1_155.0 * 1e6)
+
+    assert energy_j == pytest.approx(expected_energy_j, rel=1e-3)
+    assert float(np.max(np.abs(out.pulse.field_t) ** 2)) == pytest.approx(33.8902337193, rel=5e-3)
+
+
+@pytest.mark.unit
+def test_analytic_laser_sech2_autocorr_case_deconvolves_to_expected_intensity_fwhm() -> None:
+    cfg = PipelineConfig(
+        laser_gen={
+            "spec": {
+                "pulse": {
+                    "shape": "sech2",
+                    "intensity_autocorr_fwhm_fs": 11_111.111111,
+                    "n_samples": 16384,
+                    "time_window_fs": 80_000.0,
+                }
+            }
+        }
+    )
+
+    out = AnalyticLaserGenStage(cfg.laser_gen).process(_empty_state()).state
+    t_fs = np.asarray(out.pulse.grid.t)
+    measured_fwhm_fs = _fwhm_fs(t_fs, np.asarray(out.pulse.intensity_t))
+
+    assert measured_fwhm_fs == pytest.approx(7_200.0, rel=0.0, abs=1.0)
