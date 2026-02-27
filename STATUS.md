@@ -5,6 +5,7 @@
 ## Last updated
 - Date: 2026-02-27
 - By: @openai-codex
+- Scope: Updated pulse sampling adequacy checks to always use resolved intensity FWHM via `resolve_intensity_fwhm_fs` (including autocorrelation deconvolution), refreshed sampling warning/error wording, and added unit/integration tests for autocorrelation-only width handling plus CLI validation messaging for explicitly conflicting width inputs.
 - Scope: Updated `AnalyticLaserGenStage` to resolve pulse normalization via `resolve_intensity_fwhm_fs` + `resolve_peak_power_w`, switched generation to effective intensity FWHM/peak power semantics, and added audit metadata/metrics (`laser.intensity_fwhm_fs`, `laser.peak_power_w`, `laser.pulse_energy_j`, `laser.avg_power_w`, autocorr input echo).
 - Scope: Added unit tests covering analytic laser energy closure from `avg_power_w`, peak-power consistency for gaussian/sech2, and autocorrelation-width deconvolution behavior; preserved legacy amplitude compatibility (with deprecation warnings).
 - Scope: Extended `PulseSpec` with user-friendly pulse normalization inputs (`avg_power_w`, `pulse_energy_j`, `peak_power_w`), optional intensity-autocorrelation width input, explicit mutual-exclusion validation for normalization/width inputs using explicit field-set detection, and deprecation schema/warning behavior for explicit `amplitude`; added focused unit tests for conflicts, warning emission, and schema deprecation metadata.
