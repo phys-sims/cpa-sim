@@ -1,8 +1,15 @@
 import numpy as np
 import pytest
 
-from cpa_sim.models import DispersionTaylorCfg, FiberCfg, FiberPhysicsCfg, WustGnlseNumericsCfg
+from cpa_sim.models import (
+    DispersionTaylorCfg,
+    FiberAmpWrapCfg,
+    FiberCfg,
+    FiberPhysicsCfg,
+    WustGnlseNumericsCfg,
+)
 from cpa_sim.models.state import BeamState, LaserState, PulseGrid, PulseState
+from cpa_sim.stages.amp.fiber_amp_wrap import FiberAmpWrapStage
 from cpa_sim.stages.fiber import FiberStage
 
 
@@ -123,3 +130,31 @@ def test_wust_gnlse_raman_toggle_produces_finite_output() -> None:
     assert np.all(np.isfinite(result.state.pulse.intensity_t))
     assert np.all(np.isfinite(result.state.pulse.spectrum_w))
     assert np.isfinite(result.metrics["fiber.energy_out_au"])
+
+
+@pytest.mark.integration
+@pytest.mark.gnlse
+def test_fiber_amp_wrap_wust_gnlse_gain_loss_hits_power_target() -> None:
+    _requires_gnlse()
+    state = _gaussian_state()
+    state.meta["rep_rate_mhz"] = 10.0
+
+    dt_s = float(state.pulse.grid.dt) * 1e-15
+    power_in_avg_w = float(np.sum(np.abs(state.pulse.field_t) ** 2) * dt_s * 1e7)
+    target_power_w = 0.65 * power_in_avg_w
+
+    stage = FiberAmpWrapStage(
+        FiberAmpWrapCfg(
+            power_out_w=target_power_w,
+            physics=FiberPhysicsCfg(
+                length_m=0.2,
+                loss_db_per_m=0.0,
+                gamma_1_per_w_m=0.0,
+                dispersion=DispersionTaylorCfg(betas_psn_per_m=[0.0]),
+            ),
+            numerics=WustGnlseNumericsCfg(z_saves=8, keep_full_solution=False),
+        )
+    )
+    result = stage.process(state)
+
+    assert result.metrics["amp.power_out_avg_w"] == pytest.approx(target_power_w, rel=1e-2)

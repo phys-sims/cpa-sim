@@ -18,6 +18,7 @@
 - Scope: Defined canonical CLI output layout (`metrics.json`, `artifacts.json`, `stage_plots/`, optional `state_final.npz`), added legacy filename deprecation fallback, documented migration in README + ADR-0008, and expanded CLI integration tests for exact filenames/required keys.
 - Scope: Added lightweight reporting package (`cpa_sim.reporting`) with `cpa.validation_report.v1` schema models, report builders/markdown renderer, CLI emission of `report.json` + `report.md`, and unit/integration test coverage for report serialization and output creation.
 - Scope: Relaxed `FiberPhysicsCfg.loss_db_per_m` validation to allow finite negative values as distributed gain semantics for `fiber_amp_wrap`, updated fiber docs wording, and added focused unit coverage for +/0/- acceptance.
+- Scope: Added an optional integration regression for `FiberAmpWrapStage` with the `wust_gnlse` backend in gain/loss-only mode (`gamma=0`, zero Taylor dispersion), asserting `amp.power_out_avg_w` tracks the requested power target within a loose relative tolerance.
 
 ---
 
