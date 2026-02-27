@@ -5,6 +5,7 @@ import pytest
 
 from cpa_sim.models import PipelineConfig
 from cpa_sim.models.state import BeamState, LaserState, PulseGrid, PulseState
+from cpa_sim.physics import peak_power_w_from_energy_j
 from cpa_sim.stages.laser_gen import AnalyticLaserGenStage
 
 
@@ -71,3 +72,94 @@ def test_analytic_laser_shape_uses_intensity_fwhm(shape: str) -> None:
     measured_fwhm_fs = _fwhm_fs(t_fs, intensity)
 
     assert measured_fwhm_fs == pytest.approx(expected_fwhm_fs, rel=0.0, abs=0.1)
+
+
+@pytest.mark.unit
+def test_analytic_laser_avg_power_resolves_pulse_energy() -> None:
+    avg_power_w = 0.42
+    rep_rate_mhz = 1.5
+    cfg = PipelineConfig(
+        laser_gen={
+            "spec": {
+                "pulse": {
+                    "shape": "gaussian",
+                    "avg_power_w": avg_power_w,
+                    "rep_rate_mhz": rep_rate_mhz,
+                    "width_fs": 120.0,
+                    "n_samples": 16384,
+                    "time_window_fs": 8000.0,
+                }
+            }
+        }
+    )
+
+    out = AnalyticLaserGenStage(cfg.laser_gen).process(_empty_state()).state
+    dt_fs = out.pulse.grid.dt
+    integrated_energy_j = float(np.sum(out.pulse.intensity_t) * dt_fs * 1e-15)
+    expected_energy_j = avg_power_w / (rep_rate_mhz * 1e6)
+
+    assert integrated_energy_j == pytest.approx(expected_energy_j, rel=5e-4)
+    assert out.meta["laser.pulse_energy_j"] == pytest.approx(expected_energy_j, rel=5e-4)
+    assert out.metrics["laser.pulse_energy_j"] == pytest.approx(expected_energy_j, rel=5e-4)
+    assert out.meta["laser.avg_power_w"] == pytest.approx(avg_power_w, rel=5e-4)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("shape", ["gaussian", "sech2"])
+def test_analytic_laser_peak_power_matches_expected_from_avg_power(shape: str) -> None:
+    avg_power_w = 0.75
+    rep_rate_mhz = 2.0
+    width_fs = 90.0
+    expected_pulse_energy_j = avg_power_w / (rep_rate_mhz * 1e6)
+    expected_peak_power_w = peak_power_w_from_energy_j(
+        energy_j=expected_pulse_energy_j,
+        width_fs=width_fs,
+        shape=shape,
+    )
+    cfg = PipelineConfig(
+        laser_gen={
+            "spec": {
+                "pulse": {
+                    "shape": shape,
+                    "avg_power_w": avg_power_w,
+                    "rep_rate_mhz": rep_rate_mhz,
+                    "width_fs": width_fs,
+                    "n_samples": 32768,
+                    "time_window_fs": 9000.0,
+                }
+            }
+        }
+    )
+
+    out = AnalyticLaserGenStage(cfg.laser_gen).process(_empty_state()).state
+    measured_peak_power_w = float(np.max(out.pulse.intensity_t))
+
+    assert measured_peak_power_w == pytest.approx(expected_peak_power_w, rel=2e-4)
+    assert out.meta["laser.peak_power_w"] == pytest.approx(expected_peak_power_w, rel=2e-4)
+    assert out.metrics["laser.peak_power_w"] == pytest.approx(expected_peak_power_w, rel=2e-4)
+
+
+@pytest.mark.unit
+def test_analytic_laser_autocorr_width_is_deconvolved_and_audited() -> None:
+    intensity_fwhm_fs = 100.0
+    autocorr_fwhm_fs = intensity_fwhm_fs / 0.648
+    cfg = PipelineConfig(
+        laser_gen={
+            "spec": {
+                "pulse": {
+                    "shape": "sech2",
+                    "intensity_autocorr_fwhm_fs": autocorr_fwhm_fs,
+                    "n_samples": 16384,
+                    "time_window_fs": 5000.0,
+                }
+            }
+        }
+    )
+
+    out = AnalyticLaserGenStage(cfg.laser_gen).process(_empty_state()).state
+    t_fs = np.asarray(out.pulse.grid.t)
+    measured_fwhm_fs = _fwhm_fs(t_fs, np.asarray(out.pulse.intensity_t))
+
+    assert measured_fwhm_fs == pytest.approx(intensity_fwhm_fs, rel=0.0, abs=0.2)
+    assert out.meta["laser.intensity_fwhm_fs"] == pytest.approx(intensity_fwhm_fs, rel=0.0, abs=0.2)
+    assert out.meta["laser.intensity_autocorr_fwhm_fs_input"] == pytest.approx(autocorr_fwhm_fs)
