@@ -2,8 +2,8 @@
 
 This example demonstrates a minimal, runnable fiber-only workflow:
 
-1. create an input pulse,
-2. run `FiberStage` with `numerics.backend="wust_gnlse"`,
+1. create a **1550 nm, 1 ps (intensity FWHM) gaussian** input pulse,
+2. run `FiberStage` with `numerics.backend="wust_gnlse"` and explicit Kerr + Raman settings,
 3. save time-domain and spectral plots as vector graphics.
 
 ## Prerequisites
@@ -71,3 +71,12 @@ The stage records this contract in state metadata:
 - `state.meta["pulse"]["power_is_absA2_W"] is True`
 
 The example plots are intentionally labeled as *derived from* `|A|^2`/`|Aw|^2` to avoid over-claiming absolute calibration when upstream pulse generation choices are modified.
+
+
+## Example physics settings (current)
+
+- Pulse: gaussian, `center_wavelength_nm=1550`, `width_fs=1000`, `amplitude=35`, `n_samples=1024`, `time_window_fs=12000`.
+- Fiber: `length_m=0.25`, `gamma_1_per_w_m=2.0`, `dispersion.betas_psn_per_m=[-0.02]`.
+- Raman: `raman.kind="wust"`, `raman.model="blowwood"`.
+
+These values are tuned to clearly demonstrate nonlinear temporal/spectral evolution in a compact example run.

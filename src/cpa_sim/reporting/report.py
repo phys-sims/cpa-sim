@@ -71,7 +71,9 @@ def render_markdown_report(report: ValidationReport) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _build_stage_reports(*, metrics: dict[str, float], artifacts: dict[str, str]) -> list[StageReport]:
+def _build_stage_reports(
+    *, metrics: dict[str, float], artifacts: dict[str, str]
+) -> list[StageReport]:
     stage_names = set(_group_metric_keys(metrics)) | set(_group_artifacts(artifacts))
     grouped_metrics = _group_metric_keys(metrics)
     grouped_artifacts = _group_artifacts(artifacts)

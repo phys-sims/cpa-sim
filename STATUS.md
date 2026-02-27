@@ -3,9 +3,10 @@
 > **Source of truth:** Update this file whenever behavior, tests, schemas, or canonical examples change.
 
 ## Last updated
-- Date: 2026-02-21
+- Date: 2026-02-27
 - By: @openai-codex
 - Scope: Updated CI workflow policy alignment: required PR gate now runs pre-commit, mypy on `src`, and fast pytest marker gate; moved physics and optional gnlse checks to isolated workflows.
+- Scope: Updated the WUST-GNLSE fiber example (script + canonical YAML) to a 1550 nm, 1 ps pulse with explicit Kerr nonlinearity and Blow-Wood Raman response to better demonstrate nonlinear evolution.
 - Scope: Updated analytic laser pulse generation so gaussian and sech2 shapes are defined from intensity-domain formulas with width_fs as intensity FWHM, added explicit PulseSpec shape/width semantics, and added unit coverage for FWHM behavior.
 - Scope: Added pulse sampling-policy helpers (minimum points per FWHM plus optional Nyquist/window checks), tightened toy amp example laser-grid construction to target denser short-pulse sampling, and documented rationale in the toy A/B gallery doc.
 - Scope: Audited stage metric naming under src/cpa_sim/stages, enforced explicit energy/power suffixes for WUST-GNLSE fiber backend metrics with fs→s Joule conversion, and added unit tests for metric-key suffix policy across laser/free-space/fiber/amp stages.

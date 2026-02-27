@@ -186,11 +186,11 @@ Practical mapping:
 For `toy_fiber_amp`, `amp_power_w` is the target **output average power in watts** at the stage output plane.
 
 
-## Fiber stage example (WUST `gnlse`)
+## Fiber stage example (WUST `gnlse`, Raman-enabled)
 
 Example policy: runnable example logic lives in `src/cpa_sim/examples/*` and is invoked via module entrypoints.
 
-A runnable fiber-stage example module is available at:
+A runnable fiber-stage example module is available at (configured for a **1550 nm, 1 ps** input pulse with Kerr nonlinearity + Raman response):
 
 - `src/cpa_sim/examples/wust_gnlse_fiber_example.py`
 
