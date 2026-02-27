@@ -16,7 +16,7 @@ This writes:
 
 ## Sampling policy for short pulses
 
-The toy A/B scripts now enforce a pulse-grid policy before running the pipeline:
+The A/B scripts now enforce a pulse-grid policy before running the pipeline:
 
 - temporal sampling must satisfy `dt_fs <= width_fs / N_min` (default `N_min=24`, i.e. 20–40+ points across FWHM),
 - optional FFT safety checks verify both a minimum time-window-to-FWHM ratio and a Nyquist spectral margin tied to pulse shape (`gaussian` or `sech2`).
@@ -38,11 +38,11 @@ magick artifacts/toy-amp-case-ab/case-a/stage-plots/toy_amp_time_intensity.svg \
 
 | Case A (direct) | Case B (CPA) |
 | --- | --- |
-| ![Case A toy amp time intensity](../../artifacts/toy-amp-case-ab/case-a/stage-plots/toy_amp_time_intensity.png) | ![Case B toy amp time intensity](../../artifacts/toy-amp-case-ab/case-b/stage-plots/toy_amp_time_intensity.png) |
-| ![Case A toy amp spectrum](../../artifacts/toy-amp-case-ab/case-a/stage-plots/toy_amp_spectrum.png) | ![Case B toy amp spectrum](../../artifacts/toy-amp-case-ab/case-b/stage-plots/toy_amp_spectrum.png) |
+| ![Case A fiber_amp_wrap time intensity](../../artifacts/toy-amp-case-ab/case-a/stage-plots/toy_amp_time_intensity.png) | ![Case B fiber_amp_wrap time intensity](../../artifacts/toy-amp-case-ab/case-b/stage-plots/toy_amp_time_intensity.png) |
+| ![Case A fiber_amp_wrap spectrum](../../artifacts/toy-amp-case-ab/case-a/stage-plots/toy_amp_spectrum.png) | ![Case B fiber_amp_wrap spectrum](../../artifacts/toy-amp-case-ab/case-b/stage-plots/toy_amp_spectrum.png) |
 
 ## Notes
 
 - Both cases use explicit `LaserGenCfg` setup (same pulse/beam spec) so the only difference is chain topology.
 - Use `comparison_summary.json` to quote numeric side-by-side metrics.
-- The shared toy amp gain is hardwired in `src/cpa_sim/examples/toy_amp_case_ab_compare.py` and reused by both case A and case B.
+- The shared `fiber_amp_wrap` gain mapping is hardwired in `src/cpa_sim/examples/toy_amp_case_ab_compare.py` and reused by both case A and case B.
