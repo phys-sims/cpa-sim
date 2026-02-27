@@ -7,6 +7,7 @@ from typing import Any
 
 from cpa_sim.models import (
     DispersionTaylorCfg,
+    FiberAmpWrapCfg,
     FiberCfg,
     FiberPhysicsCfg,
     LaserGenCfg,
@@ -14,8 +15,8 @@ from cpa_sim.models import (
     PipelineConfig,
     PulseSpec,
     RuntimeCfg,
-    SimpleGainCfg,
     TreacyGratingPairCfg,
+    WustGnlseNumericsCfg,
 )
 from cpa_sim.pipeline import run_pipeline
 
@@ -58,11 +59,26 @@ def build_config(*, seed: int, ci_safe: bool) -> PipelineConfig:
                     betas_psn_per_m=[0.022],
                 ),
             ),
+            numerics=WustGnlseNumericsCfg(
+                backend="wust_gnlse",
+                z_saves=64 if ci_safe else 200,
+                keep_full_solution=False,
+            ),
         ),
-        SimpleGainCfg(
-            name="edfa_like_gain",
-            kind="simple_gain",
-            gain_linear=4.0,
+        FiberAmpWrapCfg(
+            name="fiber_amp_wrap",
+            power_out_w=2.0,
+            physics=FiberPhysicsCfg(
+                length_m=0.5 if ci_safe else 1.0,
+                loss_db_per_m=0.2,
+                gamma_1_per_w_m=0.0,
+                dispersion=DispersionTaylorCfg(betas_psn_per_m=[0.0]),
+            ),
+            numerics=WustGnlseNumericsCfg(
+                backend="wust_gnlse",
+                z_saves=64 if ci_safe else 200,
+                keep_full_solution=False,
+            ),
         ),
         TreacyGratingPairCfg(
             name="treacy_compressor",
@@ -109,7 +125,10 @@ def run_example(*, out_dir: Path, plot_dir: Path, seed: int, ci_safe: bool) -> d
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Run a canonical 1560 nm CPA chain with DCF prechirp and Treacy compression."
+        description=(
+            "Run a canonical 1560 nm CPA chain with fiber broadening, "
+            "fiber amp wrapping, and Treacy compression."
+        )
     )
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument("--plot-dir", type=Path, default=DEFAULT_PLOT_DIR)

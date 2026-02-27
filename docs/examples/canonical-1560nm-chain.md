@@ -6,10 +6,10 @@ This guide shows how to run the canonical 1560 nm CPA chain example and publish 
 
 ## What this example does
 
-The core module `src/cpa_sim/examples/canonical_1560nm_chain.py` builds and runs a deterministic CPA chain with explicit stage ordering:
+The core module `src/cpa_sim/examples/canonical_1560nm_chain.py` builds and runs a deterministic CPA chain with explicit stage ordering. Both fiber-containing stages use the WUST-FOG `gnlse` backend (`wust_gnlse`) rather than the toy fiber backend:
 
 1. **Fiber broadening**: regular-dispersion `FiberCfg` at **1560 nm** (`beta2 > 0`) with enough length to create significant positive chirp
-2. **Amplification**: EDFA-like gain using current `simple_gain` (`AmpCfg`)
+2. **Amplification**: fiber amplifier wrapper using `fiber_amp_wrap` (`FiberAmpWrapCfg`) with an average output power target, propagated with `wust_gnlse` in gain/loss mode (`gamma=0`)
 3. **Compressor**: `TreacyGratingPairCfg` (`treacy_compressor`) as phase action
 
 Pipeline policy enables per-stage plots:
@@ -18,6 +18,8 @@ Pipeline policy enables per-stage plots:
 - `cpa.stage_plot_dir = <your plot dir>`
 
 The script writes `run_summary.json` with metrics and an artifact index.
+
+> Dependency note: this example requires the optional WUST-FOG `gnlse` package (`pip install -e .[gnlse]`).
 
 ## 1) Run the example
 
@@ -69,7 +71,7 @@ You should see:
 - per-stage SVG files in your `--plot-dir`, e.g.
   - `laser_init_time_intensity.svg`
   - `fiber_regular_disp_1560nm_time_intensity.svg`
-  - `edfa_like_gain_time_intensity.svg`
+  - `fiber_amp_wrap_time_intensity.svg`
   - `treacy_compressor_time_intensity.svg`
   - `metrics_time_intensity.svg`
 

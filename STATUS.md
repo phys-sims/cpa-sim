@@ -5,6 +5,7 @@
 ## Last updated
 - Date: 2026-02-27
 - By: @openai-codex
+- Scope: Removed the deprecated toy fiber amp A/B gallery example doc, switched the canonical 1560 nm chain example to use the `fiber_amp_wrap` amplifier backend, and configured canonical fiber/amp fiber stages to run on the WUST-FOG `wust_gnlse` backend with docs updated for the optional dependency.
 - Scope: Updated CI workflow policy alignment: required PR gate now runs pre-commit, mypy on `src`, and fast pytest marker gate; moved physics and optional gnlse checks to isolated workflows.
 - Scope: Reworked `FiberAmpWrapStage` to compute net gain from input pulse energy/rep-rate, map to effective+intrinsic distributed loss, delegate propagation strictly through `FiberStage`, and emit wrapper gain/loss/energy/power metrics with explicit error handling for invalid rep rate/power/length cases; updated unit coverage accordingly.
 - Scope: Updated the WUST-GNLSE fiber example (script + canonical YAML) to a 1550 nm, 1 ps pulse with explicit Kerr nonlinearity and Blow-Wood Raman response to better demonstrate nonlinear evolution.

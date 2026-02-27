@@ -207,11 +207,6 @@ Canonical end-to-end 1560 nm chain example documentation is at:
 - `docs/examples/canonical-1560nm-chain.md`
 
 
-Toy amplifier A/B example documentation is available at:
-
-- `docs/examples/toy-fiber-amp-spm.md`
-
-
 ## Outputs and provenance
 
 `cpa-sim run ... --out <dir>` uses this canonical output layout:
