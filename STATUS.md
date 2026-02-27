@@ -71,7 +71,7 @@ Fill these in after first green run; keep them current.
 - [x] PulseInitStage (laser_gen analytic backend)
 - [x] FreeSpaceStage: `treacy_grating` backend (stretcher/compressor)
 - [x] FiberStage: Strategy B `FiberStageCfg(physics, numerics)` with `toy_phase` and `wust_gnlse` backends
-- [x] AmpStage: `simple_gain` and `toy_fiber_amp` backends
+- [x] AmpStage: `simple_gain` and `fiber_amp_wrap` backends
 - [x] MetricsStage (energy, FWHM, bandwidth, B-integral proxy)
 - [x] Report/Validation schema (tiered validation records)
 

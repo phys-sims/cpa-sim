@@ -7,7 +7,7 @@ from typing import Any, cast
 import numpy as np
 
 from cpa_sim.models import PipelineConfig, RunProvenance
-from cpa_sim.models.config import FiberCfg, PipelineStageCfg, SimpleGainCfg, ToyFiberAmpCfg
+from cpa_sim.models.config import FiberAmpWrapCfg, FiberCfg, PipelineStageCfg, SimpleGainCfg
 from cpa_sim.models.state import BeamState, LaserState, PulseGrid, PulseState
 from cpa_sim.phys_pipeline_compat import (
     PipelineStage,
@@ -32,9 +32,11 @@ def _build_configurable_stages(cfg: PipelineConfig) -> list[PipelineStage[LaserS
 
     stages: list[PipelineStage[LaserState, Any]] = []
     for stage_cfg in ordered:
-        if isinstance(stage_cfg, FiberCfg):
+        if isinstance(stage_cfg, FiberAmpWrapCfg):
+            stages.append(build_amp_stage(stage_cfg))
+        elif isinstance(stage_cfg, FiberCfg):
             stages.append(build_fiber_stage(stage_cfg))
-        elif isinstance(stage_cfg, (SimpleGainCfg, ToyFiberAmpCfg)):
+        elif isinstance(stage_cfg, SimpleGainCfg):
             stages.append(build_amp_stage(stage_cfg))
         else:
             stages.append(build_free_space_stage(stage_cfg))
