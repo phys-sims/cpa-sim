@@ -23,6 +23,16 @@ Adopt the ECO-0001 convention set for all internal `cpa-sim` calculations and ex
 6. **Sign conventions:** positive chirp means `dω_inst/dt > 0`; GDD sign follows `d²φ/dω²`; free-space grating equation signs are documented and tested per backend.
 7. **Observable/latent split:** latent complex fields (`field_t`, `field_w`) remain simulation state, while reported observables (e.g., FWHM/autocorrelation/spectral width) must declare method and assumptions in an observable contract surface.
 
+### PulseSpec user-facing normalization inputs
+
+`PulseSpec` now supports multiple user-facing power/energy input styles while preserving the same internal envelope normalization contract above:
+
+- `avg_power_w` + `rep_rate_mhz`
+- `pulse_energy_j`
+- `peak_power_w`
+
+Legacy `amplitude` (sqrt(W)) remains accepted for compatibility but is deprecated in favor of the explicit physical units above.
+
 ### Consequences
 - **Positive:** laser, free-space, fiber, and amp stages can share one stable state contract without hidden conversions.
 - **Negative:** all new metrics and adapters must comply with suffix/unit rules.
