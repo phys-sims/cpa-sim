@@ -127,12 +127,12 @@ print(result.state.meta)
 | `laser_gen` | `analytic` | Deterministic pulse/grid initialization backend. |
 | `free_space` | `treacy_grating_pair`, `phase_only_dispersion` | Used for stretcher/compressor roles depending on stage placement. |
 | `fiber` | `fiber` | Physics/numerics split with `numerics.kind` (`toy_phase` or `wust_gnlse`). |
-| `amp` | `simple_gain`, `toy_fiber_amp` | Simple gain and toy fiber-amp backends. |
+| `amp` | `simple_gain`, `fiber_amp_wrap` | Simple gain and a fiber amplifier wrapper backend. |
 | `metrics` | `standard` | Canonical metrics/artifact recording backend (always final stage in pipeline). |
 
 Related docs:
 
-- Examples: `docs/examples/canonical-1560nm-chain.md`, `docs/examples/wust-gnlse-fiber-example.md`, `docs/examples/toy-fiber-amp-spm.md`
+- Examples: `docs/examples/canonical-1560nm-chain.md`, `docs/examples/wust-gnlse-fiber-example.md`
 - ADRs: `docs/adr/ADR-0001-conventions-units.md`, `docs/adr/ADR-0002-result-schema-contract.md`, `docs/adr/ADR-0003-validation-tiers-ci-policy.md`, `docs/adr/ADR-0008-canonical-output-layout.md`
 
 ## Configuration model (high-level)
@@ -143,7 +143,7 @@ The top-level `PipelineConfig` includes these sections:
 - `laser_gen` (initial pulse/beam specification),
 - `stretcher` / `compressor` defaults (free-space configs used when `stages` is not set),
 - `fiber` (`FiberStageCfg` with stable `physics` plus backend-specific `numerics`),
-- `amp` (amplifier backend config; supports `simple_gain` and `toy_fiber_amp` with `amp_power_w` control),
+- `amp` (amplifier backend config; supports `simple_gain` and `fiber_amp_wrap` with `power_out_w` control),
 - `stages` (optional arbitrary ordered list of `free_space`, `fiber`, and `amp` stage configs),
 - `metrics` (summary metric backend; always appended at pipeline end).
 
@@ -183,7 +183,7 @@ Practical mapping:
 - set `rep_rate_mhz` to your laser repetition rate; average power is then
   `pulse_energy_j * rep_rate_hz`.
 
-For `toy_fiber_amp`, `amp_power_w` is the target **output average power in watts** at the stage output plane.
+For `fiber_amp_wrap`, `power_out_w` is the target **output average power in watts** at the stage output plane.
 
 
 ## Fiber stage example (WUST `gnlse`, Raman-enabled)

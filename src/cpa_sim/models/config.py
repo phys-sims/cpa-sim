@@ -4,7 +4,7 @@ import math
 import warnings
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from cpa_sim.models.state import LaserSpec, PulseSpec
 from cpa_sim.phys_pipeline_compat import StageConfig
@@ -221,6 +221,23 @@ class FiberCfg(StageConfig):
     numerics: FiberNumericsCfg = Field(default_factory=ToyPhaseNumericsCfg)
 
 
+class FiberAmpWrapCfg(StageConfig):
+    model_config = ConfigDict(frozen=True)
+
+    name: str = "amp"
+    kind: Literal["fiber_amp_wrap"] = "fiber_amp_wrap"
+    physics: FiberPhysicsCfg = Field(default_factory=FiberPhysicsCfg)
+    numerics: FiberNumericsCfg = Field(default_factory=ToyPhaseNumericsCfg)
+    power_out_w: float
+
+    @field_validator("power_out_w")
+    @classmethod
+    def _validate_power_out_w(cls, value: float) -> float:
+        if value <= 0.0:
+            raise ValueError("FiberAmpWrapCfg.power_out_w must be > 0.")
+        return value
+
+
 class SimpleGainCfg(StageConfig):
     model_config = ConfigDict(frozen=True)
 
@@ -229,68 +246,8 @@ class SimpleGainCfg(StageConfig):
     gain_linear: float = 1.0
 
 
-class ToyFiberAmpCfg(StageConfig):
-    model_config = ConfigDict(frozen=True)
-
-    name: str = "amp"
-    kind: Literal["toy_fiber_amp"] = "toy_fiber_amp"
-    length_m: float = 1.0
-    beta2_s2_per_m: float = 0.0
-    gamma_w_inv_m: float = 0.0
-    amp_power_w: float | None = None
-    gain_db: float | None = None
-    loss_db_per_m: float = 0.0
-    n_steps: int = 8
-
-    @field_validator("length_m")
-    @classmethod
-    def _validate_length(cls, value: float) -> float:
-        if value <= 0.0:
-            raise ValueError("ToyFiberAmpCfg.length_m must be > 0.")
-        return value
-
-    @field_validator("n_steps")
-    @classmethod
-    def _validate_n_steps(cls, value: int) -> int:
-        if value < 1:
-            raise ValueError("ToyFiberAmpCfg.n_steps must be >= 1.")
-        return value
-
-    @field_validator("amp_power_w")
-    @classmethod
-    def _validate_amp_power_w(cls, value: float | None) -> float | None:
-        if value is None:
-            return value
-        if value <= 0.0:
-            raise ValueError("ToyFiberAmpCfg.amp_power_w must be > 0.")
-        return value
-
-    @field_validator("gain_db")
-    @classmethod
-    def _validate_gain_db(cls, value: float | None) -> float | None:
-        if value is None:
-            return value
-        warnings.warn(
-            "ToyFiberAmpCfg.gain_db is deprecated; use amp_power_w instead.",
-            DeprecationWarning,
-            stacklevel=3,
-        )
-        return value
-
-    @model_validator(mode="after")
-    def _validate_gain_knob(self) -> ToyFiberAmpCfg:
-        has_amp_power = self.amp_power_w is not None
-        has_gain_db = self.gain_db is not None
-        if has_amp_power == has_gain_db:
-            raise ValueError(
-                "ToyFiberAmpCfg requires exactly one of amp_power_w or gain_db. "
-                "Set amp_power_w for new configs; gain_db is deprecated."
-            )
-        return self
-
-
 AmpStageCfg = Annotated[
-    SimpleGainCfg | ToyFiberAmpCfg,
+    SimpleGainCfg | FiberAmpWrapCfg,
     Field(discriminator="kind"),
 ]
 
