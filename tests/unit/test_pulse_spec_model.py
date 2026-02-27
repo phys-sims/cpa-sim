@@ -29,6 +29,13 @@ def test_pulse_spec_rejects_conflicting_power_normalization_inputs(
 
 
 @pytest.mark.unit
+def test_pulse_spec_accepts_autocorrelation_width_as_only_explicit_width_input() -> None:
+    pulse = PulseSpec(shape="sech2", intensity_autocorr_fwhm_fs=154.320987654321)
+
+    assert pulse.intensity_autocorr_fwhm_fs == pytest.approx(154.320987654321)
+
+
+@pytest.mark.unit
 def test_pulse_spec_rejects_conflicting_width_inputs() -> None:
     with pytest.raises(ValidationError, match="Only one pulse width input may be explicitly set"):
         PulseSpec(width_fs=120.0, intensity_autocorr_fwhm_fs=180.0)

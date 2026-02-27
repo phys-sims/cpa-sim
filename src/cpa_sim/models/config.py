@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from cpa_sim.models.state import LaserSpec, PulseSpec
 from cpa_sim.phys_pipeline_compat import StageConfig
+from cpa_sim.physics import resolve_intensity_fwhm_fs
 
 
 def recommended_n_samples_for_pulse(
@@ -43,39 +44,44 @@ def validate_pulse_sampling(
 ) -> None:
     """Validate temporal sampling policy for analytic pulse generation.
 
-    Enforces ``dt_fs <= width_fs / min_points_per_fwhm`` and optionally checks
-    simple Nyquist/window margins that depend on pulse shape.
+    Enforces ``dt_fs <= intensity_fwhm_fs / min_points_per_fwhm`` using the
+    resolved pulse intensity FWHM (deconvolving autocorrelation width inputs), and
+    optionally checks simple Nyquist/window margins that depend on pulse shape.
     """
     if pulse.n_samples < 2:
         raise ValueError("PulseSpec.n_samples must be >= 2 for sampling checks.")
+    resolved_width_fs = resolve_intensity_fwhm_fs(pulse)  # type: ignore[arg-type]
     dt_fs = pulse.time_window_fs / float(pulse.n_samples - 1)
-    max_dt_fs = pulse.width_fs / float(min_points_per_fwhm)
+    max_dt_fs = resolved_width_fs / float(min_points_per_fwhm)
 
     if dt_fs > max_dt_fs:
         message = (
-            "Pulse sampling policy violated: dt_fs must satisfy dt_fs <= width_fs / N_min. "
-            f"Got dt_fs={dt_fs:.3f} fs with width_fs={pulse.width_fs:.3f} fs and "
+            "Pulse sampling policy violated: dt_fs must satisfy "
+            "dt_fs <= resolved_intensity_fwhm_fs / N_min. "
+            f"Got dt_fs={dt_fs:.3f} fs with "
+            f"resolved_intensity_fwhm_fs={resolved_width_fs:.3f} fs and "
             f"N_min={min_points_per_fwhm}. Increase n_samples or reduce time_window_fs."
         )
         if strict:
             raise ValueError(message)
         warnings.warn(message, stacklevel=2)
 
-    width_over_window = pulse.time_window_fs / pulse.width_fs
+    width_over_window = pulse.time_window_fs / resolved_width_fs
     if width_over_window < min_window_fwhm_ratio:
         message = (
             "Pulse time window may be too tight for clean FFT tails: "
-            f"time_window_fs/width_fs={width_over_window:.2f} < {min_window_fwhm_ratio:.2f}."
+            f"time_window_fs/resolved_intensity_fwhm_fs={width_over_window:.2f} < "
+            f"{min_window_fwhm_ratio:.2f}."
         )
         if strict:
             raise ValueError(message)
         warnings.warn(message, stacklevel=2)
 
     if pulse.shape == "gaussian":
-        sigma_fs = pulse.width_fs / (2.0 * math.sqrt(2.0 * math.log(2.0)))
+        sigma_fs = resolved_width_fs / (2.0 * math.sqrt(2.0 * math.log(2.0)))
         omega_scale_rad_per_fs = 1.0 / sigma_fs
     else:
-        t0_fs = pulse.width_fs / (2.0 * math.acosh(math.sqrt(2.0)))
+        t0_fs = resolved_width_fs / (2.0 * math.acosh(math.sqrt(2.0)))
         omega_scale_rad_per_fs = 1.0 / t0_fs
 
     nyquist_rad_per_fs = math.pi / dt_fs

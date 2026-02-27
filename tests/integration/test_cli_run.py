@@ -103,3 +103,27 @@ def test_cli_run_optionally_dumps_final_state_npz(tmp_path: Path) -> None:
 
     artifacts_payload = json.loads((out_dir / "artifacts.json").read_text(encoding="utf-8"))
     assert artifacts_payload["paths"]["run.state_dump_npz"].endswith("state_final.npz")
+
+
+@pytest.mark.integration
+def test_cli_run_surfaces_validation_message_for_conflicting_width_inputs(tmp_path: Path) -> None:
+    config_payload = """
+runtime:
+  seed: 1
+laser_gen:
+  kind: analytic
+  spec:
+    pulse:
+      shape: sech2
+      width_fs: 120.0
+      intensity_autocorr_fwhm_fs: 180.0
+"""
+    config_path = tmp_path / "invalid_config.yaml"
+    config_path.write_text(config_payload, encoding="utf-8")
+    out_dir = tmp_path / "out"
+
+    proc = _run_cli(config_path=config_path, out_dir=out_dir)
+
+    assert proc.returncode != 0
+    combined_output = f"{proc.stdout}\n{proc.stderr}"
+    assert "Only one pulse width input may be explicitly set" in combined_output
