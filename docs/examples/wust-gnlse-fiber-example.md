@@ -75,7 +75,7 @@ The example plots are intentionally labeled as *derived from* `|A|^2`/`|Aw|^2` t
 
 ## Example physics settings (current)
 
-- Pulse: gaussian, `center_wavelength_nm=1550`, `width_fs=1000`, `amplitude=35`, `n_samples=1024`, `time_window_fs=12000`.
+- Pulse: gaussian, `center_wavelength_nm=1550`, `width_fs=1000`, `peak_power_w=1225`, `n_samples=1024`, `time_window_fs=12000`.
 - Fiber: `length_m=0.25`, `gamma_1_per_w_m=2.0`, `dispersion.betas_psn_per_m=[-0.02]`.
 - Raman: `raman.kind="wust"`, `raman.model="blowwood"`.
 

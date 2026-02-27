@@ -170,18 +170,23 @@ CLI runs now emit per-stage time/spectrum SVG plots by default into `<out>/stage
 If you use the Python API directly, pass runtime policy `{"cpa.emit_stage_plots": true}` and
 optionally set `"cpa.stage_plot_dir"`.
 
-### Pulse amplitude and units
+### Pulse power/energy inputs and units
 
-`laser_gen.spec.pulse.amplitude` is treated as a **field amplitude** in `sqrt(W)` units.
-That means `|E(t)|^2` is instantaneous power in watts, and pulse energy is
-`sum(|E|^2 * dt_fs * 1e-15)` joules.
+Prefer the user-facing pulse normalization fields in config examples:
 
-Practical mapping:
+- `peak_power_w` (direct peak power),
+- `avg_power_w` + `rep_rate_mhz` (lab-friendly average power), or
+- `pulse_energy_j` (single-pulse energy workflows).
 
-- choose pulse shape + width (`width_fs`) + window/grid (`time_window_fs`, `n_samples`),
-- set `amplitude = sqrt(target_peak_power_w)` for the desired initial peak power,
-- set `rep_rate_mhz` to your laser repetition rate; average power is then
-  `pulse_energy_j * rep_rate_hz`.
+`width_fs` is the pulse **intensity FWHM**. If your source measurement is from an autocorrelator,
+provide `intensity_autocorr_fwhm_fs` with a supported `shape` (`gaussian` or `sech2`) and the
+simulator will deconvolve to intensity FWHM internally.
+
+Internally, the envelope still uses `sqrt(W)` scaling where `|E(t)|^2` is instantaneous power in W,
+and pulse energy is `sum(|E|^2 * dt_fs * 1e-15)` joules.
+
+Legacy compatibility (deprecated): `amplitude` is still accepted but should be migrated to
+`peak_power_w`/`avg_power_w`/`pulse_energy_j` in new configs.
 
 For `fiber_amp_wrap`, `power_out_w` is the target **output average power in watts** at the stage output plane.
 
