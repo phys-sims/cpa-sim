@@ -171,7 +171,13 @@ class FiberPhysicsCfg(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     length_m: float = 1.0
-    loss_db_per_m: float = 0.0
+    loss_db_per_m: float = Field(
+        default=0.0,
+        description=(
+            "Net distributed power attenuation coefficient in dB/m. "
+            "Positive values attenuate power and negative values represent distributed gain."
+        ),
+    )
     gamma_1_per_w_m: float | None = None
     n2_m2_per_w: float | None = None
     aeff_m2: float | None = None
@@ -181,6 +187,13 @@ class FiberPhysicsCfg(BaseModel):
     raman: RamanCfg | None = None
     self_steepening: bool = False
     validate_physical_units: bool = True
+
+    @field_validator("loss_db_per_m")
+    @classmethod
+    def _validate_loss_db_per_m(cls, value: float) -> float:
+        if not math.isfinite(value):
+            raise ValueError("FiberPhysicsCfg.loss_db_per_m must be finite.")
+        return value
 
 
 class ToyPhaseNumericsCfg(BaseModel):
