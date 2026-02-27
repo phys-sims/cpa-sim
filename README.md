@@ -170,9 +170,26 @@ CLI runs now emit per-stage time/spectrum SVG plots by default into `<out>/stage
 If you use the Python API directly, pass runtime policy `{"cpa.emit_stage_plots": true}` and
 optionally set `"cpa.stage_plot_dir"`.
 
-### Pulse power/energy inputs and units
+### PulseSpec quickstart inputs (power/energy units)
 
-Prefer the user-facing pulse normalization fields in config examples:
+For new configs, prefer average-power-driven inputs in lab units:
+
+```yaml
+laser_gen:
+  spec:
+    pulse:
+      shape: gaussian
+      avg_power_w: 0.5     # average power [W]
+      rep_rate_mhz: 80.0   # repetition rate [MHz]
+      width_fs: 120.0      # pulse intensity FWHM [fs]
+      center_wavelength_nm: 1030.0
+```
+
+`avg_power_w` is in **watts** and `rep_rate_mhz` is in **MHz**.
+
+See `docs/config/pulse_spec.md` for full PulseSpec behavior, including autocorrelation input rules and legacy compatibility.
+
+Prefer these user-facing pulse normalization fields:
 
 - `peak_power_w` (direct peak power),
 - `avg_power_w` + `rep_rate_mhz` (lab-friendly average power), or
