@@ -6,7 +6,7 @@ laser_gen:
   spec:
     pulse:
       shape: gaussian
-      amplitude: 1.0
+      peak_power_w: 1.0
       width_fs: 80.0
       center_wavelength_nm: 1030.0
       rep_rate_mhz: 1.0

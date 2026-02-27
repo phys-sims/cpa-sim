@@ -1,0 +1,17 @@
+runtime:
+  seed: 5
+laser_gen:
+  name: laser_init
+  kind: analytic
+  spec:
+    pulse:
+      shape: gaussian
+      amplitude: 1.0  # DEPRECATED: use peak_power_w, avg_power_w+rep_rate_mhz, or pulse_energy_j.
+      width_fs: 100.0
+      center_wavelength_nm: 1030.0
+      rep_rate_mhz: 1.0
+      n_samples: 128
+      time_window_fs: 1200.0
+metrics:
+  name: metrics
+  kind: standard

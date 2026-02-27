@@ -1,28 +1,28 @@
 runtime:
-  seed: 11
+  seed: 101
 laser_gen:
   name: laser_init
   kind: analytic
   spec:
     pulse:
-      shape: gaussian
-      peak_power_w: 1.0
-      width_fs: 100.0
+      shape: sech2
+      avg_power_w: 0.5
+      rep_rate_mhz: 50.0
+      intensity_autocorr_fwhm_fs: 185.2  # sech^2 autocorr FWHM / 1.543 => pulse intensity FWHM ≈ 120 fs
       center_wavelength_nm: 1030.0
-      rep_rate_mhz: 1.0
-      n_samples: 128
-      time_window_fs: 1200.0
+      n_samples: 256
+      time_window_fs: 2400.0
 stages:
-  - name: canonical
+  - name: stretcher
     kind: treacy_grating_pair
     line_density_lpmm: 1200.0
     incidence_angle_deg: 35.0
-    separation_um: 100000.0
+    separation_um: 60000.0
     wavelength_nm: 1030.0
     diffraction_order: -1
     n_passes: 2
     include_tod: true
-    apply_to_pulse: false
+    apply_to_pulse: true
 metrics:
   name: metrics
   kind: standard
