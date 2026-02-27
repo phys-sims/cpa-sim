@@ -48,7 +48,8 @@ class FiberAmpWrapStage(LaserStage[FiberAmpWrapCfg]):
             )
 
         intrinsic_loss_db_per_m = float(self.cfg.physics.loss_db_per_m)
-        loss_eff_db_per_m = float(-(10.0 / length_m) * np.log10(g_net))
+        target_total_loss_db_per_m = float(-(10.0 / length_m) * np.log10(g_net))
+        loss_eff_db_per_m = target_total_loss_db_per_m - intrinsic_loss_db_per_m
         loss_total_db_per_m = intrinsic_loss_db_per_m + loss_eff_db_per_m
 
         wrapped_physics = self.cfg.physics.model_copy(
