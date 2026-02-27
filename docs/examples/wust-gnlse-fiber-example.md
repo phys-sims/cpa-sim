@@ -39,7 +39,7 @@ The example uses the Strategy-B config split:
 ### `FiberPhysicsCfg`
 
 - `length_m`: fiber length in meters.
-- `loss_db_per_m`: attenuation in dB/m.
+- `loss_db_per_m`: net distributed power attenuation in dB/m (positive attenuates, negative represents distributed gain).
 - `gamma_1_per_w_m`: nonlinear coefficient in 1/(W·m).
 - `dispersion.kind="taylor"` with `betas_psn_per_m`: β₂, β₃, ... in psⁿ/m.
 - optional `raman` and `self_steepening` toggles.
