@@ -71,8 +71,8 @@ example_operating_point_for_sim_demo:
   # This section defines a *demo-friendly* operating point consistent with the UOC series capabilities.
   # Pulsewidth selection at ~2 ps is achieved via optional filter cartridge, per vendor docs.
   center_wavelength_nm: 1550
-  repetition_rate_hz: 5.0e8   # 0.5 GHz
-  pulsewidth_fwhm_ps: 2.0
+  repetition_rate_hz: 1.155e9   # 1.155 GHz
+  pulsewidth_fwhm_ps: 7.214
   output_polarization: "PM"
   modeling_assumptions:
     pulse_intensity_shape: "sech^2"
