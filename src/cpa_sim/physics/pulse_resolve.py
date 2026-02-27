@@ -91,7 +91,9 @@ def resolve_peak_power_w(pulse_spec: PulseSpecLike, width_fs: float) -> float:
 
     energy_j = resolve_pulse_energy_j(pulse_spec)
     if energy_j is not None:
-        return peak_power_w_from_energy_j(energy_j=energy_j, width_fs=width_fs, shape=pulse_spec.shape)
+        return peak_power_w_from_energy_j(
+            energy_j=energy_j, width_fs=width_fs, shape=pulse_spec.shape
+        )
 
     amplitude_is_explicit = _field_explicitly_set(pulse_spec, "amplitude")
     if amplitude_is_explicit:
