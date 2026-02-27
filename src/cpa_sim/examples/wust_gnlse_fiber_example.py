@@ -12,6 +12,7 @@ from cpa_sim.models import (
     FiberCfg,
     FiberPhysicsCfg,
     LaserGenCfg,
+    RamanCfg,
     WustGnlseNumericsCfg,
 )
 from cpa_sim.models.state import BeamState, LaserSpec, LaserState, PulseGrid, PulseSpec, PulseState
@@ -24,7 +25,7 @@ DEFAULT_OUT_DIR = Path("artifacts/fiber-example")
 def _build_empty_state() -> LaserState:
     pulse = PulseState
     empty_pulse = pulse(
-        grid=PulseGrid(t=[0.0, 1.0], w=[0.0, 1.0], dt=1.0, dw=1.0, center_wavelength_nm=1030.0),
+        grid=PulseGrid(t=[0.0, 1.0], w=[0.0, 1.0], dt=1.0, dw=1.0, center_wavelength_nm=1550.0),
         field_t=np.zeros(2, dtype=np.complex128),
         field_w=np.zeros(2, dtype=np.complex128),
         intensity_t=np.zeros(2),
@@ -41,11 +42,11 @@ def run_example(out_dir: Path, *, plot_format: str = "svg") -> dict[str, Path]:
             spec=LaserSpec(
                 pulse=PulseSpec(
                     shape="gaussian",
-                    amplitude=5.0,
-                    width_fs=80.0,
-                    center_wavelength_nm=1030.0,
-                    n_samples=512,
-                    time_window_fs=2000.0,
+                    amplitude=35.0,
+                    width_fs=1000.0,
+                    center_wavelength_nm=1550.0,
+                    n_samples=1024,
+                    time_window_fs=12000.0,
                 )
             )
         )
@@ -57,8 +58,9 @@ def run_example(out_dir: Path, *, plot_format: str = "svg") -> dict[str, Path]:
             physics=FiberPhysicsCfg(
                 length_m=0.25,
                 loss_db_per_m=0.0,
-                gamma_1_per_w_m=0.01,
-                dispersion=DispersionTaylorCfg(betas_psn_per_m=[0.02]),
+                gamma_1_per_w_m=2.0,
+                dispersion=DispersionTaylorCfg(betas_psn_per_m=[-0.02]),
+                raman=RamanCfg(model="blowwood"),
             ),
             numerics=WustGnlseNumericsCfg(
                 backend="wust_gnlse",
@@ -84,7 +86,7 @@ def run_example(out_dir: Path, *, plot_format: str = "svg") -> dict[str, Path]:
     ax.plot(t_fs, final.pulse.intensity_t, label="after fiber")
     ax.set_xlabel("Time (fs)")
     ax.set_ylabel("Intensity (arb. from |A|^2)")
-    ax.set_title("WUST gnlse fiber example: time-domain intensity")
+    ax.set_title("WUST gnlse fiber example: 1550 nm / 1 ps pulse intensity")
     ax.legend()
     fig.tight_layout()
     fig.savefig(paths["time"], format=plot_format)
@@ -95,7 +97,7 @@ def run_example(out_dir: Path, *, plot_format: str = "svg") -> dict[str, Path]:
     ax.plot(w, final.pulse.spectrum_w, label="after fiber")
     ax.set_xlabel("Angular frequency axis (rad/fs)")
     ax.set_ylabel("Spectrum (arb. from |Aw|^2)")
-    ax.set_title("WUST gnlse fiber example: spectral magnitude")
+    ax.set_title("WUST gnlse fiber example: nonlinear + Raman spectral evolution")
     ax.legend()
     fig.tight_layout()
     fig.savefig(paths["spectrum"], format=plot_format)

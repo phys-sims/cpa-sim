@@ -6,22 +6,25 @@ laser_gen:
   spec:
     pulse:
       shape: gaussian
-      amplitude: 5.0
-      width_fs: 120.0
-      center_wavelength_nm: 1030.0
+      amplitude: 35.0
+      width_fs: 1000.0
+      center_wavelength_nm: 1550.0
       rep_rate_mhz: 1.0
-      n_samples: 256
-      time_window_fs: 2000.0
+      n_samples: 512
+      time_window_fs: 12000.0
 stages:
   - name: fiber
     kind: fiber
     physics:
       length_m: 0.2
       loss_db_per_m: 0.0
-      gamma_1_per_w_m: 0.01
+      gamma_1_per_w_m: 2.0
       dispersion:
         kind: taylor
-        betas_psn_per_m: [0.0]
+        betas_psn_per_m: [-0.02]
+      raman:
+        kind: wust
+        model: blowwood
     numerics:
       backend: wust_gnlse
       grid_policy: use_state
