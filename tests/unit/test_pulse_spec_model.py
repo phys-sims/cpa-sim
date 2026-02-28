@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import warnings
+
 import pytest
 from pydantic import ValidationError
 
@@ -45,6 +47,15 @@ def test_pulse_spec_rejects_conflicting_width_inputs() -> None:
 def test_pulse_spec_warns_when_amplitude_is_explicitly_set() -> None:
     with pytest.warns(DeprecationWarning, match=r"PulseSpec\.amplitude is deprecated"):
         PulseSpec(amplitude=2.0)
+
+
+@pytest.mark.unit
+def test_pulse_spec_does_not_warn_when_amplitude_is_only_defaulted() -> None:
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        PulseSpec()
+
+    assert not any("PulseSpec.amplitude is deprecated" in str(w.message) for w in record)
 
 
 @pytest.mark.unit
