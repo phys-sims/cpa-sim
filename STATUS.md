@@ -3,8 +3,10 @@
 > **Source of truth:** Update this file whenever behavior, tests, schemas, or canonical examples change.
 
 ## Last updated
-- Date: 2026-02-27
+- Date: 2026-02-28
 - By: @openai-codex
+- Scope: Finalized PulseSpec contract cleanup by publishing `specs/pulse_spec.schema.json` from `PulseSpec.model_json_schema()`, documenting migration emphasis from deprecated `amplitude` to `avg_power_w`/`peak_power_w`, and adding a unit guard that deprecation warnings fire only when `amplitude` is explicitly provided (not when defaulted).
+- Scope: Validated canonical CLI examples for both the `avg_power_w` normalization path and the autocorrelation-width input path via `configs/examples/autocorr_input_demo.yaml`, preserving the no-double-conversion guidance for `intensity_autocorr_fwhm_fs` inputs.
 - Scope: Updated pulse sampling adequacy checks to always use resolved intensity FWHM via `resolve_intensity_fwhm_fs` (including autocorrelation deconvolution), refreshed sampling warning/error wording, and added unit/integration tests for autocorrelation-only width handling plus CLI validation messaging for explicitly conflicting width inputs.
 - Scope: Updated `AnalyticLaserGenStage` to resolve pulse normalization via `resolve_intensity_fwhm_fs` + `resolve_peak_power_w`, switched generation to effective intensity FWHM/peak power semantics, and added audit metadata/metrics (`laser.intensity_fwhm_fs`, `laser.peak_power_w`, `laser.pulse_energy_j`, `laser.avg_power_w`, autocorr input echo).
 - Scope: Added unit tests covering analytic laser energy closure from `avg_power_w`, peak-power consistency for gaussian/sech2, and autocorrelation-width deconvolution behavior; preserved legacy amplitude compatibility (with deprecation warnings).
@@ -70,6 +72,7 @@ Fill these in after first green run; keep them current.
 | `configs/examples/basic_cpa.yaml` | ✅ | ✅ | Tiny grid, CI-friendly end-to-end smoke; validated via integration config-loading test. |
 | `configs/examples/gnlse_canonical.yaml` | ✅ | ✅ | Fiber canonical config runs in integration when `gnlse` is installed; test uses optional dependency guard. |
 | `configs/examples/tracy_golden.yaml` | ✅ | ✅ | Free-space canonical config validated by integration load/run test with Treacy metrics assertions. |
+| `configs/examples/autocorr_input_demo.yaml` | ✅ | ✅ | Demonstrates `avg_power_w` normalization with `intensity_autocorr_fwhm_fs` input; docs warn to provide raw autocorrelation widths only (avoid double conversion). |
 
 ---
 

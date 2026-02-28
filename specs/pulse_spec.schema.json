@@ -1,0 +1,101 @@
+{
+  "properties": {
+    "amplitude": {
+      "default": 1.0,
+      "deprecated": true,
+      "description": "Legacy envelope amplitude scaling in sqrt(W), where instantaneous power is |E(t)|^2 in W. Deprecated: prefer peak_power_w or avg_power_w.",
+      "title": "Amplitude",
+      "type": "number"
+    },
+    "avg_power_w": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Average power in watts (W).",
+      "title": "Avg Power W"
+    },
+    "center_wavelength_nm": {
+      "default": 1030.0,
+      "title": "Center Wavelength Nm",
+      "type": "number"
+    },
+    "intensity_autocorr_fwhm_fs": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Intensity autocorrelation FWHM in femtoseconds (fs), as read from an autocorrelator before shape-dependent deconvolution to pulse intensity FWHM.",
+      "title": "Intensity Autocorr Fwhm Fs"
+    },
+    "n_samples": {
+      "default": 256,
+      "title": "N Samples",
+      "type": "integer"
+    },
+    "peak_power_w": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Peak instantaneous power in watts (W).",
+      "title": "Peak Power W"
+    },
+    "pulse_energy_j": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Energy per pulse in joules (J).",
+      "title": "Pulse Energy J"
+    },
+    "rep_rate_mhz": {
+      "default": 1.0,
+      "title": "Rep Rate Mhz",
+      "type": "number"
+    },
+    "shape": {
+      "default": "gaussian",
+      "description": "Pulse intensity profile family in time: 'gaussian' means I(t) \u221d exp(-4 ln 2 (t/FWHM)^2), 'sech2' means I(t) \u221d sech^2(t/T0).",
+      "enum": [
+        "gaussian",
+        "sech2"
+      ],
+      "title": "Shape",
+      "type": "string"
+    },
+    "time_window_fs": {
+      "default": 2000.0,
+      "title": "Time Window Fs",
+      "type": "number"
+    },
+    "width_fs": {
+      "default": 100.0,
+      "description": "Intensity full width at half maximum (FWHM) in femtoseconds.",
+      "title": "Width Fs",
+      "type": "number"
+    }
+  },
+  "title": "PulseSpec",
+  "type": "object"
+}
