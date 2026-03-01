@@ -65,11 +65,11 @@ def fake_gnlse_module() -> types.ModuleType:
 
     def dispersion_interp(
         loss: float,
-        center_wl_nm: float,
-        lambdas_nm: list[float],
         neff: list[float],
-    ) -> tuple[str, float, float, list[float], list[float]]:
-        return ("interp", loss, center_wl_nm, lambdas_nm, neff)
+        lambdas_nm: list[float],
+        center_wl_nm: float,
+    ) -> tuple[str, float, list[float], list[float], float]:
+        return ("interp", loss, neff, lambdas_nm, center_wl_nm)
 
     mod.GNLSESetup = GNLSESetup
     mod.DispersionFiberFromTaylor = dispersion_taylor

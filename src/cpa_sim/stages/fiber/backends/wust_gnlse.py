@@ -24,6 +24,11 @@ from cpa_sim.stages.fiber.utils.units import fs_to_ps
 
 _LIGHT_SPEED_M_PER_S = 299792458.0
 _FS_TO_S = 1e-15
+_RAMAN_MODEL_MAP = {
+    "blowwood": "raman_blowwood",
+    "linagrawal": "raman_linagrawal",
+    "hollenbeck": "raman_holltrell",
+}
 
 
 def _ensure_numpy_math_compat() -> None:
@@ -55,27 +60,50 @@ def _resolve_gamma(physics: FiberPhysicsCfg, *, center_wavelength_nm: float) -> 
 
 
 def _build_dispersion(gnlse: Any, physics: FiberPhysicsCfg) -> Any:
+    dispersion_cfg = physics.dispersion
     if isinstance(physics.dispersion, DispersionTaylorCfg):
         return gnlse.DispersionFiberFromTaylor(
             physics.loss_db_per_m,
-            physics.dispersion.betas_psn_per_m,
+            dispersion_cfg.betas_psn_per_m,
         )
-    if isinstance(physics.dispersion, DispersionInterpolationCfg):
+    if isinstance(dispersion_cfg, DispersionInterpolationCfg):
+        loss_db_per_m = float(physics.loss_db_per_m)
+        neff = np.asarray(dispersion_cfg.effective_indices, dtype=float)
+        lambdas_nm = np.asarray(dispersion_cfg.lambdas_nm, dtype=float)
+        central_wavelength_nm = float(dispersion_cfg.central_wavelength_nm)
         return gnlse.DispersionFiberFromInterpolation(
-            physics.loss_db_per_m,
-            np.asarray(physics.dispersion.effective_indices, dtype=float),
-            np.asarray(physics.dispersion.lambdas_nm, dtype=float),
-            physics.dispersion.central_wavelength_nm,
+            loss_db_per_m,
+            neff,
+            lambdas_nm,
+            central_wavelength_nm,
         )
-    raise TypeError("Unsupported dispersion config.")
+
+    supported_kinds = ["taylor", "interpolation"]
+    got_kind = getattr(dispersion_cfg, "kind", type(dispersion_cfg).__name__)
+    raise ValueError(
+        "Unsupported fiber dispersion config for WUST gnlse backend: "
+        f"kind={got_kind!r}. Supported kinds: {supported_kinds}."
+    )
 
 
 def _build_raman_model(gnlse: Any, physics: FiberPhysicsCfg) -> Any | None:
     if physics.raman is None:
         return None
-    model_name = f"raman_{physics.raman.model}"
+    supported_models = sorted(_RAMAN_MODEL_MAP)
+    model = physics.raman.model
+    model_name = _RAMAN_MODEL_MAP.get(model)
+    if model_name is None:
+        raise ValueError(
+            "Unsupported Raman model for WUST gnlse backend: "
+            f"model={model!r}. Supported models: {supported_models}. "
+            "Note: gnlse exposes the Hollenbeck–Cantrell response as 'raman_holltrell'."
+        )
     if not hasattr(gnlse, model_name):
-        raise ValueError(f"Requested Raman model is not available in gnlse: {physics.raman.model}")
+        raise ValueError(
+            "Configured Raman model is not available in installed gnlse package: "
+            f"model={model!r} -> attribute={model_name!r}. Supported models: {supported_models}. "
+            "Note: gnlse exposes the Hollenbeck–Cantrell response as 'raman_holltrell'."
+        )
     return getattr(gnlse, model_name)
 
 
