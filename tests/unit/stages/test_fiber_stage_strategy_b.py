@@ -142,7 +142,7 @@ def test_wust_backend_missing_dependency_has_clear_error(monkeypatch: pytest.Mon
             physics=FiberPhysicsCfg(gamma_1_per_w_m=0.001),
             numerics=WustGnlseNumericsCfg(
                 grid_policy="force_resolution", resolution_override=32, record_backend_version=False
-            )
+            ),
         )
     )
     with pytest.raises(RuntimeError, match="optional 'gnlse'"):

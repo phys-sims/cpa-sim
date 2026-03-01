@@ -16,9 +16,9 @@ from cpa_sim.models import (
     FiberPhysicsCfg,
     LaserGenCfg,
     LaserSpec,
-    RamanCfg,
     PipelineConfig,
     PulseSpec,
+    RamanCfg,
     RuntimeCfg,
     WustGnlseNumericsCfg,
 )
@@ -26,7 +26,6 @@ from cpa_sim.pipeline import run_pipeline
 
 DEFAULT_OUT_DIR = Path("out")
 DEFAULT_STAGE_NAME = "fiber_dispersive_wave"
-
 
 
 def _plot_from_npz(
@@ -39,7 +38,9 @@ def _plot_from_npz(
     data = np.load(npz_path)
     z_m = np.asarray(data["z_m"], dtype=float)
     t_fs = np.asarray(data["t_fs"], dtype=float)
-    at = np.asarray(data["at_zt_real"], dtype=float) + 1j * np.asarray(data["at_zt_imag"], dtype=float)
+    at = np.asarray(data["at_zt_real"], dtype=float) + 1j * np.asarray(
+        data["at_zt_imag"], dtype=float
+    )
 
     delay_map = np.abs(at) ** 2
 
@@ -150,9 +151,13 @@ def run_showcase(*, out_dir: Path, seed: int = 7) -> dict[str, str]:
         "schema_version": "cpa.metrics.v1",
         "overall": result.metrics,
     }
-    (out_dir / "metrics.json").write_text(json.dumps(metrics_payload, indent=2, sort_keys=True) + "\n")
+    (out_dir / "metrics.json").write_text(
+        json.dumps(metrics_payload, indent=2, sort_keys=True) + "\n"
+    )
     (out_dir / "artifacts.json").write_text(
-        json.dumps({"schema_version": "cpa.artifacts.v1", "paths": artifacts}, indent=2, sort_keys=True)
+        json.dumps(
+            {"schema_version": "cpa.artifacts.v1", "paths": artifacts}, indent=2, sort_keys=True
+        )
         + "\n"
     )
 
