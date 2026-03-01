@@ -262,6 +262,29 @@ python -m mypy src
 python -m pytest -q -m "not slow and not physics" --durations=10
 ```
 
+## Documentation
+
+This repository includes a MkDocs Material site built from `docs/`.
+
+### Run docs locally
+
+```bash
+pip install -e .[dev]
+pip install -r docs/requirements.txt
+mkdocs serve
+```
+
+Then open the local URL printed by MkDocs (typically `http://127.0.0.1:8000`).
+
+### CI workflow behavior
+
+- On pull requests, `.github/workflows/docs.yml` builds the documentation with `mkdocs build --strict` and uploads `site/` as a workflow artifact.
+- On manual trigger (`workflow_dispatch`), the same workflow builds and deploys to GitHub Pages using the official Pages actions.
+
+### GitHub Pages setup note
+
+For manual deployment to work, enable GitHub Pages in repository settings with **Build and deployment: GitHub Actions**.
+
 ## Repository layout
 
 ```text

@@ -1,0 +1,28 @@
+site_name: cpa-sim
+site_description: Documentation for the cpa-sim chirped-pulse amplification simulator
+repo_url: https://github.com/phys-sims/cpa-sim
+edit_uri: ""
+
+theme:
+  name: material
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Examples:
+      - Canonical 1560nm Chain: examples/canonical-1560nm-chain.md
+      - WUST GNLS Fiber Example: examples/wust-gnlse-fiber-example.md
+      - GNLS Dispersive Wave: examples/gnlse-dispersive-wave.md
+  - ADRs:
+      - Index: adr/INDEX.md
+      - ADR-0001 Conventions & Units: adr/ADR-0001-conventions-units.md
+      - ADR-0002 Result Schema Contract: adr/ADR-0002-result-schema-contract.md
+      - ADR-0003 Validation Tiers CI Policy: adr/ADR-0003-validation-tiers-ci-policy.md
+      - ADR-0004 Stage Domain Boundaries: adr/ADR-0004-stage-domain-boundaries.md
+      - ADR-0005 phys-pipeline Contract Adoption: adr/ADR-0005-phys-pipeline-contract-adoption.md
+      - ADR-0006 Fiber Stage Physics Numerics Split: adr/ADR-0006-fiber-stage-physics-numerics-split.md
+      - ADR-0008 Canonical Output Layout: adr/ADR-0008-canonical-output-layout.md
