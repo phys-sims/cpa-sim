@@ -43,6 +43,19 @@ _EPS = 1e-30
 _STAGE_NAME = "fiber_dispersive_wave"
 
 
+def _int_with_min(*, name: str, minimum: int) -> callable:
+    def _parse(value: str) -> int:
+        try:
+            parsed = int(value)
+        except ValueError as exc:
+            raise argparse.ArgumentTypeError(f"{name} must be an integer.") from exc
+        if parsed < minimum:
+            raise argparse.ArgumentTypeError(f"{name} must be >= {minimum}; got {parsed}.")
+        return parsed
+
+    return _parse
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Generate dispersive-wave figures with cpa-sim + WUST gnlse"
@@ -51,10 +64,16 @@ def _build_parser() -> argparse.ArgumentParser:
         "--outdir", type=Path, required=True, help="Output directory for generated figures"
     )
     parser.add_argument(
-        "--n-samples", type=int, default=8192, help="Pulse temporal grid sample count"
+        "--n-samples",
+        type=_int_with_min(name="--n-samples", minimum=2),
+        default=8192,
+        help="Pulse temporal grid sample count (must be >= 2)",
     )
     parser.add_argument(
-        "--z-saves", type=int, default=400, help="Number of saved z-slices from gnlse"
+        "--z-saves",
+        type=_int_with_min(name="--z-saves", minimum=1),
+        default=400,
+        help="Number of saved z-slices from gnlse (must be >= 1)",
     )
     parser.add_argument(
         "--raman-model",
