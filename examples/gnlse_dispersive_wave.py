@@ -19,6 +19,7 @@ import argparse
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -43,10 +44,18 @@ _STAGE_NAME = "fiber_dispersive_wave"
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Generate dispersive-wave figures with cpa-sim + WUST gnlse")
-    parser.add_argument("--outdir", type=Path, required=True, help="Output directory for generated figures")
-    parser.add_argument("--n-samples", type=int, default=8192, help="Pulse temporal grid sample count")
-    parser.add_argument("--z-saves", type=int, default=400, help="Number of saved z-slices from gnlse")
+    parser = argparse.ArgumentParser(
+        description="Generate dispersive-wave figures with cpa-sim + WUST gnlse"
+    )
+    parser.add_argument(
+        "--outdir", type=Path, required=True, help="Output directory for generated figures"
+    )
+    parser.add_argument(
+        "--n-samples", type=int, default=8192, help="Pulse temporal grid sample count"
+    )
+    parser.add_argument(
+        "--z-saves", type=int, default=400, help="Number of saved z-slices from gnlse"
+    )
     parser.add_argument(
         "--raman-model",
         type=str,
@@ -77,7 +86,9 @@ def _load_z_traces(npz_path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, 
     z_m = np.asarray(data["z_m"], dtype=float)
     t_fs = np.asarray(data["t_fs"], dtype=float)
     w_rad_per_fs = np.asarray(data["w_rad_per_fs"], dtype=float)
-    at = np.asarray(data["at_zt_real"], dtype=float) + 1j * np.asarray(data["at_zt_imag"], dtype=float)
+    at = np.asarray(data["at_zt_real"], dtype=float) + 1j * np.asarray(
+        data["at_zt_imag"], dtype=float
+    )
     return z_m, t_fs, w_rad_per_fs, at
 
 
