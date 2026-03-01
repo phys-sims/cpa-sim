@@ -35,5 +35,19 @@ jobs:
           pip install "setuptools<81"
           pip install --no-build-isolation gnlse
 
+      - name: Prepare optional gnlse artifact directory
+        run: mkdir -p artifacts/gnlse-dispersive-wave
+
       - name: Run optional gnlse tests
-        run: python -m pytest -q -m gnlse --durations=10
+        env:
+          CPA_SIM_ARTIFACT_DIR: artifacts/gnlse-dispersive-wave
+          MPLBACKEND: Agg
+        run: python -m pytest -q -m "gnlse" --durations=10
+
+      - name: Upload optional gnlse plots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gnlse-dispersive-wave-plots
+          path: artifacts/gnlse-dispersive-wave/**
+          if-no-files-found: warn
