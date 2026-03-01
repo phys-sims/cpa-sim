@@ -5,6 +5,7 @@
 ## Last updated
 - Date: 2026-03-01
 - By: @openai-codex
+- Scope: Updated `wust_gnlse` `keep_full_solution` behavior to persist full z-evolution traces as compressed NPZ under the canonical stage plot directory, register stable stage artifact keys, add a new dispersive-wave showcase example that generates doc-style delay/wavelength heatmaps from saved traces, and document usage/output layout in `docs/examples/gnlse-dispersive-wave.md`.
 - Scope: Fixed `wust_gnlse` interpolation-dispersion adapter ordering to map `DispersionInterpolationCfg` into `gnlse.DispersionFiberFromInterpolation(loss_db_per_m, neff, lambdas_nm, central_wavelength_nm)` and added a gnlse-backed unit contract test that compares direct-vs-stage propagation outputs to fail loudly on argument order or units mismatches.
 - Scope: Finalized PulseSpec contract cleanup by publishing `specs/pulse_spec.schema.json` from `PulseSpec.model_json_schema()`, documenting migration emphasis from deprecated `amplitude` to `avg_power_w`/`peak_power_w`, and adding a unit guard that deprecation warnings fire only when `amplitude` is explicitly provided (not when defaulted).
 - Scope: Validated canonical CLI examples for both the `avg_power_w` normalization path and the autocorrelation-width input path via `configs/examples/autocorr_input_demo.yaml`, preserving the no-double-conversion guidance for `intensity_autocorr_fwhm_fs` inputs.

@@ -1,5 +1,6 @@
 import sys
 import types
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -43,6 +44,7 @@ def _state() -> LaserState:
 class _FakeSolution:
     def __init__(self, field_t: np.ndarray):
         self.At = np.vstack([field_t, 1.1 * field_t])
+        self.Z = np.array([0.0, 1.0], dtype=float)
 
 
 class _FakeGNLSE:
@@ -137,6 +139,7 @@ def test_wust_backend_missing_dependency_has_clear_error(monkeypatch: pytest.Mon
     s = _state()
     stage = FiberStage(
         FiberCfg(
+            physics=FiberPhysicsCfg(gamma_1_per_w_m=0.001),
             numerics=WustGnlseNumericsCfg(
                 grid_policy="force_resolution", resolution_override=32, record_backend_version=False
             )
@@ -207,3 +210,33 @@ def test_wust_interpolation_dispersion_mapping(
     )
     result = stage.process(s)
     assert result.state.metrics["fiber.energy_out_au"] > 0.0
+
+
+@pytest.mark.unit
+def test_wust_keep_full_solution_writes_z_trace_npz(
+    monkeypatch: pytest.MonkeyPatch, fake_gnlse_module: types.ModuleType, tmp_path
+) -> None:
+    monkeypatch.setitem(sys.modules, "gnlse", fake_gnlse_module)
+
+    s = _state()
+    stage = FiberStage(
+        FiberCfg(
+            physics=FiberPhysicsCfg(gamma_1_per_w_m=0.001),
+            numerics=WustGnlseNumericsCfg(
+                z_saves=2,
+                keep_full_solution=True,
+                record_backend_version=False,
+            ),
+        )
+    )
+
+    result = stage.process(s, policy={"cpa.stage_plot_dir": str(tmp_path)})
+    npz_path = result.state.artifacts["fiber.z_traces_npz"]
+    data = np.load(npz_path)
+
+    assert Path(npz_path).exists()
+    assert data["z_m"].shape == (2,)
+    assert data["t_fs"].ndim == 1
+    assert data["at_zt_real"].shape[0] == 2
+    assert data["at_zt_real"].shape == data["at_zt_imag"].shape
+    assert result.state.artifacts["fiber.solution_saved"] == "z_traces_npz"

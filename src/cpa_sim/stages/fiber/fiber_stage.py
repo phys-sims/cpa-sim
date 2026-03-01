@@ -39,6 +39,7 @@ class FiberStage(LaserStage[FiberCfg]):
                 stage_name=self.name,
                 physics=self.cfg.physics,
                 numerics=numerics,
+                policy=policy,
             )
             result.state.artifacts.update(
                 maybe_emit_stage_plots(stage_name=self.name, state=result.state, policy=policy)
