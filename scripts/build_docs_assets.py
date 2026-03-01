@@ -5,16 +5,18 @@ import shlex
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
-import matplotlib
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import numpy as np
 
 LIGHT_SPEED_M_PER_S = 299_792_458.0
 EPS = 1e-30
 DEFAULT_OUTPUT_DIR = Path("docs/assets/generated/gnlse-dispersive-wave")
+SVG_NAMES = (
+    "spectrum_z0_vs_zL.svg",
+    "evolution_wavelength_vs_distance.svg",
+    "evolution_delay_vs_distance.svg",
+)
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -29,7 +31,10 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--allow-missing-gnlse",
         action="store_true",
-        help="If gnlse is unavailable, write deterministic placeholder SVGs instead of failing.",
+        help=(
+            "If optional plotting/gnlse dependencies are unavailable, "
+            "write deterministic placeholder SVGs instead of failing."
+        ),
     )
     return parser
 
@@ -62,28 +67,40 @@ def _load_z_traces(npz_path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, 
     return z_m, t_fs, w_rad_per_fs, at
 
 
+def _normalize_svg_whitespace(svg_path: Path) -> None:
+    lines = svg_path.read_text(encoding="utf-8").splitlines()
+    normalized = "\n".join(line.rstrip() for line in lines) + "\n"
+    svg_path.write_text(normalized, encoding="utf-8")
+
+
+def _load_pyplot() -> tuple[Any, Any]:
+    try:
+        import matplotlib
+    except ModuleNotFoundError as exc:  # pragma: no cover - depends on runner image
+        raise RuntimeError(
+            "matplotlib is required to render docs assets; install docs dependencies "
+            "or use --allow-missing-gnlse for placeholder SVGs"
+        ) from exc
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    return matplotlib, plt
+
+
 def _save_placeholder_svgs(outdir: Path, reason: str) -> None:
     outdir.mkdir(parents=True, exist_ok=True)
-    names = [
-        "spectrum_z0_vs_zL.svg",
-        "evolution_wavelength_vs_distance.svg",
-        "evolution_delay_vs_distance.svg",
-    ]
     escaped = reason.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-    for name in names:
-        (outdir / name).write_text(
-            "\n".join(
-                [
-                    '<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">',
-                    '  <rect width="100%" height="100%" fill="#0f172a"/>',
-                    '  <text x="60" y="160" fill="#e2e8f0" font-size="34" font-family="sans-serif">GNLSE asset unavailable in this build</text>',
-                    f'  <text x="60" y="230" fill="#93c5fd" font-size="24" font-family="monospace">{escaped}</text>',
-                    "</svg>",
-                    "",
-                ]
-            ),
-            encoding="utf-8",
-        )
+    body = [
+        '<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">',
+        '  <rect width="100%" height="100%" fill="#0f172a"/>',
+        '  <text x="60" y="160" fill="#e2e8f0" font-size="34" font-family="sans-serif">Docs asset unavailable in this build</text>',
+        f'  <text x="60" y="230" fill="#93c5fd" font-size="24" font-family="monospace">{escaped}</text>',
+        "</svg>",
+    ]
+    for name in SVG_NAMES:
+        output = outdir / name
+        output.write_text("\n".join(body) + "\n", encoding="utf-8")
 
 
 def _build_svgs(
@@ -94,6 +111,7 @@ def _build_svgs(
     at_zt: np.ndarray,
     outdir: Path,
 ) -> None:
+    _, plt = _load_pyplot()
     outdir.mkdir(parents=True, exist_ok=True)
 
     wavelength_nm = _to_wavelength_nm(w_rad_per_fs, center_wavelength_nm=835.0)
@@ -126,7 +144,7 @@ def _build_svgs(
     ax.legend()
     fig.tight_layout()
     fig.savefig(
-        outdir / "spectrum_z0_vs_zL.svg",
+        outdir / SVG_NAMES[0],
         format="svg",
         metadata={"Date": "1970-01-01T00:00:00", "Creator": "cpa-sim docs asset builder"},
     )
@@ -153,7 +171,7 @@ def _build_svgs(
     ax.set_title("Wavelength vs distance")
     fig.tight_layout()
     fig.savefig(
-        outdir / "evolution_wavelength_vs_distance.svg",
+        outdir / SVG_NAMES[1],
         format="svg",
         metadata={"Date": "1970-01-01T00:00:00", "Creator": "cpa-sim docs asset builder"},
     )
@@ -175,11 +193,22 @@ def _build_svgs(
     ax.set_title("Delay vs distance")
     fig.tight_layout()
     fig.savefig(
-        outdir / "evolution_delay_vs_distance.svg",
+        outdir / SVG_NAMES[2],
         format="svg",
         metadata={"Date": "1970-01-01T00:00:00", "Creator": "cpa-sim docs asset builder"},
     )
     plt.close(fig)
+
+    for name in SVG_NAMES:
+        _normalize_svg_whitespace(outdir / name)
+
+
+def _cleanup_run_dir(run_dir: Path) -> None:
+    if run_dir.exists():
+        for child in run_dir.iterdir():
+            if child.is_file():
+                child.unlink()
+        run_dir.rmdir()
 
 
 def main() -> None:
@@ -208,31 +237,19 @@ def main() -> None:
 
     try:
         subprocess.run(cmd, check=True)
-    except subprocess.CalledProcessError:
+        npz_path = run_dir / "fiber_dispersive_wave_z_traces.npz"
+        if not npz_path.exists():
+            raise FileNotFoundError(f"Expected z-traces file was not generated: {npz_path}")
+        z_m, t_fs, w_rad_per_fs, at_zt = _load_z_traces(npz_path)
+        _build_svgs(z_m=z_m, t_fs=t_fs, w_rad_per_fs=w_rad_per_fs, at_zt=at_zt, outdir=outdir)
+        _cleanup_run_dir(run_dir)
+        print(f"Wrote generated SVG assets to: {outdir}")
+    except (subprocess.CalledProcessError, RuntimeError, FileNotFoundError) as exc:
+        _cleanup_run_dir(run_dir)
         if not args.allow_missing_gnlse:
             raise
-        reason = (
-            "optional gnlse backend unavailable on this runner; "
-            "generated placeholder SVGs so docs can still build"
-        )
-        _save_placeholder_svgs(outdir, reason=reason)
+        _save_placeholder_svgs(outdir, reason=str(exc))
         print(f"Wrote placeholder SVG assets to: {outdir}")
-        return
-
-    npz_path = run_dir / "fiber_dispersive_wave_z_traces.npz"
-    if not npz_path.exists():
-        raise FileNotFoundError(f"Expected z-traces file was not generated: {npz_path}")
-
-    z_m, t_fs, w_rad_per_fs, at_zt = _load_z_traces(npz_path)
-    _build_svgs(z_m=z_m, t_fs=t_fs, w_rad_per_fs=w_rad_per_fs, at_zt=at_zt, outdir=outdir)
-
-    if run_dir.exists():
-        for child in run_dir.iterdir():
-            if child.is_file():
-                child.unlink()
-        run_dir.rmdir()
-
-    print(f"Wrote generated SVG assets to: {outdir}")
 
 
 if __name__ == "__main__":
