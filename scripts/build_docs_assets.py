@@ -133,7 +133,14 @@ def _build_svgs(
         _downsample_axis(power_w, max_rows, axis=0), max_columns, axis=1
     )
 
-    plt.rcParams.update({"axes.grid": True, "grid.alpha": 0.25, "font.size": 11})
+    plt.rcParams.update(
+        {
+            "axes.grid": True,
+            "grid.alpha": 0.25,
+            "font.size": 11,
+            "svg.hashsalt": "cpa-sim-docs-assets-v1",
+        }
+    )
 
     fig, ax = plt.subplots(figsize=(8.0, 4.8))
     ax.plot(wavelength_nm, np.log10(power_w[0] + EPS), label="z = 0")
