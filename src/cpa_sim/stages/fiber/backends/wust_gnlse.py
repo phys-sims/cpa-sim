@@ -63,9 +63,9 @@ def _build_dispersion(gnlse: Any, physics: FiberPhysicsCfg) -> Any:
     if isinstance(physics.dispersion, DispersionInterpolationCfg):
         return gnlse.DispersionFiberFromInterpolation(
             physics.loss_db_per_m,
+            np.asarray(physics.dispersion.effective_indices, dtype=float),
+            np.asarray(physics.dispersion.lambdas_nm, dtype=float),
             physics.dispersion.central_wavelength_nm,
-            physics.dispersion.lambdas_nm,
-            physics.dispersion.effective_indices,
         )
     raise TypeError("Unsupported dispersion config.")
 

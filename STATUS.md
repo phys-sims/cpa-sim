@@ -3,8 +3,9 @@
 > **Source of truth:** Update this file whenever behavior, tests, schemas, or canonical examples change.
 
 ## Last updated
-- Date: 2026-02-28
+- Date: 2026-03-01
 - By: @openai-codex
+- Scope: Fixed `wust_gnlse` interpolation-dispersion adapter ordering to map `DispersionInterpolationCfg` into `gnlse.DispersionFiberFromInterpolation(loss_db_per_m, neff, lambdas_nm, central_wavelength_nm)` and added a gnlse-backed unit contract test that compares direct-vs-stage propagation outputs to fail loudly on argument order or units mismatches.
 - Scope: Finalized PulseSpec contract cleanup by publishing `specs/pulse_spec.schema.json` from `PulseSpec.model_json_schema()`, documenting migration emphasis from deprecated `amplitude` to `avg_power_w`/`peak_power_w`, and adding a unit guard that deprecation warnings fire only when `amplitude` is explicitly provided (not when defaulted).
 - Scope: Validated canonical CLI examples for both the `avg_power_w` normalization path and the autocorrelation-width input path via `configs/examples/autocorr_input_demo.yaml`, preserving the no-double-conversion guidance for `intensity_autocorr_fwhm_fs` inputs.
 - Scope: Updated pulse sampling adequacy checks to always use resolved intensity FWHM via `resolve_intensity_fwhm_fs` (including autocorrelation deconvolution), refreshed sampling warning/error wording, and added unit/integration tests for autocorrelation-only width handling plus CLI validation messaging for explicitly conflicting width inputs.
