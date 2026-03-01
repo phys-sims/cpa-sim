@@ -93,22 +93,26 @@ def test_fiber_high_order_dispersion_raman_and_shock_yield_blue_dispersive_wave_
     gnlse = pytest.importorskip("gnlse")
     del gnlse
 
-    initial = AnalyticLaserGenStage(
-        PipelineConfig(
-            laser_gen={
-                "spec": {
-                    "pulse": {
-                        "center_wavelength_nm": 835.0,
-                        "shape": "sech2",
-                        "width_fs": 50.284,
-                        "peak_power_w": 10000.0,
-                        "n_samples": 4096,
-                        "time_window_fs": 12500.0,
+    initial = (
+        AnalyticLaserGenStage(
+            PipelineConfig(
+                laser_gen={
+                    "spec": {
+                        "pulse": {
+                            "center_wavelength_nm": 835.0,
+                            "shape": "sech2",
+                            "width_fs": 50.284,
+                            "peak_power_w": 10000.0,
+                            "n_samples": 4096,
+                            "time_window_fs": 12500.0,
+                        }
                     }
                 }
-            }
-        ).laser_gen
-    ).process(_seed_state(center_wavelength_nm=835.0)).state
+            ).laser_gen
+        )
+        .process(_seed_state(center_wavelength_nm=835.0))
+        .state
+    )
 
     result = FiberStage(
         FiberCfg(
