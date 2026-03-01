@@ -61,7 +61,7 @@ def _resolve_gamma(physics: FiberPhysicsCfg, *, center_wavelength_nm: float) -> 
 
 def _build_dispersion(gnlse: Any, physics: FiberPhysicsCfg) -> Any:
     dispersion_cfg = physics.dispersion
-    if isinstance(physics.dispersion, DispersionTaylorCfg):
+    if isinstance(dispersion_cfg, DispersionTaylorCfg):
         return gnlse.DispersionFiberFromTaylor(
             physics.loss_db_per_m,
             dispersion_cfg.betas_psn_per_m,
