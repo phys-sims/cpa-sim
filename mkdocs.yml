@@ -17,6 +17,8 @@ nav:
       - Canonical 1560nm Chain: examples/canonical-1560nm-chain.md
       - WUST GNLS Fiber Example: examples/wust-gnlse-fiber-example.md
       - GNLS Dispersive Wave: examples/gnlse-dispersive-wave.md
+  - Configuration:
+      - Pulse Spec: config/pulse_spec.md
   - ADRs:
       - Index: adr/INDEX.md
       - ADR-0001 Conventions & Units: adr/ADR-0001-conventions-units.md
@@ -26,3 +28,15 @@ nav:
       - ADR-0005 phys-pipeline Contract Adoption: adr/ADR-0005-phys-pipeline-contract-adoption.md
       - ADR-0006 Fiber Stage Physics Numerics Split: adr/ADR-0006-fiber-stage-physics-numerics-split.md
       - ADR-0008 Canonical Output Layout: adr/ADR-0008-canonical-output-layout.md
+      - ADR Template (Lite): adr/_template-lite.md
+      - ADR Template (Full): adr/_template-full.md
+      - ADR Template (Amend): adr/_template-amend.md
+  - Agent Context:
+      - Fiber Stage: agent/fiber-stage-context.md
+      - Fiber Amp Wrap: agent/fiber_amp_wrap-context.md
+      - Free Space Treacy: agent/freespace-stage-treacy-context.md
+      - Phys Pipeline: agent/phys-pipeline-context.md
+  - Roadmaps:
+      - v1 to v3 Plan: roadmaps/v1_to_v3_plan.md
+      - v1 Fiber Stage Roadmap: roadmaps/v1-fiber-stage-roadmap.md
+      - v1 Free Space Stage Roadmap: roadmaps/v1-freespace-stage-roadmap.md
