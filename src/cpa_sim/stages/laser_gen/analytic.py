@@ -4,6 +4,7 @@ from typing import cast
 
 import numpy as np
 
+from cpa_sim.grid_contract import assert_offset_omega_grid
 from cpa_sim.models.config import LaserGenCfg
 from cpa_sim.models.state import BeamState, LaserState, PulseGrid, PulseState
 from cpa_sim.phys_pipeline_compat import PolicyBag, StageResult
@@ -41,6 +42,7 @@ class AnalyticLaserGenStage(LaserStage[LaserGenCfg]):
         field_t = np.sqrt(intensity).astype(np.complex128)
         field_w = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(field_t)))
         w = np.fft.fftshift(2.0 * np.pi * np.fft.fftfreq(t.size, d=dt))
+        assert_offset_omega_grid(w)
         dw = float(w[1] - w[0])
         intensity = np.abs(field_t) ** 2
         spectrum = np.abs(field_w) ** 2

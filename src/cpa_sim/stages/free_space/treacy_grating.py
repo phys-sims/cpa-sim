@@ -4,6 +4,7 @@ import math
 
 import numpy as np
 
+from cpa_sim.grid_contract import assert_offset_omega_grid
 from cpa_sim.models.config import (
     FreeSpaceCfg,
     PhaseOnlyDispersionCfg,
@@ -103,6 +104,7 @@ class TreacyGratingStage(LaserStage[FreeSpaceCfg]):
     ) -> StageResult[LaserState]:
         out = state.deepcopy()
         w = np.asarray(out.pulse.grid.w)
+        assert_offset_omega_grid(w)
 
         if isinstance(self.cfg, TreacyGratingPairCfg):
             cfg_metrics = _compute_treacy_metrics(self.cfg)

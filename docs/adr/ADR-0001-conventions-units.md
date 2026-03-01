@@ -23,6 +23,18 @@ Adopt the ECO-0001 convention set for all internal `cpa-sim` calculations and ex
 6. **Sign conventions:** positive chirp means `dω_inst/dt > 0`; GDD sign follows `d²φ/dω²`; free-space grating equation signs are documented and tested per backend.
 7. **Observable/latent split:** latent complex fields (`field_t`, `field_w`) remain simulation state, while reported observables (e.g., FWHM/autocorrelation/spectral width) must declare method and assumptions in an observable contract surface.
 
+### Frequency axis / FFT contract
+
+`PulseGrid` frequency semantics are envelope-centric and explicit:
+
+- `t` is sampled in femtoseconds (`fs`).
+- `w` is offset angular frequency `Δω` in `rad/fs`, generated from FFT sample frequencies (`2π * fftfreq`) and typically `fftshift` centered near `0`.
+- `field_t` is the complex SVEA-style envelope with units `sqrt(W)`.
+- `field_w` is the FFT of that envelope under the repo FFT sign/scaling convention.
+- Carrier `ω0` derived from center wavelength is metadata for optics formulas; the simulation grid is centered around `Δω = 0` and is not absolute optical `ω`.
+
+This contract prevents accidental double-centering (e.g., subtracting `ω0` from an already offset grid), which can introduce non-physical cross-terms in dispersion polynomials.
+
 ### PulseSpec user-facing normalization inputs
 
 `PulseSpec` now supports multiple user-facing power/energy input styles while preserving the same internal envelope normalization contract above:
