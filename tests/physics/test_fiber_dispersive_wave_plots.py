@@ -81,7 +81,9 @@ def _load_full_solution(npz_path: Path) -> tuple[np.ndarray, np.ndarray, np.ndar
     z_m = np.asarray(data["z_m"], dtype=float)
     t_fs = np.asarray(data["t_fs"], dtype=float)
     w_rad_per_fs = np.asarray(data["w_rad_per_fs"], dtype=float)
-    at_zt = np.asarray(data["at_zt_real"], dtype=float) + 1j * np.asarray(data["at_zt_imag"], dtype=float)
+    at_zt = np.asarray(data["at_zt_real"], dtype=float) + 1j * np.asarray(
+        data["at_zt_imag"], dtype=float
+    )
     return z_m, t_fs, w_rad_per_fs, at_zt
 
 
