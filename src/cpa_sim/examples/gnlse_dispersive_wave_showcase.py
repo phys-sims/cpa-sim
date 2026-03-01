@@ -2,13 +2,11 @@ from __future__ import annotations
 
 import argparse
 import json
+from importlib import import_module
 from pathlib import Path
+from typing import Any
 
-import matplotlib
 import numpy as np
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 
 from cpa_sim.models import (
     DispersionTaylorCfg,
@@ -28,6 +26,12 @@ DEFAULT_OUT_DIR = Path("out")
 DEFAULT_STAGE_NAME = "fiber_dispersive_wave"
 
 
+def _load_pyplot() -> Any:
+    matplotlib: Any = import_module("matplotlib")
+    matplotlib.use("Agg")
+    return import_module("matplotlib.pyplot")
+
+
 def _plot_from_npz(
     *,
     npz_path: Path,
@@ -35,6 +39,7 @@ def _plot_from_npz(
     delay_path: Path,
     center_wavelength_nm: float,
 ) -> None:
+    plt = _load_pyplot()
     data = np.load(npz_path)
     z_m = np.asarray(data["z_m"], dtype=float)
     t_fs = np.asarray(data["t_fs"], dtype=float)
