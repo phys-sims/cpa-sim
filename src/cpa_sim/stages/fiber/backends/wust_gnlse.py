@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 import warnings
 from importlib import import_module, metadata
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -14,13 +15,14 @@ from cpa_sim.models.config import (
     WustGnlseNumericsCfg,
 )
 from cpa_sim.models.state import LaserState
-from cpa_sim.phys_pipeline_compat import StageResult
+from cpa_sim.phys_pipeline_compat import PolicyBag, StageResult
 from cpa_sim.stages.fiber.utils.grid import (
     has_large_prime_factor,
     nearest_power_of_two,
     resample_complex_uniform,
 )
 from cpa_sim.stages.fiber.utils.units import fs_to_ps
+from cpa_sim.utils import _policy_get
 
 _LIGHT_SPEED_M_PER_S = 299792458.0
 _FS_TO_S = 1e-15
@@ -158,6 +160,7 @@ def run_wust_gnlse(
     stage_name: str,
     physics: FiberPhysicsCfg,
     numerics: WustGnlseNumericsCfg,
+    policy: PolicyBag | None = None,
 ) -> StageResult[LaserState]:
     _ensure_numpy_math_compat()
     gnlse = _import_gnlse()
@@ -212,7 +215,28 @@ def run_wust_gnlse(
     artifacts[f"{stage_name}.time_window_ps"] = f"{time_window_ps:.12g}"
     artifacts[f"{stage_name}.resolution"] = str(setup.resolution)
     if numerics.keep_full_solution:
-        artifacts[f"{stage_name}.solution_saved"] = "z_traces_in_memory"
+        z_trace_dir = Path(str(_policy_get(policy, "cpa.stage_plot_dir", "artifacts/stage_plots")))
+        z_trace_dir.mkdir(parents=True, exist_ok=True)
+        z_traces_path = z_trace_dir / f"{stage_name}_z_traces.npz"
+
+        z_axis_m = np.asarray(getattr(solution, "Z", np.array([])), dtype=float)
+        if z_axis_m.size == 0:
+            z_axis_m = np.linspace(0.0, float(physics.length_m), at.shape[0], dtype=float)
+
+        full_at = np.asarray(at, dtype=np.complex128)
+        if full_at.ndim == 1:
+            full_at = full_at[np.newaxis, :]
+
+        np.savez_compressed(
+            z_traces_path,
+            z_m=z_axis_m,
+            t_fs=np.asarray(out.pulse.grid.t, dtype=float),
+            w_rad_per_fs=np.asarray(out.pulse.grid.w, dtype=float),
+            at_zt_real=np.real(full_at).astype(float),
+            at_zt_imag=np.imag(full_at).astype(float),
+        )
+        artifacts[f"{stage_name}.z_traces_npz"] = str(z_traces_path)
+        artifacts[f"{stage_name}.solution_saved"] = "z_traces_npz"
     if numerics.record_backend_version:
         try:
             artifacts[f"{stage_name}.backend_version"] = metadata.version("gnlse")
