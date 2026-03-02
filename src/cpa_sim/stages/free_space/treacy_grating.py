@@ -25,9 +25,9 @@ def _phase_from_dispersion(
 ) -> np.ndarray:
     """Evaluate polynomial dispersion phase on an offset-frequency (Δω) grid.
 
-    In this envelope-model simulator, ``PulseGrid.w`` is already a Δω axis around the
-    carrier. Dispersion polynomials are therefore applied about a grid reference close to
-    Δω≈0 using ``domega = w - w_ref``, not ``w - ω0_optical``.
+    In this envelope-model simulator, ``PulseGrid.w`` is already a carrier-offset axis
+    (Δω). Dispersion polynomials are applied directly on this Δω grid (about Δω≈0),
+    not by subtracting ``ω0_optical`` or re-centering with ``mean(w)``.
     """
 
     phase = -0.5 * gdd_fs2 * domega_rad_per_fs**2
@@ -113,8 +113,8 @@ class TreacyGratingStage(LaserStage[FreeSpaceCfg]):
         out = state.deepcopy()
         w = np.asarray(out.pulse.grid.w)
         assert_offset_omega_grid(w)
-        w_ref = float(np.mean(w))
-        domega = w - w_ref
+        w_ref = 0.0
+        domega = w
 
         if isinstance(self.cfg, TreacyGratingPairCfg):
             cfg_metrics = _compute_treacy_metrics(self.cfg)
@@ -124,6 +124,7 @@ class TreacyGratingStage(LaserStage[FreeSpaceCfg]):
             omega0_optical_rad_per_fs = cfg_metrics["omega0_rad_per_fs"]
             cfg_metrics["omega0_optical_rad_per_fs"] = omega0_optical_rad_per_fs
             cfg_metrics["omega_ref_grid_rad_per_fs"] = w_ref
+            cfg_metrics["omega_grid_mean_rad_per_fs"] = float(np.mean(w))
         else:
             assert isinstance(self.cfg, PhaseOnlyDispersionCfg)
             gdd_fs2 = float(self.cfg.gdd_fs2)
@@ -134,6 +135,7 @@ class TreacyGratingStage(LaserStage[FreeSpaceCfg]):
                 "tod_fs3": tod_fs3,
                 "omega0_rad_per_fs": w_ref,
                 "omega_ref_grid_rad_per_fs": w_ref,
+                "omega_grid_mean_rad_per_fs": float(np.mean(w)),
             }
 
         if apply_to_pulse:
