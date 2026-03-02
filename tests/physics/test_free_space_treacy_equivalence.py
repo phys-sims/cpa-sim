@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from cpa_sim.models import PhaseOnlyDispersionCfg, PipelineConfig, TreacyGratingPairCfg
+from cpa_sim.models import PipelineConfig, TreacyGratingPairCfg
 from cpa_sim.models.state import BeamState, LaserState, PulseGrid, PulseState
 from cpa_sim.stages.free_space.treacy_grating import TreacyGratingStage
 from cpa_sim.stages.laser_gen import AnalyticLaserGenStage
@@ -50,6 +50,29 @@ def _rms_width_fs(state: LaserState) -> float:
     return float(np.sqrt(max(variance, 0.0)))
 
 
+def _apply_polynomial_phase_independent(
+    state: LaserState,
+    *,
+    gdd_fs2: float,
+    tod_fs3: float,
+) -> LaserState:
+    """Apply phase from GDD/TOD with an implementation independent from Treacy stage.
+
+    This intentionally duplicates the polynomial operator here (rather than calling
+    TreacyGratingStage with PhaseOnlyDispersionCfg) so this test can detect shared-path
+    regressions in omega-grid handling.
+    """
+
+    out = state.deepcopy()
+    domega = np.asarray(out.pulse.grid.w, dtype=np.float64)
+    phase = -0.5 * gdd_fs2 * domega**2 - (1.0 / 6.0) * tod_fs3 * domega**3
+    out.pulse.field_w = np.asarray(out.pulse.field_w, dtype=np.complex128) * np.exp(1j * phase)
+    out.pulse.field_t = np.fft.fftshift(np.fft.ifft(np.fft.ifftshift(out.pulse.field_w)))
+    out.pulse.intensity_t = np.abs(out.pulse.field_t) ** 2
+    out.pulse.spectrum_w = np.abs(out.pulse.field_w) ** 2
+    return out
+
+
 @pytest.mark.physics
 def test_treacy_include_tod_matches_polynomial_phase_operator() -> None:
     initial = _generated_laser()
@@ -73,13 +96,8 @@ def test_treacy_include_tod_matches_polynomial_phase_operator() -> None:
 
     treacy_out = TreacyGratingStage(treacy_cfg).process(initial).state
 
-    poly_cfg = PhaseOnlyDispersionCfg(
-        name="poly",
-        gdd_fs2=gdd_fs2,
-        tod_fs3=tod_fs3,
-        apply_to_pulse=True,
-    )
-    poly_out = TreacyGratingStage(poly_cfg).process(initial).state
+    # Independent polynomial path: do not route through TreacyGratingStage here.
+    poly_out = _apply_polynomial_phase_independent(initial, gdd_fs2=gdd_fs2, tod_fs3=tod_fs3)
 
     treacy_intensity = np.asarray(treacy_out.pulse.intensity_t, dtype=np.float64)
     poly_intensity = np.asarray(poly_out.pulse.intensity_t, dtype=np.float64)
