@@ -10,7 +10,9 @@ from cpa_sim.models.state import BeamState, LaserState, PulseGrid, PulseState
 from cpa_sim.stages.free_space.treacy_grating import TreacyGratingStage
 
 
-def _gaussian_envelope_state(*, tau0_fs: float, time_window_fs: float, n_samples: int) -> LaserState:
+def _gaussian_envelope_state(
+    *, tau0_fs: float, time_window_fs: float, n_samples: int
+) -> LaserState:
     t_fs = np.linspace(-0.5 * time_window_fs, 0.5 * time_window_fs, n_samples)
     dt_fs = float(t_fs[1] - t_fs[0])
 
