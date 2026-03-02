@@ -52,3 +52,9 @@ def test_offset_omega_grid_contract_from_analytic_laser() -> None:
 def test_offset_omega_grid_contract_rejects_noncentered_axis() -> None:
     with pytest.raises(ValueError, match="centered near 0"):
         assert_offset_omega_grid(np.array([1.0, 2.0, 3.0]))
+
+
+@pytest.mark.unit
+def test_offset_omega_grid_contract_rejects_nonuniform_spacing() -> None:
+    with pytest.raises(ValueError, match="uniform FFT bin spacing"):
+        assert_offset_omega_grid(np.array([-3.0, -1.0, 0.0, 1.0, 3.0]))

@@ -17,10 +17,18 @@ def assert_offset_omega_grid(w: np.ndarray, *, atol: float = 1e-9) -> None:
     if arr.size < 2:
         raise ValueError("Offset angular-frequency grid must contain at least two samples.")
 
-    if not np.all(np.diff(arr) > 0.0):
+    diffs = np.diff(arr)
+    if not np.all(diffs > 0.0):
         raise ValueError("Offset angular-frequency grid must be strictly increasing.")
 
-    step = float(arr[1] - arr[0])
+    step = float(diffs[0])
+    if not np.allclose(diffs, step, rtol=0.0, atol=atol):
+        spacing_err = float(np.max(np.abs(diffs - step)))
+        raise ValueError(
+            "Offset angular-frequency grid must have uniform FFT bin spacing: "
+            f"max|diff(w)-dw|={spacing_err:.6e}, atol={atol:.6e}."
+        )
+
     mean_bound = 0.5 * abs(step) + atol
 
     mean_w = float(np.mean(arr))
