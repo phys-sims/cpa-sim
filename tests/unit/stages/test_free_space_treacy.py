@@ -145,6 +145,45 @@ def test_phase_only_preserves_spectral_magnitude_and_energy() -> None:
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize(
+    ("gdd_fs2", "tod_fs3"),
+    [
+        (2_500.0, 0.0),
+        (2_500.0, -1_000.0),
+    ],
+)
+def test_phase_operator_is_reversible(gdd_fs2: float, tod_fs3: float) -> None:
+    initial = _generated_laser_state()
+    dispersed = (
+        TreacyGratingStage(PhaseOnlyDispersionCfg(name="fs", gdd_fs2=gdd_fs2, tod_fs3=tod_fs3))
+        .process(initial)
+        .state
+    )
+    recovered = (
+        TreacyGratingStage(
+            PhaseOnlyDispersionCfg(name="fs_inv", gdd_fs2=-gdd_fs2, tod_fs3=-tod_fs3)
+        )
+        .process(dispersed)
+        .state
+    )
+
+    initial_intensity = np.asarray(initial.pulse.intensity_t, dtype=np.float64)
+    recovered_intensity = np.asarray(recovered.pulse.intensity_t, dtype=np.float64)
+    intensity_diff_norm = np.linalg.norm(recovered_intensity - initial_intensity)
+    intensity_ref_norm = np.linalg.norm(initial_intensity)
+    assert intensity_ref_norm > 0.0
+    assert intensity_diff_norm / intensity_ref_norm < 1e-8
+
+    initial_mag = np.abs(np.asarray(initial.pulse.field_w, dtype=np.complex128))
+    recovered_mag = np.abs(np.asarray(recovered.pulse.field_w, dtype=np.complex128))
+    assert np.linalg.norm(recovered_mag - initial_mag) / np.linalg.norm(initial_mag) < 1e-8
+
+    initial_energy = float(np.sum(initial_intensity) * initial.pulse.grid.dt)
+    recovered_energy = float(np.sum(recovered_intensity) * recovered.pulse.grid.dt)
+    assert recovered_energy == pytest.approx(initial_energy, abs=1e-8)
+
+
+@pytest.mark.unit
 def test_apply_to_pulse_false_is_noop() -> None:
     initial = _generated_laser_state()
     stage = TreacyGratingStage(
@@ -153,6 +192,19 @@ def test_apply_to_pulse_false_is_noop() -> None:
     out = stage.process(initial).state
     assert out.pulse.field_w == pytest.approx(initial.pulse.field_w)
     assert out.pulse.field_t == pytest.approx(initial.pulse.field_t)
+
+
+@pytest.mark.unit
+def test_treacy_records_offset_omega_reference_grid() -> None:
+    metrics = (
+        TreacyGratingStage(
+            TreacyGratingPairCfg(name="stretcher", apply_to_pulse=False, separation_um=100_000.0)
+        )
+        .process(_generated_laser_state())
+        .metrics
+    )
+    assert "stretcher.omega_ref_grid_rad_per_fs" in metrics
+    assert metrics["stretcher.omega_ref_grid_rad_per_fs"] == pytest.approx(0.0, abs=1e-12)
 
 
 @pytest.mark.unit
