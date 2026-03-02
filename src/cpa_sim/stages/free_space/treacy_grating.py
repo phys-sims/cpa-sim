@@ -19,13 +19,21 @@ C_UM_PER_FS = 0.299792458
 
 
 def _phase_from_dispersion(
-    omega_rad_per_fs: np.ndarray,
-    omega0_rad_per_fs: float,
+    domega_rad_per_fs: np.ndarray,
     gdd_fs2: float,
     tod_fs3: float,
 ) -> np.ndarray:
-    domega = omega_rad_per_fs - omega0_rad_per_fs
-    return -0.5 * gdd_fs2 * domega**2 - (1.0 / 6.0) * tod_fs3 * domega**3
+    """Evaluate polynomial dispersion phase on an offset-frequency (Δω) grid.
+
+    In this envelope-model simulator, ``PulseGrid.w`` is already a carrier-offset axis
+    (Δω). Dispersion polynomials are applied directly on this Δω grid (about Δω≈0),
+    not by subtracting ``ω0_optical`` or re-centering with ``mean(w)``.
+    """
+
+    phase = -0.5 * gdd_fs2 * domega_rad_per_fs**2
+    if tod_fs3 != 0.0:
+        phase -= (1.0 / 6.0) * tod_fs3 * domega_rad_per_fs**3
+    return phase
 
 
 def _safe_asin(arg: float, *, context: str) -> float:
@@ -105,27 +113,33 @@ class TreacyGratingStage(LaserStage[FreeSpaceCfg]):
         out = state.deepcopy()
         w = np.asarray(out.pulse.grid.w)
         assert_offset_omega_grid(w)
+        w_ref = 0.0
+        domega = w
 
         if isinstance(self.cfg, TreacyGratingPairCfg):
             cfg_metrics = _compute_treacy_metrics(self.cfg)
             gdd_fs2 = cfg_metrics["gdd_fs2"]
             tod_fs3 = cfg_metrics["tod_fs3"]
             apply_to_pulse = self.cfg.apply_to_pulse
-            w0 = cfg_metrics["omega0_rad_per_fs"]
+            omega0_optical_rad_per_fs = cfg_metrics["omega0_rad_per_fs"]
+            cfg_metrics["omega0_optical_rad_per_fs"] = omega0_optical_rad_per_fs
+            cfg_metrics["omega_ref_grid_rad_per_fs"] = w_ref
+            cfg_metrics["omega_grid_mean_rad_per_fs"] = float(np.mean(w))
         else:
             assert isinstance(self.cfg, PhaseOnlyDispersionCfg)
             gdd_fs2 = float(self.cfg.gdd_fs2)
             tod_fs3 = float(self.cfg.tod_fs3)
             apply_to_pulse = self.cfg.apply_to_pulse
-            w0 = float(np.mean(w))
             cfg_metrics = {
                 "gdd_fs2": gdd_fs2,
                 "tod_fs3": tod_fs3,
-                "omega0_rad_per_fs": w0,
+                "omega0_rad_per_fs": w_ref,
+                "omega_ref_grid_rad_per_fs": w_ref,
+                "omega_grid_mean_rad_per_fs": float(np.mean(w)),
             }
 
         if apply_to_pulse:
-            phase = _phase_from_dispersion(w, w0, gdd_fs2=gdd_fs2, tod_fs3=tod_fs3)
+            phase = _phase_from_dispersion(domega, gdd_fs2=gdd_fs2, tod_fs3=tod_fs3)
             out.pulse.field_w = out.pulse.field_w * np.exp(1j * phase)
             out.pulse.field_t = np.fft.fftshift(np.fft.ifft(np.fft.ifftshift(out.pulse.field_w)))
             out.pulse.intensity_t = np.abs(out.pulse.field_t) ** 2

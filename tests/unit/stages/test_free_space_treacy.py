@@ -71,6 +71,10 @@ def _generated_laser_state() -> LaserState:
 def _rms_width_fs(state: LaserState) -> float:
     t_fs = np.asarray(state.pulse.grid.t)
     intensity = np.asarray(state.pulse.intensity_t)
+    if intensity.size > 1:
+        center_idx = intensity.size // 2
+        peak_idx = int(np.argmax(intensity))
+        intensity = np.roll(intensity, center_idx - peak_idx)
     norm = float(np.sum(intensity))
     if norm <= 0.0:
         return 0.0
