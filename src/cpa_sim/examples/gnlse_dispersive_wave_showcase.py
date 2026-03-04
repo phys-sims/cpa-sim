@@ -101,11 +101,11 @@ def run_showcase(*, out_dir: Path, seed: int = 7) -> dict[str, str]:
             spec=LaserSpec(
                 pulse=PulseSpec(
                     shape="sech2",
-                    amplitude=40.0,
+                    peak_power_w=1000,
                     width_fs=50.0,
                     center_wavelength_nm=835.0,
                     n_samples=2048,
-                    time_window_fs=12000.0,
+                    time_window_fs=12500.0,
                 )
             )
         ),
@@ -116,7 +116,7 @@ def run_showcase(*, out_dir: Path, seed: int = 7) -> dict[str, str]:
                     length_m=0.15,
                     loss_db_per_m=0.0,
                     gamma_1_per_w_m=0.11,
-                    dispersion=DispersionTaylorCfg(betas_psn_per_m=[-0.011830, 0.000084]),
+                    dispersion=DispersionTaylorCfg(betas_psn_per_m=[-0.02, 0.000084]),
                     raman=RamanCfg(model="blowwood"),
                     self_steepening=True,
                 ),

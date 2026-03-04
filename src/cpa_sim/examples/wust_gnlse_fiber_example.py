@@ -41,8 +41,8 @@ def run_example(out_dir: Path, *, plot_format: str = "svg") -> dict[str, Path]:
         LaserGenCfg(
             spec=LaserSpec(
                 pulse=PulseSpec(
-                    shape="gaussian",
-                    amplitude=35.0,
+                    shape="sech2",
+                    avg_power_w=5,
                     width_fs=1000.0,
                     center_wavelength_nm=1550.0,
                     n_samples=1024,
@@ -58,7 +58,7 @@ def run_example(out_dir: Path, *, plot_format: str = "svg") -> dict[str, Path]:
             physics=FiberPhysicsCfg(
                 length_m=0.25,
                 loss_db_per_m=0.0,
-                gamma_1_per_w_m=2.0,
+                gamma_1_per_w_m=0.008,
                 dispersion=DispersionTaylorCfg(betas_psn_per_m=[-0.02]),
                 raman=RamanCfg(model="blowwood"),
             ),

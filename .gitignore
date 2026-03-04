@@ -13,6 +13,7 @@ __pycache__/
 coverage.xml
 htmlcov/
 artifacts/
+out/
 
 # --- Packaging/build ---
 dist/
