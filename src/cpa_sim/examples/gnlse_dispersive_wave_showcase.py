@@ -2,11 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from importlib import import_module
 from pathlib import Path
-from typing import Any
-
-import numpy as np
 
 from cpa_sim.models import (
     DispersionTaylorCfg,
@@ -21,74 +17,10 @@ from cpa_sim.models import (
     WustGnlseNumericsCfg,
 )
 from cpa_sim.pipeline import run_pipeline
+from cpa_sim.plotting import plot_dispersive_wave_maps_from_npz
 
 DEFAULT_OUT_DIR = Path("out")
 DEFAULT_STAGE_NAME = "fiber_dispersive_wave"
-
-
-def _load_pyplot() -> Any:
-    matplotlib: Any = import_module("matplotlib")
-    matplotlib.use("Agg")
-    return import_module("matplotlib.pyplot")
-
-
-def _plot_from_npz(
-    *,
-    npz_path: Path,
-    wavelength_path: Path,
-    delay_path: Path,
-    center_wavelength_nm: float,
-) -> None:
-    plt = _load_pyplot()
-    data = np.load(npz_path)
-    z_m = np.asarray(data["z_m"], dtype=float)
-    t_fs = np.asarray(data["t_fs"], dtype=float)
-    at = np.asarray(data["at_zt_real"], dtype=float) + 1j * np.asarray(
-        data["at_zt_imag"], dtype=float
-    )
-
-    delay_map = np.abs(at) ** 2
-
-    fig, ax = plt.subplots(figsize=(8, 4.8))
-    m = ax.pcolormesh(t_fs, z_m, np.log10(delay_map + 1e-12), shading="auto", cmap="magma")
-    fig.colorbar(m, ax=ax, label="log10(|A(t,z)|²)")
-    ax.set_xlabel("Delay (fs)")
-    ax.set_ylabel("Distance (m)")
-    ax.set_title("Delay vs distance")
-    fig.tight_layout()
-    fig.savefig(delay_path, dpi=170)
-    plt.close(fig)
-
-    aw = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(at, axes=1), axis=1), axes=1)
-    spectrum_map = np.abs(aw) ** 2
-
-    if "w_rad_per_fs" in data:
-        w_rad_per_fs = np.asarray(data["w_rad_per_fs"], dtype=float)
-    else:
-        dt_s = float((t_fs[1] - t_fs[0]) * 1e-15)
-        w_rad_per_fs = np.fft.fftshift(2.0 * np.pi * np.fft.fftfreq(t_fs.size, d=dt_s)) * 1e-15
-
-    omega0_rad_per_s = 2.0 * np.pi * 299792458.0 / (center_wavelength_nm * 1e-9)
-    omega_rad_per_s = omega0_rad_per_s + w_rad_per_fs * 1e15
-    valid = omega_rad_per_s > 0.0
-    wavelength_nm = np.full_like(omega_rad_per_s, np.nan, dtype=float)
-    wavelength_nm[valid] = 2.0 * np.pi * 299792458.0 / omega_rad_per_s[valid] * 1e9
-
-    fig, ax = plt.subplots(figsize=(8, 4.8))
-    m = ax.pcolormesh(
-        wavelength_nm,
-        z_m,
-        np.log10(spectrum_map + 1e-12),
-        shading="auto",
-        cmap="viridis",
-    )
-    fig.colorbar(m, ax=ax, label="log10(|A(ω,z)|²)")
-    ax.set_xlabel("Wavelength (nm)")
-    ax.set_ylabel("Distance (m)")
-    ax.set_title("Wavelength vs distance")
-    fig.tight_layout()
-    fig.savefig(wavelength_path, dpi=170)
-    plt.close(fig)
 
 
 def run_showcase(*, out_dir: Path, seed: int = 7) -> dict[str, str]:
@@ -140,17 +72,21 @@ def run_showcase(*, out_dir: Path, seed: int = 7) -> dict[str, str]:
     artifacts = {**result.artifacts, **result.state.artifacts}
     z_npz = Path(artifacts[f"{DEFAULT_STAGE_NAME}.z_traces_npz"])
 
-    wavelength_img = stage_plot_dir / f"{DEFAULT_STAGE_NAME}_wavelength_vs_distance.png"
-    delay_img = stage_plot_dir / f"{DEFAULT_STAGE_NAME}_delay_vs_distance.png"
-    _plot_from_npz(
+    plots = plot_dispersive_wave_maps_from_npz(
         npz_path=z_npz,
-        wavelength_path=wavelength_img,
-        delay_path=delay_img,
         center_wavelength_nm=835.0,
+        out_dir=stage_plot_dir,
+        stem=DEFAULT_STAGE_NAME,
     )
 
-    artifacts[f"{DEFAULT_STAGE_NAME}.plot_wavelength_vs_distance"] = str(wavelength_img)
-    artifacts[f"{DEFAULT_STAGE_NAME}.plot_delay_vs_distance"] = str(delay_img)
+    artifacts[f"{DEFAULT_STAGE_NAME}.plot_wavelength_vs_distance_linear"] = str(
+        plots.wavelength_linear
+    )
+    artifacts[f"{DEFAULT_STAGE_NAME}.plot_wavelength_vs_distance_log"] = str(plots.wavelength_log)
+    artifacts[f"{DEFAULT_STAGE_NAME}.plot_delay_vs_distance_linear"] = str(plots.delay_linear)
+    artifacts[f"{DEFAULT_STAGE_NAME}.plot_delay_vs_distance_log"] = str(plots.delay_log)
+    artifacts[f"{DEFAULT_STAGE_NAME}.plot_wavelength_vs_distance"] = str(plots.wavelength_log)
+    artifacts[f"{DEFAULT_STAGE_NAME}.plot_delay_vs_distance"] = str(plots.delay_log)
 
     metrics_payload = {
         "schema_version": "cpa.metrics.v1",
@@ -181,8 +117,10 @@ def main() -> None:
     artifacts = run_showcase(out_dir=args.out, seed=args.seed)
     for key in (
         f"{DEFAULT_STAGE_NAME}.z_traces_npz",
-        f"{DEFAULT_STAGE_NAME}.plot_wavelength_vs_distance",
-        f"{DEFAULT_STAGE_NAME}.plot_delay_vs_distance",
+        f"{DEFAULT_STAGE_NAME}.plot_wavelength_vs_distance_linear",
+        f"{DEFAULT_STAGE_NAME}.plot_wavelength_vs_distance_log",
+        f"{DEFAULT_STAGE_NAME}.plot_delay_vs_distance_linear",
+        f"{DEFAULT_STAGE_NAME}.plot_delay_vs_distance_log",
     ):
         print(f"{key}: {artifacts[key]}")
 
