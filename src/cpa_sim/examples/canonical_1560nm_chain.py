@@ -28,19 +28,20 @@ DEFAULT_SEED = 1560
 def build_config(*, seed: int, ci_safe: bool) -> PipelineConfig:
     if ci_safe:
         n_samples = 256
-        time_window_fs = 2400.0
+        time_window_fs = 24000.0
         fiber_length_m = 2.0
     else:
         n_samples = 1024
-        time_window_fs = 6000.0
+        time_window_fs = 60000.0
         fiber_length_m = 12.0
 
     laser_gen = LaserGenCfg(
         spec=LaserSpec(
             pulse=PulseSpec(
-                shape="gaussian",
-                amplitude=1.0,
-                width_fs=120.0,
+                shape="sech2",
+                avg_power_w=5,
+                rep_rate_mhz=1000,
+                width_fs=7000.0,
                 center_wavelength_nm=1560.0,
                 n_samples=n_samples,
                 time_window_fs=time_window_fs,
