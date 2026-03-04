@@ -5,6 +5,7 @@
 ## Last updated
 - Date: 2026-03-04
 - By: @openai-codex
+- Scope: Made dispersive-wave plotting unit coverage robust in environments without optional Matplotlib by conditionally skipping image-emission tests when the plotting dependency is unavailable.
 - Scope: Refined dispersive-wave plotting consolidation by adding a high-level NPZ-driven plotting entrypoint, restoring legacy showcase artifact keys for compatibility, and adding unit coverage for default plot naming and emitted image artifacts.
 - Scope: Consolidated dispersive-wave plotting into a reusable `cpa_sim.plotting` utility and simplified the showcase example to call the shared helper while emitting both linear and log delay/wavelength vs distance maps with stable artifact keys.
 - Scope: Added deterministic docs asset generation via `scripts/build_docs_assets.py` to run the dispersive-wave example in CI-safe modes and emit SVG-only outputs under `docs/assets/generated/gnlse-dispersive-wave/`; added a dedicated docs page for the 835 nm showcase and wired docs workflow branches to conditionally install/use optional `gnlse` for scheduled/manual builds while keeping PR docs builds non-blocking with `--allow-missing-gnlse`.

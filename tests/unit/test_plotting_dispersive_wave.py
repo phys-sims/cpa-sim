@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from cpa_sim.plotting import build_default_plot_paths, plot_dispersive_wave_maps_from_npz
 
@@ -17,6 +18,8 @@ def test_build_default_plot_paths_uses_expected_naming(tmp_path: Path) -> None:
 
 
 def test_plot_dispersive_wave_maps_from_npz_generates_all_outputs(tmp_path: Path) -> None:
+    pytest.importorskip("matplotlib")
+
     n_z = 4
     n_t = 16
     z_m = np.linspace(0.0, 0.15, n_z)
