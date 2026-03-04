@@ -4,8 +4,6 @@ import argparse
 import json
 from pathlib import Path
 
-import numpy as np
-
 from cpa_sim.models import (
     DispersionTaylorCfg,
     FiberCfg,
@@ -19,45 +17,10 @@ from cpa_sim.models import (
     WustGnlseNumericsCfg,
 )
 from cpa_sim.pipeline import run_pipeline
-from cpa_sim.plotting import plot_dispersive_wave_maps
+from cpa_sim.plotting import plot_dispersive_wave_maps_from_npz
 
 DEFAULT_OUT_DIR = Path("out")
 DEFAULT_STAGE_NAME = "fiber_dispersive_wave"
-
-
-def _plot_from_npz(
-    *,
-    npz_path: Path,
-    wavelength_linear_path: Path,
-    wavelength_log_path: Path,
-    delay_linear_path: Path,
-    delay_log_path: Path,
-    center_wavelength_nm: float,
-) -> None:
-    data = np.load(npz_path)
-    z_m = np.asarray(data["z_m"], dtype=float)
-    t_fs = np.asarray(data["t_fs"], dtype=float)
-    at = np.asarray(data["at_zt_real"], dtype=float) + 1j * np.asarray(
-        data["at_zt_imag"], dtype=float
-    )
-
-    if "w_rad_per_fs" in data:
-        w_rad_per_fs = np.asarray(data["w_rad_per_fs"], dtype=float)
-    else:
-        dt_s = float((t_fs[1] - t_fs[0]) * 1e-15)
-        w_rad_per_fs = np.fft.fftshift(2.0 * np.pi * np.fft.fftfreq(t_fs.size, d=dt_s)) * 1e-15
-
-    plot_dispersive_wave_maps(
-        at_zt=at,
-        z_m=z_m,
-        t_fs=t_fs,
-        w_rad_per_fs=w_rad_per_fs,
-        center_wavelength_nm=center_wavelength_nm,
-        delay_linear_path=delay_linear_path,
-        delay_log_path=delay_log_path,
-        wavelength_linear_path=wavelength_linear_path,
-        wavelength_log_path=wavelength_log_path,
-    )
 
 
 def run_showcase(*, out_dir: Path, seed: int = 7) -> dict[str, str]:
@@ -109,27 +72,21 @@ def run_showcase(*, out_dir: Path, seed: int = 7) -> dict[str, str]:
     artifacts = {**result.artifacts, **result.state.artifacts}
     z_npz = Path(artifacts[f"{DEFAULT_STAGE_NAME}.z_traces_npz"])
 
-    wavelength_linear_img = (
-        stage_plot_dir / f"{DEFAULT_STAGE_NAME}_wavelength_vs_distance_linear.png"
-    )
-    wavelength_log_img = stage_plot_dir / f"{DEFAULT_STAGE_NAME}_wavelength_vs_distance_log.png"
-    delay_linear_img = stage_plot_dir / f"{DEFAULT_STAGE_NAME}_delay_vs_distance_linear.png"
-    delay_log_img = stage_plot_dir / f"{DEFAULT_STAGE_NAME}_delay_vs_distance_log.png"
-    _plot_from_npz(
+    plots = plot_dispersive_wave_maps_from_npz(
         npz_path=z_npz,
-        wavelength_linear_path=wavelength_linear_img,
-        wavelength_log_path=wavelength_log_img,
-        delay_linear_path=delay_linear_img,
-        delay_log_path=delay_log_img,
         center_wavelength_nm=835.0,
+        out_dir=stage_plot_dir,
+        stem=DEFAULT_STAGE_NAME,
     )
 
     artifacts[f"{DEFAULT_STAGE_NAME}.plot_wavelength_vs_distance_linear"] = str(
-        wavelength_linear_img
+        plots.wavelength_linear
     )
-    artifacts[f"{DEFAULT_STAGE_NAME}.plot_wavelength_vs_distance_log"] = str(wavelength_log_img)
-    artifacts[f"{DEFAULT_STAGE_NAME}.plot_delay_vs_distance_linear"] = str(delay_linear_img)
-    artifacts[f"{DEFAULT_STAGE_NAME}.plot_delay_vs_distance_log"] = str(delay_log_img)
+    artifacts[f"{DEFAULT_STAGE_NAME}.plot_wavelength_vs_distance_log"] = str(plots.wavelength_log)
+    artifacts[f"{DEFAULT_STAGE_NAME}.plot_delay_vs_distance_linear"] = str(plots.delay_linear)
+    artifacts[f"{DEFAULT_STAGE_NAME}.plot_delay_vs_distance_log"] = str(plots.delay_log)
+    artifacts[f"{DEFAULT_STAGE_NAME}.plot_wavelength_vs_distance"] = str(plots.wavelength_log)
+    artifacts[f"{DEFAULT_STAGE_NAME}.plot_delay_vs_distance"] = str(plots.delay_log)
 
     metrics_payload = {
         "schema_version": "cpa.metrics.v1",

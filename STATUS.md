@@ -5,6 +5,7 @@
 ## Last updated
 - Date: 2026-03-04
 - By: @openai-codex
+- Scope: Refined dispersive-wave plotting consolidation by adding a high-level NPZ-driven plotting entrypoint, restoring legacy showcase artifact keys for compatibility, and adding unit coverage for default plot naming and emitted image artifacts.
 - Scope: Consolidated dispersive-wave plotting into a reusable `cpa_sim.plotting` utility and simplified the showcase example to call the shared helper while emitting both linear and log delay/wavelength vs distance maps with stable artifact keys.
 - Scope: Added deterministic docs asset generation via `scripts/build_docs_assets.py` to run the dispersive-wave example in CI-safe modes and emit SVG-only outputs under `docs/assets/generated/gnlse-dispersive-wave/`; added a dedicated docs page for the 835 nm showcase and wired docs workflow branches to conditionally install/use optional `gnlse` for scheduled/manual builds while keeping PR docs builds non-blocking with `--allow-missing-gnlse`.
 - Scope: Tightened the `PulseGrid.w` invariant to require constant `Δω` bin spacing (uniform FFT `dw`) in addition to centering/symmetry checks, and added a unit regression that rejects nonuniform odd-length grids to prevent silent misuse with FFT-based dispersion application.
@@ -43,7 +44,7 @@
 | --- | --- | --- | --- | --- |
 | Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-03-04 | Passed; pre-commit still reports only a deprecation warning for `default_stages`. |
 | Type checking (mypy) | `python -m mypy src` | ✅ | 2026-03-04 | Success: no issues found in 48 source files. |
-| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-03-04 | Passed (98 tests, 10 deselected), including CLI and optional-gnlse guarded integration coverage. |
+| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-03-04 | Passed (100 tests, 10 deselected), including new plotting utility unit coverage plus CLI and optional-gnlse guarded integration coverage. |
 | Pytest physics (nightly/manual) | `python -m pytest -q -m physics --durations=10` | ✅ | 2026-02-21 | Runs in `.github/workflows/physics.yml` (manual + nightly), not in required PR gate. |
 | Pytest slow (supplemental) | `python -m pytest -q -m slow --durations=10` | ⬜ | — |  |
 | Pytest gnlse optional (isolated/non-blocking) | `python -m pytest -q -m gnlse --durations=10` | ✅ | 2026-02-17 | Runs only in `.github/workflows/gnlse-optional.yml`; keep non-blocking unless branch protection intentionally requires it. |
