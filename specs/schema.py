@@ -79,7 +79,9 @@ class FiberSpecRecord(CatalogRecordBase):
                 "value_s_per_m2": ps_per_nm_km_to_s_per_m2(dispersion_ps_nm_km),
             }
 
-        loss_db_km = _to_float(_nested_get(self.specs, "optical", "attenuation_db_per_km", "typical"))
+        loss_db_km = _to_float(
+            _nested_get(self.specs, "optical", "attenuation_db_per_km", "typical")
+        )
         if loss_db_km is not None:
             normalized["loss_db_per_m"] = {
                 "raw": loss_db_km,
@@ -113,7 +115,9 @@ class FiberSpecRecord(CatalogRecordBase):
         computed_gamma: float | None = None
 
         if n2 is not None and a_eff_m2 is not None and ref_lambda_nm is not None:
-            computed_gamma = _compute_fiber_gamma(n2_m2_per_w=n2, a_eff_m2=a_eff_m2, wavelength_m=ref_lambda_nm * 1e-9)
+            computed_gamma = _compute_fiber_gamma(
+                n2_m2_per_w=n2, a_eff_m2=a_eff_m2, wavelength_m=ref_lambda_nm * 1e-9
+            )
             normalized["gamma_1_per_w_m"] = {
                 "source": "computed",
                 "value_1_per_w_m": computed_gamma,
@@ -215,7 +219,9 @@ def load_spec(path: str | Path) -> CatalogSpecRecord:
     return adapter.validate_python(payload)
 
 
-def load_catalog(root: str | Path = "specs/catalog", *, as_dict: bool = True) -> dict[str, CatalogSpecRecord] | list[CatalogSpecRecord]:
+def load_catalog(
+    root: str | Path = "specs/catalog", *, as_dict: bool = True
+) -> dict[str, CatalogSpecRecord] | list[CatalogSpecRecord]:
     root_path = Path(root)
     records: list[CatalogSpecRecord] = []
     for yml_path in sorted(root_path.glob("*/*.yml")):

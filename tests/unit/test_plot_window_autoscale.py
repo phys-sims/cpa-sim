@@ -7,7 +7,7 @@ from cpa_sim.utils import _autoscale_window
 
 def test_autoscale_window_focuses_on_signal_support() -> None:
     x = np.linspace(-100.0, 100.0, 1001)
-    values = np.exp(-(x / 10.0) ** 2)
+    values = np.exp(-((x / 10.0) ** 2))
 
     lo, hi = _autoscale_window(x_axis=x, values=values, threshold_fraction=1e-2) or (None, None)
 
