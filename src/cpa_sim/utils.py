@@ -48,7 +48,11 @@ def maybe_emit_stage_plots(
     spectrum_path = out_dir / f"{stage_name}_spectrum.svg"
 
     fig, ax = plt.subplots(figsize=(8, 4.5))
-    ax.plot(t_fs, state.pulse.intensity_t)
+    intensity_t = np.asarray(state.pulse.intensity_t, dtype=float)
+    ax.plot(t_fs, intensity_t)
+    time_xlim = _autoscale_window(x_axis=t_fs, values=intensity_t)
+    if time_xlim is not None:
+        ax.set_xlim(*time_xlim)
     ax.set_xlabel("Time (fs)")
     ax.set_ylabel("Intensity (|A|^2)")
     ax.set_title(f"Stage: {stage_name} time-domain intensity")
@@ -57,7 +61,11 @@ def maybe_emit_stage_plots(
     plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(8, 4.5))
-    ax.plot(w, state.pulse.spectrum_w)
+    spectrum_w = np.asarray(state.pulse.spectrum_w, dtype=float)
+    ax.plot(w, spectrum_w)
+    spectrum_xlim = _autoscale_window(x_axis=w, values=spectrum_w)
+    if spectrum_xlim is not None:
+        ax.set_xlim(*spectrum_xlim)
     ax.set_xlabel("Angular frequency (rad/fs)")
     ax.set_ylabel("Spectrum (|Aw|^2)")
     ax.set_title(f"Stage: {stage_name} spectral magnitude")
@@ -69,3 +77,37 @@ def maybe_emit_stage_plots(
         f"{stage_name}.plot_time_intensity": str(time_path),
         f"{stage_name}.plot_spectrum": str(spectrum_path),
     }
+
+
+def _autoscale_window(
+    *, x_axis: np.ndarray, values: np.ndarray, threshold_fraction: float = 1e-3
+) -> tuple[float, float] | None:
+    if x_axis.size == 0 or values.size == 0:
+        return None
+
+    x = np.asarray(x_axis, dtype=float)
+    y = np.asarray(values, dtype=float)
+
+    finite = np.isfinite(x) & np.isfinite(y)
+    if not np.any(finite):
+        return None
+
+    x = x[finite]
+    y = np.abs(y[finite])
+    peak = float(np.max(y))
+    if peak <= 0.0:
+        return (float(np.min(x)), float(np.max(x)))
+
+    support = np.where(y >= peak * threshold_fraction)[0]
+    if support.size == 0:
+        return (float(np.min(x)), float(np.max(x)))
+
+    lo = float(np.min(x[support]))
+    hi = float(np.max(x[support]))
+    if np.isclose(lo, hi):
+        span = float(np.max(x) - np.min(x))
+        pad = 0.05 * span if span > 0.0 else 1.0
+        return (lo - pad, hi + pad)
+
+    pad = 0.05 * (hi - lo)
+    return (lo - pad, hi + pad)
