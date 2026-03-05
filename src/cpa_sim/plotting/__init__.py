@@ -13,7 +13,6 @@ from .dispersive_wave import (
     plot_dispersive_wave_maps,
     plot_dispersive_wave_maps_from_npz,
 )
-from .pulse_compare import plot_pulse_comparison
 
 __all__ = [
     "LineSeries",
@@ -25,5 +24,4 @@ __all__ = [
     "build_default_plot_paths",
     "plot_dispersive_wave_maps",
     "plot_dispersive_wave_maps_from_npz",
-    "plot_pulse_comparison",
 ]

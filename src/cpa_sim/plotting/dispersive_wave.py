@@ -11,7 +11,6 @@ from pathlib import Path
 
 import numpy as np
 
-from .common import auto_xlim_from_intensity as _auto_xlim_from_intensity
 from .common import plot_heatmap
 
 _LIGHT_SPEED_M_PER_S = 299792458.0
@@ -23,24 +22,6 @@ class DispersiveWavePlotPaths:
     delay_log: Path
     wavelength_linear: Path
     wavelength_log: Path
-
-
-def auto_xlim_from_intensity(
-    x: np.ndarray,
-    I2d: np.ndarray,
-    *,
-    coverage: float = 0.999,
-    pad_frac: float = 0.10,
-    axis_for_x: int = -1,
-) -> tuple[float, float]:
-    """Backward-compatible wrapper for generic intensity auto-zoom."""
-    return _auto_xlim_from_intensity(
-        x,
-        I2d,
-        coverage=coverage,
-        pad_frac=pad_frac,
-        axis_for_x=axis_for_x,
-    )
 
 
 def _wavelength_axis_nm(*, w_rad_per_fs: np.ndarray, center_wavelength_nm: float) -> np.ndarray:

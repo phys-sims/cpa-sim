@@ -8,7 +8,7 @@ import numpy as np
 
 from cpa_sim.models.state import LaserState
 from cpa_sim.phys_pipeline_compat import PolicyBag
-from cpa_sim.plotting.common import LineSeries, autoscale_window_1d, plot_line_series
+from cpa_sim.plotting.common import LineSeries, plot_line_series
 
 
 def _policy_get(policy: PolicyBag | None, key: str, default: Any = None) -> Any:
@@ -80,14 +80,3 @@ def maybe_emit_stage_plots(
         f"{stage_name}.plot_time_intensity": str(time_path),
         f"{stage_name}.plot_spectrum": str(spectrum_path),
     }
-
-
-def _autoscale_window(
-    *, x_axis: np.ndarray, values: np.ndarray, threshold_fraction: float = 1e-3
-) -> tuple[float, float] | None:
-    """Backward-compatible alias for shared 1D autoscaling utility."""
-    return autoscale_window_1d(
-        x_axis=np.asarray(x_axis, dtype=float),
-        values=np.asarray(values, dtype=float),
-        threshold_fraction=threshold_fraction,
-    )

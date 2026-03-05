@@ -14,7 +14,7 @@ from cpa_sim.models import (
     WustGnlseNumericsCfg,
 )
 from cpa_sim.models.state import BeamState, LaserSpec, LaserState, PulseGrid, PulseSpec, PulseState
-from cpa_sim.plotting import plot_pulse_comparison
+from cpa_sim.plotting import LineSeries, plot_line_series
 from cpa_sim.stages.fiber import FiberStage
 from cpa_sim.stages.laser_gen import AnalyticLaserGenStage
 
@@ -69,13 +69,41 @@ def run_example(out_dir: Path, *, plot_format: str = "svg") -> dict[str, Path]:
         )
     )
     final = fiber_stage.process(initial).state
-    return plot_pulse_comparison(
-        initial=initial,
-        final=final,
-        out_dir=out_dir,
-        stem="fiber",
+    paths = {
+        "time": out_dir / f"fiber_time_intensity.{plot_format}",
+        "spectrum": out_dir / f"fiber_spectrum.{plot_format}",
+    }
+
+    t_fs = np.asarray(initial.pulse.grid.t, dtype=float)
+    w = np.asarray(initial.pulse.grid.w, dtype=float)
+
+    plot_line_series(
+        out_path=paths["time"],
+        series=[
+            LineSeries(x=t_fs, y=np.asarray(initial.pulse.intensity_t, dtype=float), label="input"),
+            LineSeries(
+                x=t_fs, y=np.asarray(final.pulse.intensity_t, dtype=float), label="after fiber"
+            ),
+        ],
+        x_label="Time (fs)",
+        y_label="Intensity (arb. from |A|^2)",
+        title="WUST gnlse fiber example: 1550 nm / 1 ps pulse intensity",
         plot_format=plot_format,
     )
+
+    plot_line_series(
+        out_path=paths["spectrum"],
+        series=[
+            LineSeries(x=w, y=np.asarray(initial.pulse.spectrum_w, dtype=float), label="input"),
+            LineSeries(x=w, y=np.asarray(final.pulse.spectrum_w, dtype=float), label="after fiber"),
+        ],
+        x_label="Angular frequency axis (rad/fs)",
+        y_label="Spectrum (arb. from |Aw|^2)",
+        title="WUST gnlse fiber example: nonlinear + Raman spectral evolution",
+        plot_format=plot_format,
+    )
+
+    return paths
 
 
 def _build_parser() -> argparse.ArgumentParser:
