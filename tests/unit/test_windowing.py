@@ -68,6 +68,20 @@ def test_pad_laser_state_time_updates_window_from_dt_and_n() -> None:
 
 
 @pytest.mark.unit
+def test_pad_laser_state_time_preserves_centroid_across_parity_change() -> None:
+    state = _make_gaussian_state(n_samples=256, dt_fs=2.0, center_fs=25.0)
+    initial_t = np.asarray(state.pulse.grid.t)
+    initial_centroid_fs = intensity_weighted_mean_fs(initial_t, np.asarray(state.pulse.intensity_t))
+
+    padded = pad_laser_state_time(state, new_n_samples=257)
+
+    padded_t = np.asarray(padded.pulse.grid.t)
+    padded_centroid_fs = intensity_weighted_mean_fs(padded_t, np.asarray(padded.pulse.intensity_t))
+
+    assert padded_centroid_fs == pytest.approx(initial_centroid_fs, abs=1e-6)
+
+
+@pytest.mark.unit
 def test_recenter_state_by_intensity_centroid_moves_centroid_to_zero() -> None:
     state = _make_gaussian_state(n_samples=512, dt_fs=1.0, center_fs=42.5)
     t = np.asarray(state.pulse.grid.t)

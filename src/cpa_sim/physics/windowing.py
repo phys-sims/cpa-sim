@@ -97,6 +97,9 @@ def pad_laser_state_time(state: LaserState, *, new_n_samples: int) -> LaserState
     t_new_window = dt * (new_n_samples - 1)
     t_new = np.linspace(-0.5 * t_new_window, 0.5 * t_new_window, new_n_samples)
 
+    t_old = np.asarray(state.pulse.grid.t, dtype=np.float64)
+    old_centroid_fs = intensity_weighted_mean_fs(t_old, np.abs(old_field_t) ** 2)
+
     field_t_new = np.zeros(new_n_samples, dtype=np.complex128)
     start = (new_n_samples - old_n) // 2
     stop = start + old_n
@@ -104,6 +107,12 @@ def pad_laser_state_time(state: LaserState, *, new_n_samples: int) -> LaserState
 
     field_w_new = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(field_t_new)))
     w_new = np.fft.fftshift(2.0 * np.pi * np.fft.fftfreq(new_n_samples, d=dt))
+    new_centroid_fs = intensity_weighted_mean_fs(t_new, np.abs(field_t_new) ** 2)
+    centroid_shift_fs = old_centroid_fs - new_centroid_fs
+    if centroid_shift_fs != 0.0:
+        recenter_pulse_inplace(field_w_new, w_new, shift_fs=centroid_shift_fs)
+        field_t_new = np.fft.fftshift(np.fft.ifft(np.fft.ifftshift(field_w_new)))
+
     dw_new = float(w_new[1] - w_new[0])
 
     out = state.deepcopy()
