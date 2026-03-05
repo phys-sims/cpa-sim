@@ -120,6 +120,7 @@ def plot_line_series(
     figsize: tuple[float, float] = (8, 4.5),
     plot_format: str | None = None,
     auto_xlim: bool = False,
+    auto_xlim_threshold_fraction: float = 1e-3,
 ) -> Path:
     plt = load_pyplot()
 
@@ -131,7 +132,9 @@ def plot_line_series(
 
     if auto_xlim and series:
         xlim = autoscale_window_1d(
-            x_axis=np.asarray(series[0].x, dtype=float), values=np.asarray(series[0].y, dtype=float)
+            x_axis=np.asarray(series[0].x, dtype=float),
+            values=np.asarray(series[0].y, dtype=float),
+            threshold_fraction=auto_xlim_threshold_fraction,
         )
         if xlim is not None:
             ax.set_xlim(*xlim)

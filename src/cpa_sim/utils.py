@@ -72,6 +72,7 @@ def maybe_emit_stage_plots(
             title=f"Stage: {stage_name} spectral magnitude",
             plot_format="svg",
             auto_xlim=True,
+            auto_xlim_threshold_fraction=1e-2,
         )
     except ModuleNotFoundError:
         return {}
