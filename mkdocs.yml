@@ -37,6 +37,8 @@ nav:
       - Fiber Amp Wrap: agent/fiber_amp_wrap-context.md
       - Free Space Treacy: agent/freespace-stage-treacy-context.md
       - Phys Pipeline: agent/phys-pipeline-context.md
+  - Validation:
+      - Treacy Stage Validation: validation/treacy_stage_validation.md
   - Roadmaps:
       - v1 to v3 Plan: roadmaps/v1_to_v3_plan.md
       - v1 Fiber Stage Roadmap: roadmaps/v1-fiber-stage-roadmap.md
