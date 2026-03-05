@@ -33,14 +33,14 @@ def build_config(*, seed: int, ci_safe: bool) -> PipelineConfig:
     else:
         n_samples = 1024
         time_window_fs = 60000.0
-        fiber_length_m = 12.0
+        fiber_length_m = 50000
 
     laser_gen = LaserGenCfg(
         spec=LaserSpec(
             pulse=PulseSpec(
                 shape="sech2",
-                avg_power_w=5,
-                rep_rate_mhz=1000,
+                avg_power_w=0.1,
+                rep_rate_mhz=1150,
                 width_fs=7000.0,
                 center_wavelength_nm=1560.0,
                 n_samples=n_samples,
@@ -54,8 +54,8 @@ def build_config(*, seed: int, ci_safe: bool) -> PipelineConfig:
             name="fiber_regular_disp_1560nm",
             physics=FiberPhysicsCfg(
                 length_m=fiber_length_m,
-                loss_db_per_m=0.2,
-                gamma_1_per_w_m=0.003,
+                loss_db_per_m=0.0,
+                gamma_1_per_w_m=0.0,
                 dispersion=DispersionTaylorCfg(
                     betas_psn_per_m=[0.022],
                 ),
@@ -68,11 +68,11 @@ def build_config(*, seed: int, ci_safe: bool) -> PipelineConfig:
         ),
         FiberAmpWrapCfg(
             name="fiber_amp_wrap",
-            power_out_w=2.0,
+            power_out_w=5.0,
             physics=FiberPhysicsCfg(
-                length_m=0.5 if ci_safe else 1.0,
+                length_m=0.5 if ci_safe else 5.0,
                 loss_db_per_m=0.2,
-                gamma_1_per_w_m=0.0,
+                gamma_1_per_w_m=0.01,
                 dispersion=DispersionTaylorCfg(betas_psn_per_m=[0.0]),
             ),
             numerics=WustGnlseNumericsCfg(

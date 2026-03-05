@@ -54,7 +54,7 @@ def run_showcase(*, out_dir: Path, seed: int = 7) -> dict[str, str]:
                 ),
                 numerics=WustGnlseNumericsCfg(
                     backend="wust_gnlse",
-                    z_saves=200,
+                    z_saves=2000,
                     keep_full_solution=True,
                 ),
             )
