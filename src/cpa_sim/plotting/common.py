@@ -76,6 +76,18 @@ def auto_xlim_from_intensity(
     if data.shape[x_axis] != x_arr.size:
         raise ValueError("intensity_2d axis length for x does not match len(x).")
 
+    # If the x-axis contains non-finite entries (e.g. NaNs from invalid ω→λ conversion),
+    # drop those bins so they don't poison the CDF-based window estimate.
+    finite_x = np.isfinite(x_arr)
+    if not np.all(finite_x):
+        idx = np.where(finite_x)[0]
+        if idx.size == 0:
+            x_min = float(np.nanmin(x_arr))
+            x_max = float(np.nanmax(x_arr))
+            return x_min, x_max
+        x_arr = x_arr[idx]
+        data = np.take(data, idx, axis=x_axis)
+
     reduce_axes = tuple(ax for ax in range(data.ndim) if ax != x_axis)
     clean_data = np.where(np.isfinite(data), np.clip(data, 0.0, None), 0.0)
     profile = np.max(clean_data, axis=reduce_axes) if reduce_axes else clean_data
@@ -166,44 +178,114 @@ def plot_heatmap(
     xlim: str | tuple[float, float] | None = "auto",
     axis_for_x: int = -1,
     figsize: tuple[float, float] = (8, 4.8),
+    vmin: float | None = None,
+    vmax: float | None = None,
+    linear_percentile: float = 99.9,
+    log_vmax_percentile: float | None = 99.9,
+    log_dynamic_range_db: float = 60.0,
+    clip_data: bool = False,
 ) -> Path:
+    """Plot a 2D heatmap.
+
+    The default normalization is chosen to be stable for GNLS/SSFM style evolution maps:
+
+    - ``scale='linear'``: ``vmin=0`` and ``vmax`` is the ``linear_percentile`` percentile.
+    - ``scale='log'``: ``vmax`` is the ``log_vmax_percentile`` percentile of positive values
+      (or the max if ``log_vmax_percentile=None``) and ``vmin`` is set from a fixed dynamic
+      range in dB relative to that peak:
+
+        ``vmin = vmax / 10**(log_dynamic_range_db/10)``.
+
+      This mimics the common "show N dB below peak" convention used in many WUST/GNLSE
+      example figures and avoids percentile-based vmin choices that can hide weak features.
+
+    You can override auto-scaling by explicitly passing ``vmin`` and/or ``vmax``.
+    """
+
     if scale not in {"linear", "log"}:
         raise ValueError(f"Unsupported scale '{scale}'. Expected 'linear' or 'log'.")
 
-    finite = values[np.isfinite(values)]
+    data = np.asarray(values, dtype=float)
+    finite = data[np.isfinite(data)]
+
+    norm = None
+    vmin_plot: float
+    vmax_plot: float
+
     if scale == "linear":
-        vmin = 0.0
-        vmax = float(np.nanpercentile(finite, 99.9)) if finite.size else 1.0
-        if not np.isfinite(vmax) or vmax <= vmin:
-            vmax = float(np.max(finite)) if finite.size else 1.0
-        if not np.isfinite(vmax) or vmax <= vmin:
-            vmax = 1.0
-        norm = None
+        vmin_plot = float(vmin) if vmin is not None else 0.0
+        if vmax is not None:
+            vmax_plot = float(vmax)
+        else:
+            vmax_plot = float(np.nanpercentile(finite, linear_percentile)) if finite.size else 1.0
+        if not np.isfinite(vmax_plot) or vmax_plot <= vmin_plot:
+            vmax_plot = float(np.nanmax(finite)) if finite.size else (vmin_plot + 1.0)
+        if not np.isfinite(vmax_plot) or vmax_plot <= vmin_plot:
+            vmax_plot = vmin_plot + 1.0
     else:
         colors = import_module("matplotlib.colors")
-        positive = values[np.isfinite(values) & (values > 0.0)]
-        if positive.size:
-            vmin = float(np.nanpercentile(positive, 1.0))
-            vmax = float(np.nanpercentile(positive, 99.9))
+        positive = data[np.isfinite(data) & (data > 0.0)]
+
+        if vmax is not None:
+            vmax_plot = float(vmax)
+        elif positive.size:
+            if log_vmax_percentile is None:
+                vmax_plot = float(np.nanmax(positive))
+            else:
+                vmax_plot = float(np.nanpercentile(positive, log_vmax_percentile))
         else:
-            vmin = 1e-12
-            vmax = float(np.max(finite)) if finite.size else 1.0
-        if not np.isfinite(vmin) or vmin <= 0.0:
-            vmin = 1e-12
-        if not np.isfinite(vmax) or vmax <= vmin:
-            vmax = max(vmin * 10.0, 1e-11)
-        norm = colors.LogNorm(vmin=vmin, vmax=vmax)
+            vmax_plot = 1.0
+
+        if not np.isfinite(vmax_plot) or vmax_plot <= 0.0:
+            vmax_plot = float(np.nanmax(positive)) if positive.size else 1.0
+        if not np.isfinite(vmax_plot) or vmax_plot <= 0.0:
+            vmax_plot = 1.0
+
+        if vmin is not None:
+            vmin_plot = float(vmin)
+        else:
+            # Fixed dB range relative to the peak.
+            # (Intensity is power-like, so use 10*log10 convention.)
+            dyn = float(log_dynamic_range_db)
+            if not np.isfinite(dyn) or dyn <= 0.0:
+                dyn = 60.0
+            vmin_plot = vmax_plot / (10.0 ** (dyn / 10.0))
+
+        if not np.isfinite(vmin_plot) or vmin_plot <= 0.0:
+            if positive.size:
+                vmin_plot = float(np.nanmin(positive[positive > 0.0]))
+            else:
+                vmin_plot = max(vmax_plot * 1e-12, 1e-12)
+
+        if vmax_plot <= vmin_plot:
+            vmax_plot = max(vmin_plot * 10.0, vmin_plot + 1e-12)
+
+        # Clip in the *normalizer* rather than clipping the data array. This preserves
+        # the real dynamic range for debugging, while still producing stable visuals.
+        norm = colors.LogNorm(vmin=vmin_plot, vmax=vmax_plot, clip=True)
+
+    plot_values_arr = np.array(data, copy=True)
+    plot_values_arr[~np.isfinite(plot_values_arr)] = np.nan
+    if scale == "log":
+        # Log scales can't display zeros/negatives. Instead of masking them (which tends
+        # to render as white/transparent), floor them to vmin so the background uses the
+        # bottom colormap color.
+        plot_values_arr = np.where(plot_values_arr > 0.0, plot_values_arr, vmin_plot)
+    elif clip_data:
+        plot_values_arr = np.clip(plot_values_arr, vmin_plot, vmax_plot)
+
+    plot_values = np.ma.masked_invalid(plot_values_arr)
 
     plt = load_pyplot()
     fig, ax = plt.subplots(figsize=figsize)
     mesh = ax.pcolormesh(
         x_axis,
         y_axis,
-        np.clip(values, vmin, vmax),
+        plot_values,
         shading="auto",
         cmap=cmap,
-        vmin=None if norm is not None else vmin,
-        vmax=None if norm is not None else vmax,
+        vmin=None if norm is not None else vmin_plot,
+        vmax=None if norm is not None else vmax_plot,
         norm=norm,
     )
     fig.colorbar(mesh, ax=ax, label=color_label)
