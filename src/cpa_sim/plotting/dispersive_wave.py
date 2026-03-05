@@ -60,6 +60,9 @@ def plot_dispersive_wave_maps(
     center_wavelength_nm: float,
     paths: DispersiveWavePlotPaths,
     xlim: str | tuple[float, float] | None = "auto",
+    linear_percentile: float = 99.9,
+    log_vmax_percentile: float | None = 99.9,
+    log_dynamic_range_db: float = 60.0,
 ) -> DispersiveWavePlotPaths:
     """Generate delay/wavelength-vs-distance maps in linear and log scales."""
     delay_power = np.abs(at_zt) ** 2
@@ -75,6 +78,7 @@ def plot_dispersive_wave_maps(
         color_label="|A(t,z)|²",
         xlim=xlim,
         scale="linear",
+        linear_percentile=linear_percentile,
     )
     plot_heatmap(
         out_path=paths.delay_log,
@@ -88,6 +92,8 @@ def plot_dispersive_wave_maps(
         color_label="|A(t,z)|²",
         xlim=xlim,
         scale="log",
+        log_vmax_percentile=log_vmax_percentile,
+        log_dynamic_range_db=log_dynamic_range_db,
     )
 
     aw = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(at_zt, axes=1), axis=1), axes=1)
@@ -96,6 +102,17 @@ def plot_dispersive_wave_maps(
         w_rad_per_fs=w_rad_per_fs,
         center_wavelength_nm=center_wavelength_nm,
     )
+
+    # The ω→λ mapping produces NaNs for invalid (ω<=0) bins. Those bins are unphysical
+    # in wavelength space and they also break "auto" x-limits (CDF interpolation).
+    # Filter them out, then sort wavelength so the x-axis is strictly increasing.
+    finite = np.isfinite(wavelength_nm)
+    if np.any(finite):
+        wavelength_nm = wavelength_nm[finite]
+        spectrum_power = spectrum_power[:, finite]
+        order = np.argsort(wavelength_nm)
+        wavelength_nm = wavelength_nm[order]
+        spectrum_power = spectrum_power[:, order]
 
     plot_heatmap(
         out_path=paths.wavelength_linear,
@@ -109,6 +126,7 @@ def plot_dispersive_wave_maps(
         color_label="|A(ω,z)|²",
         xlim=xlim,
         scale="linear",
+        linear_percentile=linear_percentile,
     )
     plot_heatmap(
         out_path=paths.wavelength_log,
@@ -122,6 +140,8 @@ def plot_dispersive_wave_maps(
         color_label="|A(ω,z)|²",
         xlim=xlim,
         scale="log",
+        log_vmax_percentile=log_vmax_percentile,
+        log_dynamic_range_db=log_dynamic_range_db,
     )
     return paths
 
@@ -133,6 +153,9 @@ def plot_dispersive_wave_maps_from_npz(
     out_dir: Path,
     stem: str,
     xlim: str | tuple[float, float] | None = "auto",
+    linear_percentile: float = 99.9,
+    log_vmax_percentile: float | None = 99.9,
+    log_dynamic_range_db: float = 60.0,
 ) -> DispersiveWavePlotPaths:
     """Load z-traces from a saved NPZ and emit standard dispersive-wave map artifacts."""
     data = np.load(npz_path)
@@ -157,4 +180,7 @@ def plot_dispersive_wave_maps_from_npz(
         center_wavelength_nm=center_wavelength_nm,
         paths=paths,
         xlim=xlim,
+        linear_percentile=linear_percentile,
+        log_vmax_percentile=log_vmax_percentile,
+        log_dynamic_range_db=log_dynamic_range_db,
     )
