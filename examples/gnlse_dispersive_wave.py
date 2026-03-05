@@ -18,12 +18,6 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-import matplotlib
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import numpy as np
-
 from cpa_sim.models import (
     DispersionTaylorCfg,
     FiberCfg,
@@ -37,9 +31,8 @@ from cpa_sim.models import (
     WustGnlseNumericsCfg,
 )
 from cpa_sim.pipeline import run_pipeline
+from cpa_sim.plotting import plot_dispersive_wave_maps_from_npz
 
-_LIGHT_SPEED_M_PER_S = 299_792_458.0
-_EPS = 1e-30
 _STAGE_NAME = "fiber_dispersive_wave"
 
 
@@ -88,96 +81,6 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Quick mode: overrides to n_samples=4096 and z_saves=150",
     )
     return parser
-
-
-def _to_wavelength_nm(w_rad_per_fs: np.ndarray, center_wavelength_nm: float) -> np.ndarray:
-    omega0_rad_per_s = 2.0 * np.pi * _LIGHT_SPEED_M_PER_S / (center_wavelength_nm * 1e-9)
-    omega_abs_rad_per_s = omega0_rad_per_s + (w_rad_per_fs * 1e15)
-
-    lam_nm = np.full_like(omega_abs_rad_per_s, np.nan, dtype=float)
-    valid = omega_abs_rad_per_s > 0.0
-    lam_nm[valid] = 2.0 * np.pi * _LIGHT_SPEED_M_PER_S / omega_abs_rad_per_s[valid] * 1e9
-    return lam_nm
-
-
-def _load_z_traces(npz_path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    data = np.load(npz_path)
-    z_m = np.asarray(data["z_m"], dtype=float)
-    t_fs = np.asarray(data["t_fs"], dtype=float)
-    w_rad_per_fs = np.asarray(data["w_rad_per_fs"], dtype=float)
-    at = np.asarray(data["at_zt_real"], dtype=float) + 1j * np.asarray(
-        data["at_zt_imag"], dtype=float
-    )
-    return z_m, t_fs, w_rad_per_fs, at
-
-
-def _save_plots(
-    *,
-    z_m: np.ndarray,
-    t_fs: np.ndarray,
-    w_rad_per_fs: np.ndarray,
-    at_zt: np.ndarray,
-    center_wavelength_nm: float,
-    outdir: Path,
-) -> dict[str, Path]:
-    outdir.mkdir(parents=True, exist_ok=True)
-
-    wavelength_nm = _to_wavelength_nm(w_rad_per_fs, center_wavelength_nm=center_wavelength_nm)
-    aw_zt = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(at_zt, axes=1), axis=1), axes=1)
-
-    power_t = np.abs(at_zt) ** 2
-    power_w = np.abs(aw_zt) ** 2
-
-    spectrum_path = outdir / "spectrum_z0_vs_zL.png"
-    wavelength_path = outdir / "evolution_wavelength_vs_distance.png"
-    delay_path = outdir / "evolution_delay_vs_distance.png"
-
-    matplotlib.rcParams.update(
-        {
-            "figure.dpi": 170,
-            "savefig.dpi": 300,
-            "axes.grid": True,
-            "grid.alpha": 0.25,
-            "font.size": 11,
-        }
-    )
-
-    fig, ax = plt.subplots(figsize=(8.0, 4.8))
-    ax.plot(wavelength_nm, np.log10(power_w[0] + _EPS), label="z = 0")
-    ax.plot(wavelength_nm, np.log10(power_w[-1] + _EPS), label=f"z = {z_m[-1]:.3f} m")
-    ax.set_xlabel("Wavelength (nm)")
-    ax.set_ylabel(r"$\log_{10}(P_\lambda)$ [a.u.]")
-    ax.set_title("Dispersive-wave spectrum evolution")
-    ax.legend()
-    fig.tight_layout()
-    fig.savefig(spectrum_path)
-    plt.close(fig)
-
-    fig, ax = plt.subplots(figsize=(8.0, 4.8))
-    m = ax.pcolormesh(wavelength_nm, z_m, np.log10(power_w + _EPS), shading="auto", cmap="viridis")
-    fig.colorbar(m, ax=ax, label=r"$\log_{10}(P_\lambda)$ [a.u.]")
-    ax.set_xlabel("Wavelength (nm)")
-    ax.set_ylabel("Distance (m)")
-    ax.set_title("Wavelength vs distance")
-    fig.tight_layout()
-    fig.savefig(wavelength_path)
-    plt.close(fig)
-
-    fig, ax = plt.subplots(figsize=(8.0, 4.8))
-    m = ax.pcolormesh(t_fs, z_m, np.log10(power_t + _EPS), shading="auto", cmap="magma")
-    fig.colorbar(m, ax=ax, label=r"$\log_{10}(|A(t,z)|^2)$ [a.u.]")
-    ax.set_xlabel("Delay (fs)")
-    ax.set_ylabel("Distance (m)")
-    ax.set_title("Delay vs distance")
-    fig.tight_layout()
-    fig.savefig(delay_path)
-    plt.close(fig)
-
-    return {
-        "spectrum_comparison": spectrum_path,
-        "wavelength_evolution": wavelength_path,
-        "delay_evolution": delay_path,
-    }
 
 
 def main() -> None:
@@ -246,21 +149,19 @@ def main() -> None:
     artifacts = {**result.artifacts, **result.state.artifacts}
     z_traces_npz = Path(artifacts[f"{_STAGE_NAME}.z_traces_npz"])
 
-    z_m, t_fs, w_rad_per_fs, at_zt = _load_z_traces(z_traces_npz)
-    fig_paths = _save_plots(
-        z_m=z_m,
-        t_fs=t_fs,
-        w_rad_per_fs=w_rad_per_fs,
-        at_zt=at_zt,
+    fig_paths = plot_dispersive_wave_maps_from_npz(
+        npz_path=z_traces_npz,
         center_wavelength_nm=835.0,
-        outdir=outdir,
+        out_dir=outdir,
+        stem=_STAGE_NAME,
     )
 
     print("Generated dispersive-wave artifacts:")
     print(f"  z-traces npz       : {z_traces_npz}")
-    print(f"  spectrum z0 vs zL  : {fig_paths['spectrum_comparison']}")
-    print(f"  wavelength vs z    : {fig_paths['wavelength_evolution']}")
-    print(f"  delay vs z         : {fig_paths['delay_evolution']}")
+    print(f"  wavelength (linear): {fig_paths.wavelength_linear}")
+    print(f"  wavelength (log)   : {fig_paths.wavelength_log}")
+    print(f"  delay (linear)     : {fig_paths.delay_linear}")
+    print(f"  delay (log)        : {fig_paths.delay_log}")
 
 
 if __name__ == "__main__":
