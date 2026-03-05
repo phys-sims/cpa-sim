@@ -106,6 +106,12 @@ def run_example(*, out_dir: Path, plot_dir: Path, seed: int, ci_safe: bool) -> d
     policy = {
         "cpa.emit_stage_plots": True,
         "cpa.stage_plot_dir": str(plot_dir),
+        "cpa.plot.line.threshold_fraction": 1e-3,
+        "cpa.plot.line.min_support_width": 0.0,
+        "cpa.plot.line.pad_fraction": 0.05,
+        "cpa.plot.heatmap.coverage_quantile": 0.999,
+        "cpa.plot.heatmap.pad_fraction": 0.10,
+        "cpa.plot.heatmap.fallback_behavior": "full_axis",
     }
     result = run_pipeline(cfg, policy=policy)
 

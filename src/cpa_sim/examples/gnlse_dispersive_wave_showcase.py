@@ -11,6 +11,7 @@ from cpa_sim.models import (
     LaserGenCfg,
     LaserSpec,
     PipelineConfig,
+    PlotWindowPolicy,
     PulseSpec,
     RamanCfg,
     RuntimeCfg,
@@ -61,13 +62,17 @@ def run_showcase(*, out_dir: Path, seed: int = 7) -> dict[str, str]:
         ],
     )
 
-    result = run_pipeline(
-        cfg,
-        policy={
-            "cpa.emit_stage_plots": True,
-            "cpa.stage_plot_dir": str(stage_plot_dir),
-        },
-    )
+    policy = {
+        "cpa.emit_stage_plots": True,
+        "cpa.stage_plot_dir": str(stage_plot_dir),
+        "cpa.plot.line.threshold_fraction": 1e-3,
+        "cpa.plot.line.min_support_width": 0.0,
+        "cpa.plot.line.pad_fraction": 0.05,
+        "cpa.plot.heatmap.coverage_quantile": 0.999,
+        "cpa.plot.heatmap.pad_fraction": 0.10,
+        "cpa.plot.heatmap.fallback_behavior": "full_axis",
+    }
+    result = run_pipeline(cfg, policy=policy)
 
     artifacts = {**result.artifacts, **result.state.artifacts}
     z_npz = Path(artifacts[f"{DEFAULT_STAGE_NAME}.z_traces_npz"])
@@ -77,6 +82,7 @@ def run_showcase(*, out_dir: Path, seed: int = 7) -> dict[str, str]:
         center_wavelength_nm=835.0,
         out_dir=stage_plot_dir,
         stem=DEFAULT_STAGE_NAME,
+        plot_policy=PlotWindowPolicy.from_policy_bag(policy),
     )
 
     artifacts[f"{DEFAULT_STAGE_NAME}.plot_wavelength_vs_distance_linear"] = str(
