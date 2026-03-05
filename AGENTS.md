@@ -213,3 +213,5 @@ Each ADR must state how the decision is validated (unit/integration/physics test
 - Prefer reputable third-party solvers/models in v1 over bespoke rewrites.
 - Never silently ignore invalid config combinations; validate and raise structured errors.
 - Don’t change public config/result shape without ADR + tests + versioning policy.
+- Do not commit, upload, or include generated PNG artifacts in PRs unless the user explicitly requests it for that change.
+- Reuse existing plotting utilities when possible; if adding plotting helpers that can generalize to future stages, add them to shared plotting utils, otherwise keep one-off plotting logic local to the branch/task.
