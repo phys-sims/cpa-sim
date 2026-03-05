@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import argparse
-from importlib import import_module
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 
@@ -16,6 +14,7 @@ from cpa_sim.models import (
     WustGnlseNumericsCfg,
 )
 from cpa_sim.models.state import BeamState, LaserSpec, LaserState, PulseGrid, PulseSpec, PulseState
+from cpa_sim.plotting import plot_pulse_comparison
 from cpa_sim.stages.fiber import FiberStage
 from cpa_sim.stages.laser_gen import AnalyticLaserGenStage
 
@@ -70,40 +69,13 @@ def run_example(out_dir: Path, *, plot_format: str = "svg") -> dict[str, Path]:
         )
     )
     final = fiber_stage.process(initial).state
-
-    paths = {
-        "time": out_dir / f"fiber_time_intensity.{plot_format}",
-        "spectrum": out_dir / f"fiber_spectrum.{plot_format}",
-    }
-
-    plt: Any = import_module("matplotlib.pyplot")
-
-    t_fs = np.asarray(initial.pulse.grid.t, dtype=float)
-    w = np.asarray(initial.pulse.grid.w, dtype=float)
-
-    fig, ax = plt.subplots(figsize=(8, 4.5))
-    ax.plot(t_fs, initial.pulse.intensity_t, label="input")
-    ax.plot(t_fs, final.pulse.intensity_t, label="after fiber")
-    ax.set_xlabel("Time (fs)")
-    ax.set_ylabel("Intensity (arb. from |A|^2)")
-    ax.set_title("WUST gnlse fiber example: 1550 nm / 1 ps pulse intensity")
-    ax.legend()
-    fig.tight_layout()
-    fig.savefig(paths["time"], format=plot_format)
-    plt.close(fig)
-
-    fig, ax = plt.subplots(figsize=(8, 4.5))
-    ax.plot(w, initial.pulse.spectrum_w, label="input")
-    ax.plot(w, final.pulse.spectrum_w, label="after fiber")
-    ax.set_xlabel("Angular frequency axis (rad/fs)")
-    ax.set_ylabel("Spectrum (arb. from |Aw|^2)")
-    ax.set_title("WUST gnlse fiber example: nonlinear + Raman spectral evolution")
-    ax.legend()
-    fig.tight_layout()
-    fig.savefig(paths["spectrum"], format=plot_format)
-    plt.close(fig)
-
-    return paths
+    return plot_pulse_comparison(
+        initial=initial,
+        final=final,
+        out_dir=out_dir,
+        stem="fiber",
+        plot_format=plot_format,
+    )
 
 
 def _build_parser() -> argparse.ArgumentParser:
