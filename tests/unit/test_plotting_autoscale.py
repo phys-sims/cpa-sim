@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from cpa_sim.plotting.dispersive_wave import auto_xlim_from_intensity
+from cpa_sim.plotting.common import auto_xlim_from_intensity
 
 
 def test_auto_xlim_from_intensity_focuses_signal_region() -> None:
