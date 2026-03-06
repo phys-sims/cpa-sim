@@ -55,6 +55,8 @@ def test_plot_dispersive_wave_maps_from_npz_generates_all_outputs(tmp_path: Path
 
 
 def test_log_dynamic_range_norm_anchors_to_peak_for_hdr_maps() -> None:
+    pytest.importorskip("matplotlib")
+
     values = np.array(
         [
             [1e-12, 1e-8, 1e-4],
