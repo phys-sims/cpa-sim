@@ -4,16 +4,18 @@ from pathlib import Path
 
 import numpy as np
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-
 from cpa_sim.models.config import LaserGenCfg, PhaseOnlyDispersionCfg, TreacyGratingPairCfg
 from cpa_sim.models.state import BeamState, LaserSpec, LaserState, PulseGrid, PulseSpec, PulseState
 from cpa_sim.phys_pipeline_compat import StageResult
-from cpa_sim.stages.free_space.treacy_grating import _compute_treacy_metrics, _phase_from_dispersion
-from cpa_sim.stages.free_space.treacy_grating import TreacyGratingStage
-from cpa_sim.stages.laser_gen.analytic import AnalyticLaserGenStage
 from cpa_sim.plotting.common import LineSeries, plot_line_series
+from cpa_sim.stages.free_space.treacy_grating import (
+    TreacyGratingStage,
+    _compute_treacy_metrics,
+    _phase_from_dispersion,
+)
+from cpa_sim.stages.laser_gen.analytic import AnalyticLaserGenStage
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
 ASSET_DIR = REPO_ROOT / "docs" / "assets" / "treacy_validation"
 
 
@@ -210,6 +212,7 @@ def main() -> None:
     rms_in = _rms_duration_fs(t, initial_state.pulse.intensity_t)
     rms_stretched = _rms_duration_fs(t, phase_gdd_state.pulse.intensity_t)
     rms_recompressed = _rms_duration_fs(t, recompressed_state.pulse.intensity_t)
+    rms_gdd_tod = _rms_duration_fs(t, phase_gdd_tod_state.pulse.intensity_t)
     rms_treacy = _rms_duration_fs(t, treacy_state.pulse.intensity_t)
 
     print("Treacy/phase-only validation summary")
@@ -217,9 +220,11 @@ def main() -> None:
     print(f"RMS duration input           : {rms_in:10.4f} fs")
     print(f"RMS duration stretched (GDD) : {rms_stretched:10.4f} fs")
     print(f"RMS duration recompressed    : {rms_recompressed:10.4f} fs")
-    print(f"RMS duration Treacy          : {rms_treacy:10.4f} fs")
+    print(f"RMS duration stretched (GDD+TOD): {rms_gdd_tod:10.4f} fs")
+    print(f"RMS duration Treacy             : {rms_treacy:10.4f} fs")
     print(
-        f"Recovered from d²φ/dω²,d³φ/dω³ (GDD-only): GDD={gdd_est_gdd:.3f} fs², TOD={tod_est_gdd:.3f} fs³"
+        "Recovered from d²φ/dω²,d³φ/dω³ (GDD-only): "
+        f"GDD={gdd_est_gdd:.3f} fs², TOD={tod_est_gdd:.3f} fs³"
     )
     print(
         "Recovered from d²φ/dω²,d³φ/dω³ (Treacy): "
