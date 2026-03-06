@@ -63,6 +63,35 @@ python -m cpa_sim.examples.treacy_compressor_probe \
   --step-um 5000
 ```
 
+## Policy overrides for plot windows (no stage code changes)
+
+The example script already exposes `--plot-dir` for where stage plots are written. To additionally
+override autoscaled line-window behavior, wrap pipeline execution with `run_pipeline_with_plot_policy`
+and pass `policy_overrides` (same `cpa.plot.*` keys used elsewhere):
+
+```bash
+python - <<'PY'
+from pathlib import Path
+
+from cpa_sim.examples.canonical_1560nm_chain import build_config
+from cpa_sim.reporting import run_pipeline_with_plot_policy
+
+cfg = build_config(seed=1560, ci_safe=True)
+run_output = run_pipeline_with_plot_policy(
+    cfg,
+    stage_plot_dir=Path("artifacts/canonical-1560nm-chain-policy/stage-plots"),
+    policy_overrides={
+        "cpa.plot.line.threshold_fraction": 5e-3,
+        "cpa.plot.line.min_support_width": 500.0,
+        "cpa.plot.line.pad_fraction": 0.08,
+    },
+)
+print(run_output.policy)
+PY
+```
+
+This keeps stage implementations untouched while changing how plot bounds are computed.
+
 ## 2) Inspect generated artifacts
 
 You should see:
