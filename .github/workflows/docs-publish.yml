@@ -42,6 +42,27 @@ jobs:
       - name: Generate docs assets (scheduled/manual)
         run: python scripts/build_docs_assets.py --mode ci
 
+      - name: Verify generated dispersive-wave assets
+        run: |
+          expected_files=(
+            "docs/assets/generated/gnlse-dispersive-wave/spectrum_z0_vs_zL.svg"
+            "docs/assets/generated/gnlse-dispersive-wave/evolution_wavelength_vs_distance.svg"
+            "docs/assets/generated/gnlse-dispersive-wave/evolution_delay_vs_distance.svg"
+          )
+
+          missing=0
+          for file in "${expected_files[@]}"; do
+            if [[ ! -f "$file" ]]; then
+              echo "Missing expected generated asset: $file"
+              missing=1
+            fi
+          done
+
+          if [[ "$missing" -ne 0 ]]; then
+            echo "One or more generated dispersive-wave SVG assets are missing."
+            exit 1
+          fi
+
       - name: Build docs
         run: mkdocs build --strict
 
