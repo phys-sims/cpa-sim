@@ -22,7 +22,8 @@ python -m cpa_sim.examples.spm_after_fiber_amp --out artifacts/example-spm-after
 
 This script demonstrates nonlinear self-phase modulation (SPM) through a `FiberAmpWrapStage` using:
 
-- `gamma = 0.025 1/(W·m)`
+- `n2 = 2.6e-20 m²/W`
+- `Aeff = 4.18879020478639e-12 m²`
 - fiber length `L = 2 m`
 - input pulse: `sech²`, `7 ps` FWHM, `0.3 W` average power
 - amplifier target output: `4.5 W` average power

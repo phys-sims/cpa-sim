@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-import argparse, datetime as dt, glob, os, re, sys
+import argparse
+import datetime as dt
+import glob
+import os
+import re
+import sys
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 ADR_DIR = os.path.join(ROOT, "docs", "adr")
@@ -22,7 +27,7 @@ def next_id() -> str:
 
 def read_front_matter(path):
     meta = {}
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         s = f.read()
     if s.startswith("---"):
         parts = s.split("\n---", 1)
@@ -53,7 +58,7 @@ def cmd_new(args):
     if not os.path.exists(src):
         sys.exit(f"Template not found: {src}")
     os.makedirs(ADR_DIR, exist_ok=True)
-    with open(src, "r", encoding="utf-8") as f:
+    with open(src, encoding="utf-8") as f:
         s = f.read()
     s = s.replace("<ADR-ID>", tid).replace("<DATE>", dt.date.today().isoformat())
     with open(fname, "w", encoding="utf-8", newline="\n") as f:
