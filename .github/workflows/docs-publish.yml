@@ -33,7 +33,11 @@ jobs:
           pip install -r docs/requirements.txt
 
       - name: Install optional gnlse backend
-        run: pip install -e .[gnlse]
+        run: |
+          # gnlse currently imports pkg_resources at build time in CI;
+          # pin setuptools to avoid breakages from newer releases.
+          pip install "setuptools<81"
+          pip install -e .[gnlse]
 
       - name: Generate docs assets (scheduled/manual)
         run: python scripts/build_docs_assets.py --mode ci
