@@ -1,7 +1,6 @@
-name: docs
+name: docs-nightly-publish
 
 on:
-  pull_request:
   workflow_dispatch:
   schedule:
     - cron: "0 4 * * *"
@@ -33,39 +32,23 @@ jobs:
           pip install -e .[dev]
           pip install -r docs/requirements.txt
 
-      - name: Install optional gnlse backend (scheduled/manual)
-        if: github.event_name != 'pull_request'
+      - name: Install optional gnlse backend
         run: pip install -e .[gnlse]
 
-      - name: Generate docs assets (PR-safe)
-        if: github.event_name == 'pull_request'
-        run: python scripts/build_docs_assets.py --mode ultra-fast --allow-missing-gnlse
-
       - name: Generate docs assets (scheduled/manual)
-        if: github.event_name != 'pull_request'
         run: python scripts/build_docs_assets.py --mode ci
 
       - name: Build docs
         run: mkdocs build --strict
 
-      - name: Upload site artifact (PR)
-        if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
-        with:
-          name: docs-site
-          path: site/
-
       - name: Configure GitHub Pages
-        if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
 
       - name: Upload GitHub Pages artifact
-        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: site/
 
       - name: Deploy to GitHub Pages
         id: deploy
-        if: github.event_name != 'pull_request'
         uses: actions/deploy-pages@v4
