@@ -138,7 +138,8 @@ class FiberSpecRecord(CatalogRecordBase):
                 if mismatch > 0.05:
                     raise ValueError(
                         "Fiber nonlinear parameters are contradictory: explicit gamma_1_per_w_m "
-                        "is inconsistent with n2_m2_per_w, effective_area_um2, and reference_wavelength_nm."
+                        "is inconsistent with n2_m2_per_w, effective_area_um2, "
+                        "and reference_wavelength_nm."
                     )
 
         self.normalized = normalized
@@ -161,7 +162,8 @@ class FiberSpecRecord(CatalogRecordBase):
                     "loc": ("specs", "nonlinear"),
                     "msg": (
                         "Nonlinear adapter inputs require gamma_1_per_w_m, or all of n2_m2_per_w, "
-                        "effective_area_um2.value, and dispersion.reference_wavelength_nm to compute gamma."
+                        "effective_area_um2.value, and "
+                        "dispersion.reference_wavelength_nm to compute gamma."
                     ),
                     "input": self.specs.get("nonlinear"),
                     "ctx": {"error": "missing nonlinear inputs"},

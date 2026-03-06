@@ -4,7 +4,7 @@ import math
 import warnings
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from cpa_sim.models.state import LaserSpec, PulseSpec
 from cpa_sim.phys_pipeline_compat import StageConfig
@@ -255,6 +255,26 @@ class FiberAmpWrapCfg(StageConfig):
         if value <= 0.0:
             raise ValueError("FiberAmpWrapCfg.power_out_w must be > 0.")
         return value
+
+    @model_validator(mode="after")
+    def _validate_nonlinearity_inputs(self) -> FiberAmpWrapCfg:
+        has_gamma = self.physics.gamma_1_per_w_m is not None
+        has_n2 = self.physics.n2_m2_per_w is not None
+        has_aeff = self.physics.aeff_m2 is not None
+
+        has_n2_aeff_pair = has_n2 and has_aeff
+        has_partial_pair = has_n2 ^ has_aeff
+        if has_partial_pair:
+            raise ValueError(
+                "FiberAmpWrapCfg.physics requires both n2_m2_per_w and aeff_m2 when "
+                "using n2-based nonlinearity inputs."
+            )
+        if has_gamma == has_n2_aeff_pair:
+            raise ValueError(
+                "FiberAmpWrapCfg.physics must provide exactly one nonlinearity input: "
+                "gamma_1_per_w_m XOR (n2_m2_per_w + aeff_m2)."
+            )
+        return self
 
 
 class SimpleGainCfg(StageConfig):

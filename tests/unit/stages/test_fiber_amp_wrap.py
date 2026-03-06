@@ -84,7 +84,7 @@ def test_fiber_amp_wrap_hits_target_power_without_intrinsic_loss(
     stage = FiberAmpWrapStage(
         FiberAmpWrapCfg(
             power_out_w=target_power_w,
-            physics={"length_m": 1.4, "loss_db_per_m": 0.0},
+            physics={"length_m": 1.4, "loss_db_per_m": 0.0, "gamma_1_per_w_m": 0.0},
         )
     )
     result = stage.process(state)
@@ -112,7 +112,11 @@ def test_fiber_amp_wrap_hits_target_power_with_intrinsic_loss(
     stage = FiberAmpWrapStage(
         FiberAmpWrapCfg(
             power_out_w=target_power_w,
-            physics={"length_m": length_m, "loss_db_per_m": intrinsic_loss_db_per_m},
+            physics={
+                "length_m": length_m,
+                "loss_db_per_m": intrinsic_loss_db_per_m,
+                "gamma_1_per_w_m": 0.0,
+            },
         )
     )
     result = stage.process(state)
@@ -131,13 +135,13 @@ def test_fiber_amp_wrap_hits_target_power_with_intrinsic_loss(
 
 @pytest.mark.unit
 def test_fiber_amp_wrap_rejects_missing_rep_rate_mhz() -> None:
-    stage = FiberAmpWrapStage(FiberAmpWrapCfg(power_out_w=1.0))
+    stage = FiberAmpWrapStage(FiberAmpWrapCfg(power_out_w=1.0, physics={"gamma_1_per_w_m": 0.0}))
     with pytest.raises(ValueError, match="rep_rate_mhz"):
         stage.process(_gaussian_state(rep_rate_mhz=None))
 
 
 @pytest.mark.unit
 def test_fiber_amp_wrap_rejects_non_positive_input_power() -> None:
-    stage = FiberAmpWrapStage(FiberAmpWrapCfg(power_out_w=1.0))
+    stage = FiberAmpWrapStage(FiberAmpWrapCfg(power_out_w=1.0, physics={"gamma_1_per_w_m": 0.0}))
     with pytest.raises(ValueError, match="positive input average power"):
         stage.process(_gaussian_state(rep_rate_mhz=1.0, amplitude=0.0))
