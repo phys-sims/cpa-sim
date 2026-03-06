@@ -64,21 +64,29 @@ def _recover_gdd_tod(w: np.ndarray, d2phi: np.ndarray, d3phi: np.ndarray) -> tup
 def _series_with_window(
     *,
     x: np.ndarray,
-    window_values: np.ndarray,
+    reference_values: np.ndarray,
     series: list[LineSeries],
     threshold_fraction: float,
+    span_multiplier: float = 1.0,
 ) -> list[LineSeries]:
-    """Restrict plotted series to the dominant signal window on the shared x-axis."""
+    """Crop plotted series to a window derived from the original reference-domain width."""
+    x_arr = np.asarray(x, dtype=float)
     xlim = autoscale_window_1d(
-        x_axis=np.asarray(x, dtype=float),
-        values=np.asarray(window_values, dtype=float),
+        x_axis=x_arr,
+        values=np.asarray(reference_values, dtype=float),
         threshold_fraction=threshold_fraction,
     )
     if xlim is None:
         return series
 
     lo, hi = xlim
-    mask = (np.asarray(x, dtype=float) >= lo) & (np.asarray(x, dtype=float) <= hi)
+    if span_multiplier > 1.0:
+        center = 0.5 * (lo + hi)
+        half_span = 0.5 * (hi - lo) * span_multiplier
+        lo = center - half_span
+        hi = center + half_span
+
+    mask = (x_arr >= lo) & (x_arr <= hi)
     if np.count_nonzero(mask) < 2:
         return series
 
@@ -161,7 +169,7 @@ def main() -> None:
 
     phase_series = _series_with_window(
         x=w,
-        window_values=np.asarray(initial_state.pulse.spectrum_w, dtype=float),
+        reference_values=np.asarray(initial_state.pulse.spectrum_w, dtype=float),
         threshold_fraction=2e-3,
         series=[
             LineSeries(x=w, y=phi_gdd, label="PhaseOnly (GDD)"),
@@ -180,7 +188,7 @@ def main() -> None:
 
     group_delay_series = _series_with_window(
         x=w,
-        window_values=np.asarray(initial_state.pulse.spectrum_w, dtype=float),
+        reference_values=np.asarray(initial_state.pulse.spectrum_w, dtype=float),
         threshold_fraction=2e-3,
         series=[
             LineSeries(x=w, y=tau_g_gdd, label="PhaseOnly (GDD)"),
@@ -199,7 +207,7 @@ def main() -> None:
 
     d2phi_series = _series_with_window(
         x=w,
-        window_values=np.asarray(initial_state.pulse.spectrum_w, dtype=float),
+        reference_values=np.asarray(initial_state.pulse.spectrum_w, dtype=float),
         threshold_fraction=2e-3,
         series=[
             LineSeries(x=w, y=d2_gdd, label="PhaseOnly (GDD only)"),
@@ -218,8 +226,9 @@ def main() -> None:
 
     time_window_series = _series_with_window(
         x=t,
-        window_values=np.asarray(phase_gdd_state.pulse.intensity_t, dtype=float),
+        reference_values=np.asarray(initial_state.pulse.intensity_t, dtype=float),
         threshold_fraction=3e-3,
+        span_multiplier=6.0,
         series=[
             LineSeries(x=t, y=initial_state.pulse.intensity_t, label="Input"),
             LineSeries(x=t, y=phase_gdd_state.pulse.intensity_t, label="After stretcher (GDD)"),
@@ -237,7 +246,7 @@ def main() -> None:
 
     spectrum_series = _series_with_window(
         x=w,
-        window_values=np.asarray(initial_state.pulse.spectrum_w, dtype=float),
+        reference_values=np.asarray(initial_state.pulse.spectrum_w, dtype=float),
         threshold_fraction=2e-3,
         series=[
             LineSeries(x=w, y=initial_state.pulse.spectrum_w, label="Input"),
@@ -256,8 +265,9 @@ def main() -> None:
 
     treacy_overlay_series = _series_with_window(
         x=t,
-        window_values=np.asarray(treacy_state.pulse.intensity_t, dtype=float),
+        reference_values=np.asarray(initial_state.pulse.intensity_t, dtype=float),
         threshold_fraction=3e-3,
+        span_multiplier=6.0,
         series=[
             LineSeries(x=t, y=treacy_state.pulse.intensity_t, label="TreacyGratingPair"),
             LineSeries(
