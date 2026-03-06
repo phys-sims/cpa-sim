@@ -19,6 +19,7 @@ For PR-safe docs builds (no optional gnlse dependency required), use:
 ```bash
 python scripts/build_docs_assets.py --mode ultra-fast --allow-missing-gnlse
 ```
+PR previews may show placeholder images, while nightly/manual docs builds generate the full GNLS assets.
 
 ## Generated assets
 
