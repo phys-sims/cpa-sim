@@ -5,6 +5,7 @@
 ## Last updated
 - Date: 2026-03-06
 - By: @openai-codex
+- Scope: Added ADR-0009 documenting the `cpa.plot.*` policy namespace, default windowing/normalization behavior, deterministic plotting expectations, and pinned unit/integration/physics tests; updated `docs/examples/` guides with policy-driven CLI/wrapper overrides for plot windows and heatmap scaling without stage-code edits.
 - Scope: Added `cpa_sim.reporting.pipeline_run.run_pipeline_with_plot_policy` as a shared script-facing run helper that applies canonical plotting policy and returns canonical metrics/artifact payloads; refactored CLI plus the WUST fiber, SPM-after-amp, and dispersive-wave showcase examples to consume canonical stage plot artifacts instead of duplicating standard line plotting; isolated docs-only render intermediates under `docs_rendering/runtime_stage_plots`; and added integration coverage asserting example artifact keys and no duplicate script-local standard plotting calls.
 - Scope: Removed temporary backward-compatibility plotting shims (`cpa_sim.utils._autoscale_window`, `cpa_sim.plotting.dispersive_wave.auto_xlim_from_intensity`), deleted the redundant `plotting/pulse_compare.py` helper, and updated scripts/tests to consume generic `cpa_sim.plotting.common` primitives directly for lower redundancy.
 - Scope: Added a dedicated `plotting` optional dependency extra (`matplotlib`) and updated PR/physics CI workflows to install `.[dev,plotting]` so Matplotlib-backed plotting tests execute in CI while remaining skippable locally when the optional package is absent.
