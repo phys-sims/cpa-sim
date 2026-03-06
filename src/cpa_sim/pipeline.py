@@ -11,10 +11,12 @@ from cpa_sim.models.config import FiberAmpWrapCfg, FiberCfg, PipelineStageCfg, S
 from cpa_sim.models.state import BeamState, LaserState, PulseGrid, PulseState
 from cpa_sim.phys_pipeline_compat import (
     PipelineStage,
+    PolicyBag,
     PolicyLike,
     SequentialPipeline,
     StageResult,
 )
+from cpa_sim.physics import grid_summary, nyquist_guard_fraction, time_edge_fraction
 from cpa_sim.stages.registry import (
     build_amp_stage,
     build_fiber_stage,
@@ -52,6 +54,7 @@ def build_pipeline(
         *_build_configurable_stages(cfg),
         build_metrics_stage(cfg.metrics),
     ]
+    stages = [_SamplingDiagnosticsStage(stage) for stage in stages]
     return cast(
         SequentialPipeline[LaserState],
         SequentialPipeline(stages=stages, name="cpa", policy=policy),
@@ -104,3 +107,49 @@ def _empty_state(*, seed: int, config_hash: str, policy_hash: str | None) -> Las
         metrics={},
         artifacts={},
     )
+
+
+class _SamplingDiagnosticsStage(PipelineStage[LaserState, Any]):
+    """Attach consistent per-stage sampling diagnostics to stage metrics."""
+
+    _EDGE_FRACTION = 0.05
+    _GUARD_FRACTION = 0.05
+
+    def __init__(self, inner: PipelineStage[LaserState, Any]):
+        super().__init__(inner.cfg)
+        self._inner = inner
+        self.name = getattr(inner, "name", type(inner).__name__)
+
+    def process(
+        self, state: LaserState, *, policy: PolicyBag | None = None
+    ) -> StageResult[LaserState]:
+        result = self._inner.process(state, policy=policy)
+
+        summary = grid_summary(result.state)
+        sampling_metrics: dict[str, float] = {
+            "sampling.edge_energy_fraction_t": time_edge_fraction(
+                result.state, edge_fraction=self._EDGE_FRACTION
+            ),
+            "sampling.nyquist_energy_fraction_w": nyquist_guard_fraction(
+                result.state, guard_fraction=self._GUARD_FRACTION
+            ),
+            "sampling.n_samples": float(summary["n_samples"]),
+            "sampling.dt_fs": float(summary["dt_fs"]),
+            "sampling.time_window_fs": float(summary["time_window_fs"]),
+            "sampling.dw_rad_per_fs": float(summary["dw"]),
+        }
+
+        result.state.metrics.update(sampling_metrics)
+        merged_metrics = {**result.metrics, **sampling_metrics}
+        return StageResult(
+            state=result.state,
+            metrics=merged_metrics,
+            artifacts=result.artifacts,
+            provenance=result.provenance,
+        )
+
+    def estimated_cost(self) -> float:
+        return self._inner.estimated_cost()
+
+    def can_parallelize_over(self) -> str | None:
+        return self._inner.can_parallelize_over()

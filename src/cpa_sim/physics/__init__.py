@@ -7,6 +7,11 @@ from cpa_sim.physics.pulse_resolve import (
     resolve_peak_power_w,
     resolve_pulse_energy_j,
 )
+from cpa_sim.physics.sampling_diagnostics import (
+    grid_summary,
+    nyquist_guard_fraction,
+    time_edge_fraction,
+)
 from cpa_sim.physics.windowing import (
     edge_energy_fraction,
     intensity_rms_width_fs,
@@ -30,4 +35,7 @@ __all__ = [
     "pad_laser_state_time",
     "recenter_pulse_inplace",
     "recenter_state_by_intensity_centroid",
+    "time_edge_fraction",
+    "nyquist_guard_fraction",
+    "grid_summary",
 ]
