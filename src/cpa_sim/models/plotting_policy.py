@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 HeatmapFallback = Literal["full_axis", "line_window"]
+HeatmapScale = Literal["linear", "log"]
 
 
 @dataclass(frozen=True)
@@ -22,9 +23,19 @@ class HeatmapWindowPolicy:
 
 
 @dataclass(frozen=True)
+class HeatmapNormPolicy:
+    scale: HeatmapScale = "linear"
+    vmin_percentile: float = 0.0
+    vmax_percentile: float = 99.9
+    dynamic_range_db: float = 60.0
+    gamma: float = 1.0
+
+
+@dataclass(frozen=True)
 class PlotWindowPolicy:
     line: LineWindowPolicy = LineWindowPolicy()
     heatmap: HeatmapWindowPolicy = HeatmapWindowPolicy()
+    heatmap_norm: HeatmapNormPolicy = HeatmapNormPolicy()
 
     @classmethod
     def from_policy_bag(cls, policy: Any) -> PlotWindowPolicy:
@@ -45,7 +56,14 @@ class PlotWindowPolicy:
                 _policy_get(policy, "cpa.plot.heatmap.fallback_behavior", "full_axis")
             ),
         )
-        return cls(line=line, heatmap=heatmap)
+        heatmap_norm = HeatmapNormPolicy(
+            scale=_coerce_heatmap_scale(_policy_get(policy, "cpa.plot.heatmap.scale", "linear")),
+            vmin_percentile=float(_policy_get(policy, "cpa.plot.heatmap.vmin_percentile", 0.0)),
+            vmax_percentile=float(_policy_get(policy, "cpa.plot.heatmap.vmax_percentile", 99.9)),
+            dynamic_range_db=float(_policy_get(policy, "cpa.plot.heatmap.dynamic_range_db", 60.0)),
+            gamma=float(_policy_get(policy, "cpa.plot.heatmap.gamma", 1.0)),
+        )
+        return cls(line=line, heatmap=heatmap, heatmap_norm=heatmap_norm)
 
 
 def _coerce_fallback(value: Any) -> HeatmapFallback:
@@ -55,6 +73,15 @@ def _coerce_fallback(value: Any) -> HeatmapFallback:
     if text == "line_window":
         return "line_window"
     return "full_axis"
+
+
+def _coerce_heatmap_scale(value: Any) -> HeatmapScale:
+    text = str(value)
+    if text == "linear":
+        return "linear"
+    if text == "log":
+        return "log"
+    return "linear"
 
 
 def _policy_get(policy: Any, key: str, default: Any = None) -> Any:

@@ -11,7 +11,7 @@ from pathlib import Path
 
 import numpy as np
 
-from cpa_sim.models.plotting_policy import PlotWindowPolicy
+from cpa_sim.models.plotting_policy import HeatmapNormPolicy, PlotWindowPolicy
 
 from .common import plot_heatmap
 
@@ -24,6 +24,31 @@ class DispersiveWavePlotPaths:
     delay_log: Path
     wavelength_linear: Path
     wavelength_log: Path
+
+
+def _dispersive_wave_default_policy(plot_policy: PlotWindowPolicy | None) -> PlotWindowPolicy:
+    if plot_policy is None:
+        return PlotWindowPolicy(
+            heatmap_norm=HeatmapNormPolicy(
+                scale="log",
+                vmin_percentile=0.05,
+                vmax_percentile=99.95,
+                dynamic_range_db=45.0,
+                gamma=0.85,
+            )
+        )
+
+    return PlotWindowPolicy(
+        line=plot_policy.line,
+        heatmap=plot_policy.heatmap,
+        heatmap_norm=HeatmapNormPolicy(
+            scale=plot_policy.heatmap_norm.scale,
+            vmin_percentile=plot_policy.heatmap_norm.vmin_percentile,
+            vmax_percentile=plot_policy.heatmap_norm.vmax_percentile,
+            dynamic_range_db=plot_policy.heatmap_norm.dynamic_range_db,
+            gamma=plot_policy.heatmap_norm.gamma,
+        ),
+    )
 
 
 def _wavelength_axis_nm(*, w_rad_per_fs: np.ndarray, center_wavelength_nm: float) -> np.ndarray:
@@ -65,6 +90,8 @@ def plot_dispersive_wave_maps(
     plot_policy: PlotWindowPolicy | None = None,
 ) -> DispersiveWavePlotPaths:
     """Generate delay/wavelength-vs-distance maps in linear and log scales."""
+    effective_policy = _dispersive_wave_default_policy(plot_policy)
+
     delay_power = np.abs(at_zt) ** 2
     plot_heatmap(
         out_path=paths.delay_linear,
@@ -78,7 +105,7 @@ def plot_dispersive_wave_maps(
         color_label="|A(t,z)|²",
         xlim=xlim,
         scale="linear",
-        plot_policy=plot_policy,
+        plot_policy=effective_policy,
     )
     plot_heatmap(
         out_path=paths.delay_log,
@@ -92,7 +119,7 @@ def plot_dispersive_wave_maps(
         color_label="|A(t,z)|²",
         xlim=xlim,
         scale="log",
-        plot_policy=plot_policy,
+        plot_policy=effective_policy,
     )
 
     aw = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(at_zt, axes=1), axis=1), axes=1)
@@ -114,7 +141,7 @@ def plot_dispersive_wave_maps(
         color_label="|A(ω,z)|²",
         xlim=xlim,
         scale="linear",
-        plot_policy=plot_policy,
+        plot_policy=effective_policy,
     )
     plot_heatmap(
         out_path=paths.wavelength_log,
@@ -128,7 +155,7 @@ def plot_dispersive_wave_maps(
         color_label="|A(ω,z)|²",
         xlim=xlim,
         scale="log",
-        plot_policy=plot_policy,
+        plot_policy=effective_policy,
     )
     return paths
 
