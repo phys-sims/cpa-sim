@@ -33,6 +33,10 @@ dev = [
   "pre-commit"
 ]
 
+plotting = [
+  "matplotlib"
+]
+
 # --- Black ---
 [tool.black]
 line-length = 100

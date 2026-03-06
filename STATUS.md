@@ -3,9 +3,10 @@
 > **Source of truth:** Update this file whenever behavior, tests, schemas, or canonical examples change.
 
 ## Last updated
-- Date: 2026-03-05
+- Date: 2026-03-06
 - By: @openai-codex
 - Scope: Removed temporary backward-compatibility plotting shims (`cpa_sim.utils._autoscale_window`, `cpa_sim.plotting.dispersive_wave.auto_xlim_from_intensity`), deleted the redundant `plotting/pulse_compare.py` helper, and updated scripts/tests to consume generic `cpa_sim.plotting.common` primitives directly for lower redundancy.
+- Scope: Added a dedicated `plotting` optional dependency extra (`matplotlib`) and updated PR/physics CI workflows to install `.[dev,plotting]` so Matplotlib-backed plotting tests execute in CI while remaining skippable locally when the optional package is absent.
 - Scope: Made dispersive-wave plotting unit coverage robust in environments without optional Matplotlib by conditionally skipping image-emission tests when the plotting dependency is unavailable.
 - Scope: Refined dispersive-wave plotting consolidation by adding a high-level NPZ-driven plotting entrypoint, restoring legacy showcase artifact keys for compatibility, and adding unit coverage for default plot naming and emitted image artifacts.
 - Scope: Consolidated dispersive-wave plotting into a reusable `cpa_sim.plotting` utility and simplified the showcase example to call the shared helper while emitting both linear and log delay/wavelength vs distance maps with stable artifact keys.
@@ -45,7 +46,7 @@
 | Check | Command | Status | Last run | Notes |
 | --- | --- | --- | --- | --- |
 | Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-03-05 | Passed; pre-commit still reports only a deprecation warning for `default_stages`. |
-| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-03-05 | Success: no issues found in 49 source files. |
+| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-03-05 | Success: no issues found in 52 source files. |
 | Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-03-05 | Passed (105 tests, 11 deselected), including plotting utility consolidation coverage and example/script integration checks. |
 | Pytest physics (nightly/manual) | `python -m pytest -q -m physics --durations=10` | ✅ | 2026-02-21 | Runs in `.github/workflows/physics.yml` (manual + nightly), not in required PR gate. |
 | Pytest slow (supplemental) | `python -m pytest -q -m slow --durations=10` | ⬜ | — |  |

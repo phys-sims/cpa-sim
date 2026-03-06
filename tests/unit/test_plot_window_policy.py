@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import numpy as np
 
-from cpa_sim.models import HeatmapWindowPolicy, LineWindowPolicy, PlotWindowPolicy
+from cpa_sim.models import (
+    HeatmapNormPolicy,
+    HeatmapWindowPolicy,
+    LineWindowPolicy,
+    PlotWindowPolicy,
+)
 from cpa_sim.plotting.common import auto_xlim_from_intensity, autoscale_window_1d
 
 
@@ -78,3 +83,23 @@ def test_heatmap_policy_rejects_low_snr_tails_with_quantile() -> None:
 
     assert lo < 0.0 < hi
     assert (hi - lo) < 4500.0
+
+
+def test_plot_window_policy_reads_heatmap_norm_keys_from_policy_bag() -> None:
+    policy = PlotWindowPolicy.from_policy_bag(
+        {
+            "cpa.plot.heatmap.scale": "log",
+            "cpa.plot.heatmap.vmin_percentile": 1.5,
+            "cpa.plot.heatmap.vmax_percentile": 98.0,
+            "cpa.plot.heatmap.dynamic_range_db": 42.0,
+            "cpa.plot.heatmap.gamma": 0.75,
+        }
+    )
+
+    assert policy.heatmap_norm == HeatmapNormPolicy(
+        scale="log",
+        vmin_percentile=1.5,
+        vmax_percentile=98.0,
+        dynamic_range_db=42.0,
+        gamma=0.75,
+    )

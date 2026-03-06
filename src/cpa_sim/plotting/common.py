@@ -9,6 +9,7 @@ from typing import Any
 import numpy as np
 
 from cpa_sim.models.plotting_policy import (
+    HeatmapNormPolicy,
     HeatmapWindowPolicy,
     LineWindowPolicy,
     PlotWindowPolicy,
@@ -20,6 +21,14 @@ class LineSeries:
     x: np.ndarray
     y: np.ndarray
     label: str
+
+
+@dataclass(frozen=True)
+class HeatmapRenderParams:
+    values: np.ndarray
+    vmin: float
+    vmax: float
+    norm: Any | None
 
 
 def load_pyplot() -> Any:
@@ -155,6 +164,81 @@ def auto_xlim_from_intensity(
     return lo - pad, hi + pad
 
 
+def resolve_heatmap_render_params(
+    *,
+    values: np.ndarray,
+    scale: str | None = None,
+    policy: HeatmapNormPolicy | PlotWindowPolicy | None = None,
+    symmetric: bool = False,
+) -> HeatmapRenderParams:
+    norm_policy = policy.heatmap_norm if isinstance(policy, PlotWindowPolicy) else policy
+    resolved = norm_policy if isinstance(norm_policy, HeatmapNormPolicy) else HeatmapNormPolicy()
+
+    scale_mode = resolved.scale if scale is None else scale
+    if scale_mode not in {"linear", "log"}:
+        raise ValueError(f"Unsupported heatmap scale '{scale_mode}'.")
+
+    data = np.asarray(values, dtype=float)
+    finite = data[np.isfinite(data)]
+
+    if scale_mode == "linear":
+        if symmetric:
+            abs_data = np.abs(finite)
+            max_abs = (
+                float(np.nanpercentile(abs_data, resolved.vmax_percentile))
+                if abs_data.size
+                else 1.0
+            )
+            if not np.isfinite(max_abs) or max_abs <= 0.0:
+                max_abs = float(np.max(abs_data)) if abs_data.size else 1.0
+            if not np.isfinite(max_abs) or max_abs <= 0.0:
+                max_abs = 1.0
+            vmin = -max_abs
+            vmax = max_abs
+            clipped = np.clip(np.where(np.isfinite(data), data, 0.0), vmin, vmax)
+            return HeatmapRenderParams(values=clipped, vmin=vmin, vmax=vmax, norm=None)
+
+        lower = float(np.clip(resolved.vmin_percentile, 0.0, 100.0))
+        upper = float(np.clip(resolved.vmax_percentile, lower, 100.0))
+        positive = finite[finite >= 0.0]
+        source = positive if positive.size else finite
+
+        vmin = float(np.nanpercentile(source, lower)) if source.size else 0.0
+        vmax = float(np.nanpercentile(source, upper)) if source.size else 1.0
+
+        if not np.isfinite(vmin):
+            vmin = 0.0
+        if not np.isfinite(vmax) or vmax <= vmin:
+            vmax = float(np.nanmax(source)) if source.size else 1.0
+        if not np.isfinite(vmax) or vmax <= vmin:
+            vmax = vmin + 1.0
+
+        clipped = np.clip(np.where(np.isfinite(data), data, vmin), vmin, vmax)
+        gamma = max(float(resolved.gamma), 1e-12)
+        if abs(gamma - 1.0) > 1e-12:
+            normalized = (clipped - vmin) / (vmax - vmin)
+            adjusted = np.power(np.clip(normalized, 0.0, 1.0), gamma)
+            clipped = vmin + adjusted * (vmax - vmin)
+        return HeatmapRenderParams(values=clipped, vmin=vmin, vmax=vmax, norm=None)
+
+    colors = import_module("matplotlib.colors")
+    positive = finite[finite > 0.0]
+    peak = float(np.max(positive)) if positive.size else 1.0
+    if not np.isfinite(peak) or peak <= 0.0:
+        peak = 1.0
+    dynamic_range_db = max(float(resolved.dynamic_range_db), 1e-9)
+    floor = peak * 10.0 ** (-dynamic_range_db / 10.0)
+    vmin = max(floor, float(np.min(positive)) if positive.size else floor)
+    vmax = peak
+    if not np.isfinite(vmin) or vmin <= 0.0:
+        vmin = peak * 1e-6
+    if not np.isfinite(vmax) or vmax <= vmin:
+        vmax = max(vmin * 10.0, 1e-11)
+    clipped = np.clip(np.where(np.isfinite(data), data, vmin), vmin, vmax)
+    norm = colors.LogNorm(vmin=vmin, vmax=vmax)
+    return HeatmapRenderParams(values=clipped, vmin=vmin, vmax=vmax, norm=norm)
+
+
 def plot_line_series(
     *,
     out_path: Path,
@@ -210,50 +294,25 @@ def plot_heatmap(
     x_label: str,
     y_label: str,
     color_label: str,
-    scale: str,
+    scale: str | None = None,
     xlim: str | tuple[float, float] | None = "auto",
     axis_for_x: int = -1,
     figsize: tuple[float, float] = (8, 4.8),
     plot_policy: PlotWindowPolicy | None = None,
 ) -> Path:
-    if scale not in {"linear", "log"}:
-        raise ValueError(f"Unsupported scale '{scale}'. Expected 'linear' or 'log'.")
-
-    finite = values[np.isfinite(values)]
-    if scale == "linear":
-        vmin = 0.0
-        vmax = float(np.nanpercentile(finite, 99.9)) if finite.size else 1.0
-        if not np.isfinite(vmax) or vmax <= vmin:
-            vmax = float(np.max(finite)) if finite.size else 1.0
-        if not np.isfinite(vmax) or vmax <= vmin:
-            vmax = 1.0
-        norm = None
-    else:
-        colors = import_module("matplotlib.colors")
-        positive = values[np.isfinite(values) & (values > 0.0)]
-        if positive.size:
-            vmin = float(np.nanpercentile(positive, 1.0))
-            vmax = float(np.nanpercentile(positive, 99.9))
-        else:
-            vmin = 1e-12
-            vmax = float(np.max(finite)) if finite.size else 1.0
-        if not np.isfinite(vmin) or vmin <= 0.0:
-            vmin = 1e-12
-        if not np.isfinite(vmax) or vmax <= vmin:
-            vmax = max(vmin * 10.0, 1e-11)
-        norm = colors.LogNorm(vmin=vmin, vmax=vmax)
+    render = resolve_heatmap_render_params(values=values, scale=scale, policy=plot_policy)
 
     plt = load_pyplot()
     fig, ax = plt.subplots(figsize=figsize)
     mesh = ax.pcolormesh(
         x_axis,
         y_axis,
-        np.clip(values, vmin, vmax),
+        render.values,
         shading="auto",
         cmap=cmap,
-        vmin=None if norm is not None else vmin,
-        vmax=None if norm is not None else vmax,
-        norm=norm,
+        vmin=None if render.norm is not None else render.vmin,
+        vmax=None if render.norm is not None else render.vmax,
+        norm=render.norm,
     )
     fig.colorbar(mesh, ax=ax, label=color_label)
     ax.set_xlabel(x_label)

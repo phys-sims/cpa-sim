@@ -26,7 +26,12 @@ from cpa_sim.models.observables import (
     ObservableContract,
     ObservableMeasurement,
 )
-from cpa_sim.models.plotting_policy import HeatmapWindowPolicy, LineWindowPolicy, PlotWindowPolicy
+from cpa_sim.models.plotting_policy import (
+    HeatmapNormPolicy,
+    HeatmapWindowPolicy,
+    LineWindowPolicy,
+    PlotWindowPolicy,
+)
 from cpa_sim.models.state import (
     BeamSpec,
     BeamState,
@@ -57,6 +62,7 @@ __all__ = [
     "LaserSpec",
     "LaserState",
     "MetricsCfg",
+    "HeatmapNormPolicy",
     "HeatmapWindowPolicy",
     "LineWindowPolicy",
     "PlotWindowPolicy",
