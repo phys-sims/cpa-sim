@@ -17,6 +17,7 @@ from cpa_sim.stages.laser_gen.analytic import AnalyticLaserGenStage
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 ASSET_DIR = REPO_ROOT / "docs" / "assets" / "treacy_validation"
+LIGHT_SPEED_M_PER_S = 299_792_458.0
 
 
 def _empty_state() -> LaserState:
@@ -100,6 +101,12 @@ def _series_with_window(
     ]
 
 
+def _absolute_omega_axis_rad_per_fs(state: LaserState) -> np.ndarray:
+    center_wavelength_nm = float(state.pulse.grid.center_wavelength_nm)
+    omega0_rad_per_s = 2.0 * np.pi * LIGHT_SPEED_M_PER_S / (center_wavelength_nm * 1e-9)
+    return np.asarray(state.pulse.grid.w, dtype=float) + omega0_rad_per_s * 1e-15
+
+
 def main() -> None:
     ASSET_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -120,6 +127,7 @@ def main() -> None:
     initial_state = AnalyticLaserGenStage(laser_cfg).process(_empty_state()).state
 
     w = np.asarray(initial_state.pulse.grid.w)
+    w_abs = _absolute_omega_axis_rad_per_fs(initial_state)
     t = np.asarray(initial_state.pulse.grid.t)
 
     phase_gdd_cfg = PhaseOnlyDispersionCfg(name="phase_gdd", gdd_fs2=8.5e4, tod_fs3=0.0)
@@ -168,57 +176,59 @@ def main() -> None:
     gdd_est_treacy, tod_est_treacy = _recover_gdd_tod(w, d2_treacy, d3_treacy)
 
     phase_series = _series_with_window(
-        x=w,
+        x=w_abs,
         reference_values=np.asarray(initial_state.pulse.spectrum_w, dtype=float),
         threshold_fraction=2e-3,
         series=[
-            LineSeries(x=w, y=phi_gdd, label="PhaseOnly (GDD)"),
-            LineSeries(x=w, y=phi_gdd_tod, label="PhaseOnly (GDD+TOD)"),
-            LineSeries(x=w, y=phi_treacy, label="Treacy mapped to polynomial"),
+            LineSeries(x=w_abs, y=phi_gdd, label="PhaseOnly (GDD)"),
+            LineSeries(x=w_abs, y=phi_gdd_tod, label="PhaseOnly (GDD+TOD)"),
+            LineSeries(x=w_abs, y=phi_treacy, label="Treacy mapped to polynomial"),
         ],
     )
     plot_line_series(
         out_path=ASSET_DIR / "phi_vs_w.png",
         series=phase_series,
-        x_label="Δω [rad/fs]",
-        y_label="φ(Δω) [rad]",
+        x_label="ω [rad/fs]",
+        y_label="φ(ω) [rad]",
         title="Spectral phase",
         figsize=(9, 5),
     )
 
     group_delay_series = _series_with_window(
-        x=w,
+        x=w_abs,
         reference_values=np.asarray(initial_state.pulse.spectrum_w, dtype=float),
         threshold_fraction=2e-3,
         series=[
-            LineSeries(x=w, y=tau_g_gdd, label="PhaseOnly (GDD)"),
-            LineSeries(x=w, y=tau_g_gdd_tod, label="PhaseOnly (GDD+TOD)"),
-            LineSeries(x=w, y=tau_g_treacy, label="Treacy mapped to polynomial"),
+            LineSeries(x=w_abs, y=tau_g_gdd, label="PhaseOnly (GDD)"),
+            LineSeries(x=w_abs, y=tau_g_gdd_tod, label="PhaseOnly (GDD+TOD)"),
+            LineSeries(x=w_abs, y=tau_g_treacy, label="Treacy mapped to polynomial"),
         ],
     )
     plot_line_series(
         out_path=ASSET_DIR / "group_delay_vs_w.png",
         series=group_delay_series,
-        x_label="Δω [rad/fs]",
+        x_label="ω [rad/fs]",
         y_label="dφ/dω [fs]",
         title="Group delay",
         figsize=(9, 5),
     )
 
     d2phi_series = _series_with_window(
-        x=w,
+        x=w_abs,
         reference_values=np.asarray(initial_state.pulse.spectrum_w, dtype=float),
         threshold_fraction=2e-3,
         series=[
-            LineSeries(x=w, y=d2_gdd, label="PhaseOnly (GDD only)"),
-            LineSeries(x=w, y=d2_treacy, label="Treacy (with TOD)"),
-            LineSeries(x=w, y=np.full_like(w, -phase_gdd_cfg.gdd_fs2), label="Expected: -GDD"),
+            LineSeries(x=w_abs, y=d2_gdd, label="PhaseOnly (GDD only)"),
+            LineSeries(x=w_abs, y=d2_treacy, label="Treacy (with TOD)"),
+            LineSeries(
+                x=w_abs, y=np.full_like(w_abs, -phase_gdd_cfg.gdd_fs2), label="Expected: -GDD"
+            ),
         ],
     )
     plot_line_series(
         out_path=ASSET_DIR / "d2phi_vs_w.png",
         series=d2phi_series,
-        x_label="Δω [rad/fs]",
+        x_label="ω [rad/fs]",
         y_label="d²φ/dω² [fs²]",
         title="Second derivative of spectral phase",
         figsize=(9, 5),
@@ -245,20 +255,20 @@ def main() -> None:
     )
 
     spectrum_series = _series_with_window(
-        x=w,
+        x=w_abs,
         reference_values=np.asarray(initial_state.pulse.spectrum_w, dtype=float),
         threshold_fraction=2e-3,
         series=[
-            LineSeries(x=w, y=initial_state.pulse.spectrum_w, label="Input"),
-            LineSeries(x=w, y=phase_gdd_state.pulse.spectrum_w, label="After stretcher"),
-            LineSeries(x=w, y=recompressed_state.pulse.spectrum_w, label="After compressor"),
+            LineSeries(x=w_abs, y=initial_state.pulse.spectrum_w, label="Input"),
+            LineSeries(x=w_abs, y=phase_gdd_state.pulse.spectrum_w, label="After stretcher"),
+            LineSeries(x=w_abs, y=recompressed_state.pulse.spectrum_w, label="After compressor"),
         ],
     )
     plot_line_series(
         out_path=ASSET_DIR / "spectrum_before_after.png",
         series=spectrum_series,
-        x_label="Δω [rad/fs]",
-        y_label="|E(Δω)|² [a.u.]",
+        x_label="ω [rad/fs]",
+        y_label="|E(ω)|² [a.u.]",
         title="Spectrum before/after (phase-only invariance)",
         figsize=(9, 5),
     )
