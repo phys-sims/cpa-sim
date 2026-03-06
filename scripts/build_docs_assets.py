@@ -96,8 +96,14 @@ def _save_placeholder_svgs(outdir: Path, reason: str) -> None:
     body = [
         '<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">',
         '  <rect width="100%" height="100%" fill="#0f172a"/>',
-        '  <text x="60" y="160" fill="#e2e8f0" font-size="34" font-family="sans-serif">Docs asset unavailable in this build</text>',
-        f'  <text x="60" y="230" fill="#93c5fd" font-size="24" font-family="monospace">{escaped}</text>',
+        (
+            '  <text x="60" y="160" fill="#e2e8f0" font-size="34" '
+            'font-family="sans-serif">Docs asset unavailable in this build</text>'
+        ),
+        (
+            f'  <text x="60" y="230" fill="#93c5fd" font-size="24" '
+            f'font-family="monospace">{escaped}</text>'
+        ),
         "</svg>",
     ]
     for name in SVG_NAMES:

@@ -46,7 +46,8 @@ def run_example(*, out_dir: Path) -> dict[str, Any]:
                 physics=FiberPhysicsCfg(
                     length_m=2.0,
                     loss_db_per_m=0.0,
-                    gamma_1_per_w_m=0.025,
+                    n2_m2_per_w=2.6e-20,
+                    aeff_m2=4.18879020478639e-12,
                     dispersion=DispersionTaylorCfg(betas_psn_per_m=[0.0]),
                 ),
                 numerics=WustGnlseNumericsCfg(
@@ -66,7 +67,8 @@ def run_example(*, out_dir: Path) -> dict[str, Any]:
             "avg_power_out_target_w": 4.5,
             "rep_rate_ghz": 1.115,
             "fiber_length_m": 2.0,
-            "gamma_1_per_w_m": 0.025,
+            "n2_m2_per_w": 2.6e-20,
+            "aeff_m2": 4.18879020478639e-12,
         },
         "metrics": run_output.result.metrics,
         "artifacts": {
