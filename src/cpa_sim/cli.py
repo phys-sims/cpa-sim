@@ -9,8 +9,12 @@ import numpy as np
 import yaml  # type: ignore[import-untyped]
 
 from cpa_sim.models import PipelineConfig
-from cpa_sim.pipeline import run_pipeline
-from cpa_sim.reporting import build_validation_report, render_markdown_report
+from cpa_sim.reporting import (
+    build_validation_report,
+    render_markdown_report,
+    run_pipeline_with_plot_policy,
+    write_json,
+)
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -36,32 +40,6 @@ def _load_config(path: Path) -> PipelineConfig:
         msg = "Config file root must be a mapping/object."
         raise ValueError(msg)
     return PipelineConfig.model_validate(payload)
-
-
-def _build_stage_metrics(metrics: dict[str, float]) -> dict[str, dict[str, float]]:
-    stage_metrics: dict[str, dict[str, float]] = {}
-    for key, value in metrics.items():
-        parts = key.split(".", 3)
-        if len(parts) < 4 or parts[0] != "cpa":
-            stage_name = "overall"
-            metric_name = key
-        else:
-            stage_name = parts[1]
-            metric_name = parts[3]
-        stage_metrics.setdefault(stage_name, {})[metric_name] = value
-    return stage_metrics
-
-
-def _write_json(path: Path, payload: dict[str, Any]) -> None:
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-
-
-def _canonical_metrics_payload(result_metrics: dict[str, float]) -> dict[str, Any]:
-    return {
-        "schema_version": "cpa.metrics.v1",
-        "overall": result_metrics,
-        "per_stage": _build_stage_metrics(result_metrics),
-    }
 
 
 def _write_state_dump(path: Path, *, state: Any) -> None:
@@ -91,38 +69,21 @@ def main(argv: list[str] | None = None) -> int:
     out_dir: Path = args.out
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    stage_plot_dir = out_dir / "stage_plots"
-    policy = {
-        "cpa.emit_stage_plots": True,
-        "cpa.stage_plot_dir": str(stage_plot_dir),
-        "cpa.plot.line.threshold_fraction": 1e-3,
-        "cpa.plot.line.min_support_width": 0.0,
-        "cpa.plot.line.pad_fraction": 0.05,
-        "cpa.plot.heatmap.coverage_quantile": 0.999,
-        "cpa.plot.heatmap.pad_fraction": 0.10,
-        "cpa.plot.heatmap.fallback_behavior": "full_axis",
-    }
+    run_output = run_pipeline_with_plot_policy(cfg, stage_plot_dir=out_dir / "stage_plots")
+    result = run_output.result
+    artifacts = dict(run_output.artifacts)
 
-    result = run_pipeline(cfg, policy=policy)
+    write_json(out_dir / "metrics.json", run_output.metrics_payload)
 
-    _write_json(out_dir / "metrics.json", _canonical_metrics_payload(result.metrics))
-
-    artifacts = {**result.artifacts, **result.state.artifacts}
     state_dump_path = out_dir / "state_final.npz"
     if args.dump_state_npz:
         _write_state_dump(state_dump_path, state=result.state)
         artifacts["run.state_dump_npz"] = str(state_dump_path)
 
-    _write_json(
-        out_dir / "artifacts.json",
-        {
-            "schema_version": "cpa.artifacts.v1",
-            "paths": artifacts,
-        },
-    )
+    write_json(out_dir / "artifacts.json", run_output.artifacts_payload | {"paths": artifacts})
 
     report = build_validation_report(cfg=cfg, result=result, artifacts=artifacts)
-    _write_json(out_dir / "report.json", report.model_dump(mode="json"))
+    write_json(out_dir / "report.json", report.model_dump(mode="json"))
     (out_dir / "report.md").write_text(render_markdown_report(report), encoding="utf-8")
 
     return 0

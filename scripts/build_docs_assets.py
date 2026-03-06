@@ -12,6 +12,8 @@ import numpy as np
 LIGHT_SPEED_M_PER_S = 299_792_458.0
 EPS = 1e-30
 DEFAULT_OUTPUT_DIR = Path("docs/assets/generated/gnlse-dispersive-wave")
+DOCS_RENDER_ROOT = "docs_rendering"
+DOCS_RUNTIME_STAGE_PLOTS = "runtime_stage_plots"
 SVG_NAMES = (
     "spectrum_z0_vs_zL.svg",
     "evolution_wavelength_vs_distance.svg",
@@ -221,7 +223,8 @@ def _cleanup_run_dir(run_dir: Path) -> None:
 def main() -> None:
     args = _build_parser().parse_args()
     outdir = args.outdir
-    run_dir = outdir / "_tmp_run"
+    # Docs-only rendering path: isolate temporary runtime stage artifacts from published docs SVGs.
+    run_dir = outdir / DOCS_RENDER_ROOT / DOCS_RUNTIME_STAGE_PLOTS
     run_dir.mkdir(parents=True, exist_ok=True)
 
     mode_flags = {
@@ -250,9 +253,11 @@ def main() -> None:
         z_m, t_fs, w_rad_per_fs, at_zt = _load_z_traces(npz_path)
         _build_svgs(z_m=z_m, t_fs=t_fs, w_rad_per_fs=w_rad_per_fs, at_zt=at_zt, outdir=outdir)
         _cleanup_run_dir(run_dir)
+        _cleanup_run_dir(run_dir.parent)
         print(f"Wrote generated SVG assets to: {outdir}")
     except (subprocess.CalledProcessError, RuntimeError, FileNotFoundError) as exc:
         _cleanup_run_dir(run_dir)
+        _cleanup_run_dir(run_dir.parent)
         if not args.allow_missing_gnlse:
             raise
         _save_placeholder_svgs(outdir, reason=str(exc))

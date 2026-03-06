@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 from pathlib import Path
 
 from cpa_sim.models import (
@@ -17,8 +16,8 @@ from cpa_sim.models import (
     RuntimeCfg,
     WustGnlseNumericsCfg,
 )
-from cpa_sim.pipeline import run_pipeline
 from cpa_sim.plotting import plot_dispersive_wave_maps_from_npz
+from cpa_sim.reporting import run_pipeline_with_plot_policy, write_json
 
 DEFAULT_OUT_DIR = Path("out")
 DEFAULT_STAGE_NAME = "fiber_dispersive_wave"
@@ -62,19 +61,9 @@ def run_showcase(*, out_dir: Path, seed: int = 7) -> dict[str, str]:
         ],
     )
 
-    policy = {
-        "cpa.emit_stage_plots": True,
-        "cpa.stage_plot_dir": str(stage_plot_dir),
-        "cpa.plot.line.threshold_fraction": 1e-3,
-        "cpa.plot.line.min_support_width": 0.0,
-        "cpa.plot.line.pad_fraction": 0.05,
-        "cpa.plot.heatmap.coverage_quantile": 0.999,
-        "cpa.plot.heatmap.pad_fraction": 0.10,
-        "cpa.plot.heatmap.fallback_behavior": "full_axis",
-    }
-    result = run_pipeline(cfg, policy=policy)
-
-    artifacts = {**result.artifacts, **result.state.artifacts}
+    run_output = run_pipeline_with_plot_policy(cfg, stage_plot_dir=stage_plot_dir)
+    policy = run_output.policy
+    artifacts = dict(run_output.artifacts)
     z_npz = Path(artifacts[f"{DEFAULT_STAGE_NAME}.z_traces_npz"])
 
     plots = plot_dispersive_wave_maps_from_npz(
@@ -94,19 +83,8 @@ def run_showcase(*, out_dir: Path, seed: int = 7) -> dict[str, str]:
     artifacts[f"{DEFAULT_STAGE_NAME}.plot_wavelength_vs_distance"] = str(plots.wavelength_log)
     artifacts[f"{DEFAULT_STAGE_NAME}.plot_delay_vs_distance"] = str(plots.delay_log)
 
-    metrics_payload = {
-        "schema_version": "cpa.metrics.v1",
-        "overall": result.metrics,
-    }
-    (out_dir / "metrics.json").write_text(
-        json.dumps(metrics_payload, indent=2, sort_keys=True) + "\n"
-    )
-    (out_dir / "artifacts.json").write_text(
-        json.dumps(
-            {"schema_version": "cpa.artifacts.v1", "paths": artifacts}, indent=2, sort_keys=True
-        )
-        + "\n"
-    )
+    write_json(out_dir / "metrics.json", run_output.metrics_payload)
+    write_json(out_dir / "artifacts.json", run_output.artifacts_payload | {"paths": artifacts})
 
     return artifacts
 

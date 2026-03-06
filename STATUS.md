@@ -5,6 +5,7 @@
 ## Last updated
 - Date: 2026-03-06
 - By: @openai-codex
+- Scope: Added `cpa_sim.reporting.pipeline_run.run_pipeline_with_plot_policy` as a shared script-facing run helper that applies canonical plotting policy and returns canonical metrics/artifact payloads; refactored CLI plus the WUST fiber, SPM-after-amp, and dispersive-wave showcase examples to consume canonical stage plot artifacts instead of duplicating standard line plotting; isolated docs-only render intermediates under `docs_rendering/runtime_stage_plots`; and added integration coverage asserting example artifact keys and no duplicate script-local standard plotting calls.
 - Scope: Removed temporary backward-compatibility plotting shims (`cpa_sim.utils._autoscale_window`, `cpa_sim.plotting.dispersive_wave.auto_xlim_from_intensity`), deleted the redundant `plotting/pulse_compare.py` helper, and updated scripts/tests to consume generic `cpa_sim.plotting.common` primitives directly for lower redundancy.
 - Scope: Added a dedicated `plotting` optional dependency extra (`matplotlib`) and updated PR/physics CI workflows to install `.[dev,plotting]` so Matplotlib-backed plotting tests execute in CI while remaining skippable locally when the optional package is absent.
 - Scope: Made dispersive-wave plotting unit coverage robust in environments without optional Matplotlib by conditionally skipping image-emission tests when the plotting dependency is unavailable.
@@ -45,9 +46,9 @@
 
 | Check | Command | Status | Last run | Notes |
 | --- | --- | --- | --- | --- |
-| Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-03-05 | Passed; pre-commit still reports only a deprecation warning for `default_stages`. |
-| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-03-05 | Success: no issues found in 52 source files. |
-| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-03-05 | Passed (105 tests, 11 deselected), including plotting utility consolidation coverage and example/script integration checks. |
+| Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-03-06 | Passed; pre-commit still reports only a deprecation warning for `default_stages`. |
+| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-03-06 | Success: no issues found in 53 source files. |
+| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-03-06 | Passed (118 tests, 11 deselected), including canonical plot-policy helper coverage and example/script integration checks. |
 | Pytest physics (nightly/manual) | `python -m pytest -q -m physics --durations=10` | ✅ | 2026-02-21 | Runs in `.github/workflows/physics.yml` (manual + nightly), not in required PR gate. |
 | Pytest slow (supplemental) | `python -m pytest -q -m slow --durations=10` | ⬜ | — |  |
 | Pytest gnlse optional (isolated/non-blocking) | `python -m pytest -q -m gnlse --durations=10` | ✅ | 2026-02-17 | Runs only in `.github/workflows/gnlse-optional.yml`; keep non-blocking unless branch protection intentionally requires it. |
