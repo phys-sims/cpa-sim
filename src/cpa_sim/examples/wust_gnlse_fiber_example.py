@@ -3,41 +3,33 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-import numpy as np
-
 from cpa_sim.models import (
     DispersionTaylorCfg,
     FiberCfg,
     FiberPhysicsCfg,
     LaserGenCfg,
+    LaserSpec,
+    PipelineConfig,
+    PulseSpec,
     RamanCfg,
+    RuntimeCfg,
     WustGnlseNumericsCfg,
 )
-from cpa_sim.models.state import BeamState, LaserSpec, LaserState, PulseGrid, PulseSpec, PulseState
-from cpa_sim.plotting import LineSeries, plot_line_series
-from cpa_sim.stages.fiber import FiberStage
-from cpa_sim.stages.laser_gen import AnalyticLaserGenStage
+from cpa_sim.reporting import run_pipeline_with_plot_policy
 
 DEFAULT_OUT_DIR = Path("artifacts/fiber-example")
-
-
-def _build_empty_state() -> LaserState:
-    pulse = PulseState
-    empty_pulse = pulse(
-        grid=PulseGrid(t=[0.0, 1.0], w=[0.0, 1.0], dt=1.0, dw=1.0, center_wavelength_nm=1550.0),
-        field_t=np.zeros(2, dtype=np.complex128),
-        field_w=np.zeros(2, dtype=np.complex128),
-        intensity_t=np.zeros(2),
-        spectrum_w=np.zeros(2),
-    )
-    return LaserState(pulse=empty_pulse, beam=BeamState(radius_mm=1.0, m2=1.0))
+DEFAULT_STAGE_NAME = "fiber_example"
 
 
 def run_example(out_dir: Path, *, plot_format: str = "svg") -> dict[str, Path]:
-    out_dir.mkdir(parents=True, exist_ok=True)
+    if plot_format != "svg":
+        msg = "Only svg output is supported by stage plot policy."
+        raise ValueError(msg)
 
-    laser_stage = AnalyticLaserGenStage(
-        LaserGenCfg(
+    out_dir.mkdir(parents=True, exist_ok=True)
+    cfg = PipelineConfig(
+        runtime=RuntimeCfg(seed=7),
+        laser_gen=LaserGenCfg(
             spec=LaserSpec(
                 pulse=PulseSpec(
                     shape="sech2",
@@ -48,62 +40,32 @@ def run_example(out_dir: Path, *, plot_format: str = "svg") -> dict[str, Path]:
                     time_window_fs=12000.0,
                 )
             )
-        )
+        ),
+        stages=[
+            FiberCfg(
+                name=DEFAULT_STAGE_NAME,
+                physics=FiberPhysicsCfg(
+                    length_m=0.25,
+                    loss_db_per_m=0.0,
+                    gamma_1_per_w_m=0.008,
+                    dispersion=DispersionTaylorCfg(betas_psn_per_m=[-0.02]),
+                    raman=RamanCfg(model="blowwood"),
+                ),
+                numerics=WustGnlseNumericsCfg(
+                    backend="wust_gnlse",
+                    z_saves=32,
+                    keep_full_solution=False,
+                ),
+            )
+        ],
     )
-    initial = laser_stage.process(_build_empty_state()).state
 
-    fiber_stage = FiberStage(
-        FiberCfg(
-            physics=FiberPhysicsCfg(
-                length_m=0.25,
-                loss_db_per_m=0.0,
-                gamma_1_per_w_m=0.008,
-                dispersion=DispersionTaylorCfg(betas_psn_per_m=[-0.02]),
-                raman=RamanCfg(model="blowwood"),
-            ),
-            numerics=WustGnlseNumericsCfg(
-                backend="wust_gnlse",
-                z_saves=32,
-                keep_full_solution=False,
-            ),
-        )
-    )
-    final = fiber_stage.process(initial).state
-    paths = {
-        "time": out_dir / f"fiber_time_intensity.{plot_format}",
-        "spectrum": out_dir / f"fiber_spectrum.{plot_format}",
+    run_output = run_pipeline_with_plot_policy(cfg, stage_plot_dir=out_dir)
+    artifacts = run_output.artifacts
+    return {
+        "time": Path(artifacts[f"{DEFAULT_STAGE_NAME}.plot_time_intensity"]),
+        "spectrum": Path(artifacts[f"{DEFAULT_STAGE_NAME}.plot_spectrum"]),
     }
-
-    t_fs = np.asarray(initial.pulse.grid.t, dtype=float)
-    w = np.asarray(initial.pulse.grid.w, dtype=float)
-
-    plot_line_series(
-        out_path=paths["time"],
-        series=[
-            LineSeries(x=t_fs, y=np.asarray(initial.pulse.intensity_t, dtype=float), label="input"),
-            LineSeries(
-                x=t_fs, y=np.asarray(final.pulse.intensity_t, dtype=float), label="after fiber"
-            ),
-        ],
-        x_label="Time (fs)",
-        y_label="Intensity (arb. from |A|^2)",
-        title="WUST gnlse fiber example: 1550 nm / 1 ps pulse intensity",
-        plot_format=plot_format,
-    )
-
-    plot_line_series(
-        out_path=paths["spectrum"],
-        series=[
-            LineSeries(x=w, y=np.asarray(initial.pulse.spectrum_w, dtype=float), label="input"),
-            LineSeries(x=w, y=np.asarray(final.pulse.spectrum_w, dtype=float), label="after fiber"),
-        ],
-        x_label="Angular frequency axis (rad/fs)",
-        y_label="Spectrum (arb. from |Aw|^2)",
-        title="WUST gnlse fiber example: nonlinear + Raman spectral evolution",
-        plot_format=plot_format,
-    )
-
-    return paths
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -111,7 +73,7 @@ def _build_parser() -> argparse.ArgumentParser:
         description="Run a small WUST gnlse fiber example and save plots."
     )
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT_DIR)
-    parser.add_argument("--format", choices=["svg", "pdf"], default="svg")
+    parser.add_argument("--format", choices=["svg"], default="svg")
     return parser
 
 
