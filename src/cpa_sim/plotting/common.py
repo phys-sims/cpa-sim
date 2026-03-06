@@ -8,6 +8,12 @@ from typing import Any
 
 import numpy as np
 
+from cpa_sim.models.plotting_policy import (
+    HeatmapWindowPolicy,
+    LineWindowPolicy,
+    PlotWindowPolicy,
+)
+
 
 @dataclass(frozen=True)
 class LineSeries:
@@ -23,10 +29,24 @@ def load_pyplot() -> Any:
 
 
 def autoscale_window_1d(
-    *, x_axis: np.ndarray, values: np.ndarray, threshold_fraction: float = 1e-3
+    *,
+    x_axis: np.ndarray,
+    values: np.ndarray,
+    threshold_fraction: float | None = None,
+    min_support_width: float | None = None,
+    pad_fraction: float | None = None,
+    policy: LineWindowPolicy | PlotWindowPolicy | None = None,
 ) -> tuple[float, float] | None:
     if x_axis.size == 0 or values.size == 0:
         return None
+
+    resolved = policy.line if isinstance(policy, PlotWindowPolicy) else policy
+    line_policy = resolved if isinstance(resolved, LineWindowPolicy) else LineWindowPolicy()
+    threshold = line_policy.threshold_fraction if threshold_fraction is None else threshold_fraction
+    minimum_width = (
+        line_policy.min_support_width if min_support_width is None else min_support_width
+    )
+    pad = line_policy.pad_fraction if pad_fraction is None else pad_fraction
 
     x = np.asarray(x_axis, dtype=float)
     y = np.asarray(values, dtype=float)
@@ -41,33 +61,47 @@ def autoscale_window_1d(
     if peak <= 0.0:
         return (float(np.min(x)), float(np.max(x)))
 
-    support = np.where(y >= peak * threshold_fraction)[0]
+    support = np.where(y >= peak * threshold)[0]
     if support.size == 0:
         return (float(np.min(x)), float(np.max(x)))
 
     lo = float(np.min(x[support]))
     hi = float(np.max(x[support]))
-    if np.isclose(lo, hi):
-        span = float(np.max(x) - np.min(x))
-        pad = 0.05 * span if span > 0.0 else 1.0
-        return (lo - pad, hi + pad)
+    axis_span = float(np.max(x) - np.min(x))
+    support_span = hi - lo
+    target_span = max(support_span, float(max(minimum_width, 0.0)))
 
-    pad = 0.05 * (hi - lo)
-    return (lo - pad, hi + pad)
+    if target_span <= 0.0:
+        fallback_span = axis_span if axis_span > 0.0 else 1.0
+        return (lo - 0.5 * fallback_span, hi + 0.5 * fallback_span)
+
+    center = 0.5 * (lo + hi)
+    lo = center - 0.5 * target_span
+    hi = center + 0.5 * target_span
+    padded = pad * target_span
+    return (lo - padded, hi + padded)
 
 
 def auto_xlim_from_intensity(
     x: np.ndarray,
     intensity_2d: np.ndarray,
     *,
-    coverage: float = 0.999,
-    pad_frac: float = 0.10,
+    coverage: float | None = None,
+    pad_frac: float | None = None,
     axis_for_x: int = -1,
+    policy: HeatmapWindowPolicy | PlotWindowPolicy | None = None,
 ) -> tuple[float, float]:
     """Estimate a robust x-axis window from 2D intensity support."""
     x_arr = np.asarray(x, dtype=float)
     if x_arr.ndim != 1 or x_arr.size == 0:
         raise ValueError("x must be a non-empty 1D array.")
+
+    resolved = policy.heatmap if isinstance(policy, PlotWindowPolicy) else policy
+    heatmap_policy = (
+        resolved if isinstance(resolved, HeatmapWindowPolicy) else HeatmapWindowPolicy()
+    )
+    coverage_value = heatmap_policy.coverage_quantile if coverage is None else coverage
+    pad_value = heatmap_policy.pad_fraction if pad_frac is None else pad_frac
 
     data = np.asarray(intensity_2d, dtype=float)
     x_axis = axis_for_x if axis_for_x >= 0 else data.ndim + axis_for_x
@@ -80,11 +114,18 @@ def auto_xlim_from_intensity(
     clean_data = np.where(np.isfinite(data), np.clip(data, 0.0, None), 0.0)
     profile = np.max(clean_data, axis=reduce_axes) if reduce_axes else clean_data
     profile = np.asarray(profile, dtype=float)
+    if profile.size:
+        baseline = float(np.nanquantile(profile, 0.2))
+        if np.isfinite(baseline) and baseline > 0.0:
+            profile = np.clip(profile - baseline, 0.0, None)
 
     x_min = float(np.nanmin(x_arr))
     x_max = float(np.nanmax(x_arr))
     total = float(np.sum(profile))
     if not np.isfinite(total) or total <= 0.0:
+        if heatmap_policy.fallback_behavior == "line_window":
+            xlim = autoscale_window_1d(x_axis=x_arr, values=profile)
+            return (x_min, x_max) if xlim is None else xlim
         return x_min, x_max
 
     order = np.argsort(x_arr)
@@ -92,10 +133,14 @@ def auto_xlim_from_intensity(
     p_sorted = profile[order]
     total = float(np.sum(p_sorted))
     if total <= 0.0:
+        if heatmap_policy.fallback_behavior == "line_window":
+            xlim = autoscale_window_1d(x_axis=x_arr, values=profile)
+            return (x_min, x_max) if xlim is None else xlim
         return x_min, x_max
 
     cdf = np.cumsum(p_sorted) / total
-    lo_q = (1.0 - coverage) / 2.0
+    clipped_coverage = float(np.clip(coverage_value, 1e-9, 1.0))
+    lo_q = (1.0 - clipped_coverage) / 2.0
     hi_q = 1.0 - lo_q
     lo = float(np.interp(lo_q, cdf, x_sorted))
     hi = float(np.interp(hi_q, cdf, x_sorted))
@@ -106,7 +151,7 @@ def auto_xlim_from_intensity(
     span = hi - lo
     if span <= 0.0:
         return x_min, x_max
-    pad = pad_frac * span
+    pad = pad_value * span
     return lo - pad, hi + pad
 
 
@@ -120,6 +165,7 @@ def plot_line_series(
     figsize: tuple[float, float] = (8, 4.5),
     plot_format: str | None = None,
     auto_xlim: bool = False,
+    plot_policy: PlotWindowPolicy | None = None,
 ) -> Path:
     plt = load_pyplot()
 
@@ -131,7 +177,9 @@ def plot_line_series(
 
     if auto_xlim and series:
         xlim = autoscale_window_1d(
-            x_axis=np.asarray(series[0].x, dtype=float), values=np.asarray(series[0].y, dtype=float)
+            x_axis=np.asarray(series[0].x, dtype=float),
+            values=np.asarray(series[0].y, dtype=float),
+            policy=plot_policy,
         )
         if xlim is not None:
             ax.set_xlim(*xlim)
@@ -166,6 +214,7 @@ def plot_heatmap(
     xlim: str | tuple[float, float] | None = "auto",
     axis_for_x: int = -1,
     figsize: tuple[float, float] = (8, 4.8),
+    plot_policy: PlotWindowPolicy | None = None,
 ) -> Path:
     if scale not in {"linear", "log"}:
         raise ValueError(f"Unsupported scale '{scale}'. Expected 'linear' or 'log'.")
@@ -211,7 +260,14 @@ def plot_heatmap(
     ax.set_ylabel(y_label)
     ax.set_title(title)
     if xlim == "auto":
-        ax.set_xlim(auto_xlim_from_intensity(x_axis, values, axis_for_x=axis_for_x))
+        ax.set_xlim(
+            auto_xlim_from_intensity(
+                x_axis,
+                values,
+                axis_for_x=axis_for_x,
+                policy=plot_policy,
+            )
+        )
     elif xlim is not None:
         ax.set_xlim(xlim)
 

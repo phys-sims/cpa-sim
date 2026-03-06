@@ -11,6 +11,8 @@ from pathlib import Path
 
 import numpy as np
 
+from cpa_sim.models.plotting_policy import PlotWindowPolicy
+
 from .common import plot_heatmap
 
 _LIGHT_SPEED_M_PER_S = 299792458.0
@@ -60,6 +62,7 @@ def plot_dispersive_wave_maps(
     center_wavelength_nm: float,
     paths: DispersiveWavePlotPaths,
     xlim: str | tuple[float, float] | None = "auto",
+    plot_policy: PlotWindowPolicy | None = None,
 ) -> DispersiveWavePlotPaths:
     """Generate delay/wavelength-vs-distance maps in linear and log scales."""
     delay_power = np.abs(at_zt) ** 2
@@ -75,6 +78,7 @@ def plot_dispersive_wave_maps(
         color_label="|A(t,z)|²",
         xlim=xlim,
         scale="linear",
+        plot_policy=plot_policy,
     )
     plot_heatmap(
         out_path=paths.delay_log,
@@ -88,6 +92,7 @@ def plot_dispersive_wave_maps(
         color_label="|A(t,z)|²",
         xlim=xlim,
         scale="log",
+        plot_policy=plot_policy,
     )
 
     aw = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(at_zt, axes=1), axis=1), axes=1)
@@ -109,6 +114,7 @@ def plot_dispersive_wave_maps(
         color_label="|A(ω,z)|²",
         xlim=xlim,
         scale="linear",
+        plot_policy=plot_policy,
     )
     plot_heatmap(
         out_path=paths.wavelength_log,
@@ -122,6 +128,7 @@ def plot_dispersive_wave_maps(
         color_label="|A(ω,z)|²",
         xlim=xlim,
         scale="log",
+        plot_policy=plot_policy,
     )
     return paths
 
@@ -133,6 +140,7 @@ def plot_dispersive_wave_maps_from_npz(
     out_dir: Path,
     stem: str,
     xlim: str | tuple[float, float] | None = "auto",
+    plot_policy: PlotWindowPolicy | None = None,
 ) -> DispersiveWavePlotPaths:
     """Load z-traces from a saved NPZ and emit standard dispersive-wave map artifacts."""
     data = np.load(npz_path)
@@ -157,4 +165,5 @@ def plot_dispersive_wave_maps_from_npz(
         center_wavelength_nm=center_wavelength_nm,
         paths=paths,
         xlim=xlim,
+        plot_policy=plot_policy,
     )

@@ -6,6 +6,7 @@ from typing import Any
 
 import numpy as np
 
+from cpa_sim.models.plotting_policy import PlotWindowPolicy
 from cpa_sim.models.state import LaserState
 from cpa_sim.phys_pipeline_compat import PolicyBag
 from cpa_sim.plotting.common import LineSeries, plot_line_series
@@ -38,6 +39,7 @@ def maybe_emit_stage_plots(
 
     t_fs = np.asarray(state.pulse.grid.t, dtype=float)
     w = np.asarray(state.pulse.grid.w, dtype=float)
+    plot_policy = PlotWindowPolicy.from_policy_bag(policy)
 
     time_path = out_dir / f"{stage_name}_time_intensity.svg"
     spectrum_path = out_dir / f"{stage_name}_spectrum.svg"
@@ -57,6 +59,7 @@ def maybe_emit_stage_plots(
             title=f"Stage: {stage_name} time-domain intensity",
             plot_format="svg",
             auto_xlim=True,
+            plot_policy=plot_policy,
         )
         plot_line_series(
             out_path=spectrum_path,
@@ -72,6 +75,7 @@ def maybe_emit_stage_plots(
             title=f"Stage: {stage_name} spectral magnitude",
             plot_format="svg",
             auto_xlim=True,
+            plot_policy=plot_policy,
         )
     except ModuleNotFoundError:
         return {}
