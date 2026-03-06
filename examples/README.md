@@ -1,11 +1,11 @@
 # Examples
 
-User-facing runnable scripts for reproducing canonical `cpa-sim` scenarios.
+User-facing wrappers for canonical scenarios. Source implementations are centralized in `src/cpa_sim/examples/`.
 
 ## Dispersive-wave generation
 
 ```bash
-python examples/gnlse_dispersive_wave.py --outdir artifacts/example-dispersive-wave
+python -m cpa_sim.examples.gnlse_dispersive_wave --outdir artifacts/example-dispersive-wave
 ```
 
 The script runs the WUST `gnlse` fiber backend and writes publication-oriented figures:
@@ -17,7 +17,7 @@ The script runs the WUST `gnlse` fiber backend and writes publication-oriented f
 ## SPM after fiber amp stage
 
 ```bash
-python examples/spm_after_fiber_amp.py --out artifacts/example-spm-after-amp
+python -m cpa_sim.examples.spm_after_fiber_amp --out artifacts/example-spm-after-amp
 ```
 
 This script demonstrates nonlinear self-phase modulation (SPM) through a `FiberAmpWrapStage` using:
