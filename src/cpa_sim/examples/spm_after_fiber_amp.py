@@ -19,6 +19,9 @@ from cpa_sim.reporting import run_pipeline_with_plot_policy, write_json
 
 DEFAULT_OUT_DIR = Path("artifacts/spm-after-fiber-amp")
 DEFAULT_STAGE_NAME = "fiber_amp_spm"
+DEFAULT_PLOT_POLICY_OVERRIDES = {
+    "cpa.plot.line.threshold_fraction": 1e-2,
+}
 
 
 def run_example(*, out_dir: Path) -> dict[str, Any]:
@@ -57,7 +60,11 @@ def run_example(*, out_dir: Path) -> dict[str, Any]:
             )
         ],
     )
-    run_output = run_pipeline_with_plot_policy(cfg, stage_plot_dir=out_dir)
+    run_output = run_pipeline_with_plot_policy(
+        cfg,
+        stage_plot_dir=out_dir,
+        policy_overrides=DEFAULT_PLOT_POLICY_OVERRIDES,
+    )
     summary = {
         "inputs": {
             "shape": "sech2",
@@ -73,6 +80,7 @@ def run_example(*, out_dir: Path) -> dict[str, Any]:
             "time_intensity_svg": run_output.artifacts[f"{DEFAULT_STAGE_NAME}.plot_time_intensity"],
             "spectrum_svg": run_output.artifacts[f"{DEFAULT_STAGE_NAME}.plot_spectrum"],
         },
+        "plot_policy_overrides": DEFAULT_PLOT_POLICY_OVERRIDES,
     }
 
     write_json(out_dir / "summary.json", summary)

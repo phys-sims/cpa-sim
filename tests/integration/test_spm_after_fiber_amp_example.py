@@ -21,3 +21,7 @@ def test_spm_after_fiber_amp_example_generates_svg_outputs(tmp_path: Path) -> No
         assert artifact.exists()
         assert artifact.stat().st_size > 0
         assert "<svg" in artifact.read_text(encoding="utf-8")
+
+    assert outputs["plot_policy_overrides"] == {
+        "cpa.plot.line.threshold_fraction": 1e-2,
+    }
