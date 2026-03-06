@@ -44,7 +44,7 @@ def run_example(*, out_dir: Path) -> dict[str, Any]:
                 name=DEFAULT_STAGE_NAME,
                 power_out_w=4.5,
                 physics=FiberPhysicsCfg(
-                    length_m=2.0,
+                    length_m=14.0,
                     loss_db_per_m=0.0,
                     n2_m2_per_w=2.6e-20,
                     aeff_m2=4.18879020478639e-12,
