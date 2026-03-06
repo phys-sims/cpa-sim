@@ -184,6 +184,8 @@ Each ADR must state how the decision is validated (unit/integration/physics test
 ## Developer workflow (CI must stay green)
 
 ### Required checks (must pass)
+- Ruff lint:
+  - `python -m ruff check .`
 - Pre-commit:
   - `python -m pre_commit run -a`
 - Type checking:

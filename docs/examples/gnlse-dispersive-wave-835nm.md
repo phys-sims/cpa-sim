@@ -1,7 +1,7 @@
 # GNLS dispersive-wave showcase (835 nm)
 
 This page documents the 835 nm anomalous-dispersion dispersive-wave scenario used in the
-`examples/gnlse_dispersive_wave.py` workflow.
+`python -m cpa_sim.examples.gnlse_dispersive_wave` workflow.
 
 The setup mirrors the `gnlse-python` dispersive-wave / Raman showcase style: a short sech² pulse
 propagates through nonlinear fiber with higher-order dispersion, Raman response, and

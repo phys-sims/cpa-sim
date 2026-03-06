@@ -38,7 +38,7 @@ a phase \(\phi(\Delta\omega)\) directly on the offset-frequency grid, and the si
 From the repository root:
 
 ```bash
-python scripts/validation/generate_treacy_validation_artifacts.py
+python -m cpa_sim.examples.treacy_stage_validation
 ```
 
 The script writes PNG artifacts to `docs/assets/treacy_validation/` and prints a short summary

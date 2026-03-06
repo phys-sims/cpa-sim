@@ -234,7 +234,8 @@ def main() -> None:
     }
     cmd = [
         sys.executable,
-        "examples/gnlse_dispersive_wave.py",
+        "-m",
+        "cpa_sim.examples.gnlse_dispersive_wave",
         "--outdir",
         str(run_dir),
         "--raman-model",
