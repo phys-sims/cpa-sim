@@ -16,6 +16,7 @@ API so it can be used as a reproducible, user-facing workflow.
 from __future__ import annotations
 
 import argparse
+from collections.abc import Callable
 from pathlib import Path
 
 from cpa_sim.models import (
@@ -36,7 +37,7 @@ from cpa_sim.plotting import plot_dispersive_wave_maps_from_npz
 _STAGE_NAME = "fiber_dispersive_wave"
 
 
-def _int_with_min(*, name: str, minimum: int) -> callable:
+def _int_with_min(*, name: str, minimum: int) -> Callable[[str], int]:
     def _parse(value: str) -> int:
         try:
             parsed = int(value)
