@@ -26,6 +26,8 @@ _DIMENSIONLESS_LEAF_KEYS = {
     "gain_linear",
     "grid_points",
     "n_passes",
+    "edge_energy_fraction_t",
+    "n_samples",
 }
 
 
