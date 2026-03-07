@@ -1,0 +1,33 @@
+runtime:
+  seed: 7
+laser_gen:
+  name: laser_init
+  kind: analytic
+  spec:
+    pulse:
+      shape: sech2
+      width_fs: 7000.0
+      avg_power_w: 0.3
+      rep_rate_mhz: 1115.0
+      center_wavelength_nm: 1560.0
+      n_samples: 2048
+      time_window_fs: 100000.0
+stages:
+  - name: fiber_amp_spm
+    kind: fiber_amp_wrap
+    power_out_w: 4.5
+    physics:
+      length_m: 14.0
+      loss_db_per_m: 0.0
+      n2_m2_per_w: 2.6e-20
+      aeff_m2: 4.18879020478639e-12
+      dispersion:
+        kind: taylor
+        betas_psn_per_m: [0.0]
+    numerics:
+      backend: wust_gnlse
+      z_saves: 64
+      keep_full_solution: false
+metrics:
+  name: metrics
+  kind: standard

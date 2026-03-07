@@ -3,10 +3,11 @@
 > **Source of truth:** Update this file whenever behavior, tests, schemas, or canonical examples change.
 
 ## Last updated
-- Date: 2026-03-06
+- Date: 2026-03-07
 - By: @openai-codex
 - Note: Keep this section capped at the 5 most recent scope entries.
-- Scope: Consolidated user-facing example surface to four clear entrypoints (simple linear fiber-dispersion, wave-breaking + Raman dispersive-wave, fiber-amp SPM baseline, and treacy validation), removed showcase/parity-only scripts and generated assets, removed top-level duplicate example wrappers in favor of `src/cpa_sim/examples`, simplified docs/navigation to one dispersive-wave page, and added a lightweight integration smoke test for `cpa_sim.examples.gnlse_dispersive_wave`.
+- Scope: Renamed and aligned canonical example modules/configs to `simple_fiber_dispersion`, `wave_breaking_raman`, `fiber_amp_spm`, `treacy_stage_validation`, and `end_to_end_1560nm`; removed legacy example names and `treacy_compressor_probe`; updated docs/navigation/workflows/tests to the new catalog.
+- Scope: Consolidated user-facing example surface to four clear entrypoints (simple linear fiber-dispersion, wave-breaking + Raman dispersive-wave, fiber-amp SPM baseline, and treacy validation), removed showcase/parity-only scripts and generated assets, removed top-level duplicate example wrappers in favor of `src/cpa_sim/examples`, simplified docs/navigation to one dispersive-wave page, and added a lightweight integration smoke test for the wave-breaking Raman example script.
 - Scope: Added a WUST-compatible dispersive-wave plotting mode in the existing plotting API (`compat_mode="wust"`) with separate `time_range_ps` and `wl_range_nm`, fs to ps delay-axis conversion, linear/max normalization, dB floor at -40 dB, AW-preferred wavelength maps with FFT fallback, wavelength sorting plus uniform-grid interpolation before `imshow`, optional AW trace persistence (`aw_zw_real`/`aw_zw_imag`) in WUST backend NPZ outputs, a 2x2 Taylor vs interpolation comparison figure in the dispersive-wave showcase, and focused unit coverage for these transforms and NPZ AW fallback behavior.
 - Scope: Rewrote `src/cpa_sim/examples/treacy_stage_validation.py` into two explicit sections: a hand-picked generic phase-only polynomial demo and a like-for-like Treacy backend-equivalence check that derives matched `PhaseOnlyDispersionCfg` coefficients directly from `_compute_treacy_metrics(treacy_cfg)`; switched Taylor-series validation plots to use `Delta omega = state.pulse.grid.w`; corrected expected second-derivative curves to `d2phi/d(Delta omega)^2 = GDD + TOD*Delta omega`; and clarified plot titles/legends so backend equivalence is labeled as implementation parity rather than independent physics validation.
 - Scope: Resolved Treacy free-space GDD/TOD sign-convention mismatch by defining `gdd_fs2`/`tod_fs3` as physical phase derivatives (`d2phi/domega2`, `d3phi/domega3`), switching the applied polynomial phase to `+0.5*gdd_fs2*Delta omega^2 + (1/6)*tod_fs3*Delta omega^3`, clarifying config/docstring/ADR docs, and adding regression tests that numerically recover derivatives near Delta omega=0.
@@ -62,10 +63,11 @@ Fill these in after first green run; keep them current.
 
 | Example | Config validate | Runtime validate | Notes |
 | --- | --- | --- | --- |
-| `configs/examples/basic_cpa.yaml` | ✅ | ✅ | Tiny grid, CI-friendly end-to-end smoke; validated via integration config-loading test. |
-| `configs/examples/gnlse_canonical.yaml` | ✅ | ✅ | Fiber canonical config runs in integration when `gnlse` is installed; test uses optional dependency guard. |
-| `configs/examples/tracy_golden.yaml` | ✅ | ✅ | Free-space canonical config validated by integration load/run test with Treacy metrics assertions. |
-| `configs/examples/autocorr_input_demo.yaml` | ✅ | ✅ | Demonstrates `avg_power_w` normalization with `intensity_autocorr_fwhm_fs` input; docs warn to provide raw autocorrelation widths only (avoid double conversion). |
+| `configs/examples/simple_fiber_dispersion.yaml` | yes | yes | Linear-only fiber dispersion sanity check with WUST `gnlse` backend. |
+| `configs/examples/wave_breaking_raman.yaml` | yes | yes | Wave-breaking + Raman dispersive-wave showcase with WUST `gnlse` backend. |
+| `configs/examples/fiber_amp_spm.yaml` | yes | yes | Fiber amplifier SPM baseline with `fiber_amp_wrap` + WUST `gnlse`. |
+| `configs/examples/treacy_stage_validation.yaml` | yes | yes | Free-space Treacy validation baseline with no optional dependency required. |
+| `configs/examples/end_to_end_1560nm.yaml` | yes | yes | Solver-backed end-to-end 1560 nm chain example (optional `gnlse`). |
 
 ---
 

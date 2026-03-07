@@ -36,11 +36,11 @@ jobs:
           pip install --no-build-isolation gnlse
 
       - name: Prepare optional gnlse artifact directory
-        run: mkdir -p artifacts/gnlse-dispersive-wave
+        run: mkdir -p artifacts/wave-breaking-raman
 
       - name: Run optional gnlse tests
         env:
-          CPA_SIM_ARTIFACT_DIR: artifacts/gnlse-dispersive-wave
+          CPA_SIM_ARTIFACT_DIR: artifacts/wave-breaking-raman
           MPLBACKEND: Agg
         run: python -m pytest -q -m "gnlse" --durations=10
 
@@ -48,6 +48,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gnlse-dispersive-wave-plots
-          path: artifacts/gnlse-dispersive-wave/**
+          name: wave-breaking-raman-plots
+          path: artifacts/wave-breaking-raman/**
           if-no-files-found: warn

@@ -1,4 +1,4 @@
-# WUST `gnlse` simple fiber-dispersion example
+# Simple Fiber Dispersion
 
 This example is the lightweight linear-dispersion sanity check.
 
@@ -18,15 +18,15 @@ pip install -e .[dev,gnlse]
 ## Run
 
 ```bash
-python -m cpa_sim.examples.wust_gnlse_fiber_example --out artifacts/fiber-example --format svg
+python -m cpa_sim.examples.simple_fiber_dispersion --out artifacts/simple-fiber-dispersion --format svg
 ```
 
 ## Expected outputs
 
-- `artifacts/fiber-example/laser_init_time_intensity.svg`
-- `artifacts/fiber-example/laser_init_spectrum.svg`
-- `artifacts/fiber-example/fiber_example_time_intensity.svg`
-- `artifacts/fiber-example/fiber_example_spectrum.svg`
+- `artifacts/simple-fiber-dispersion/laser_init_time_intensity.svg`
+- `artifacts/simple-fiber-dispersion/laser_init_spectrum.svg`
+- `artifacts/simple-fiber-dispersion/simple_fiber_dispersion_time_intensity.svg`
+- `artifacts/simple-fiber-dispersion/simple_fiber_dispersion_spectrum.svg`
 
 ## Current physics settings
 

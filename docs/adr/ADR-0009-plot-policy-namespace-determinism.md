@@ -76,8 +76,8 @@ Behavior is pinned across tiers:
   - `tests/unit/test_plotting_dispersive_wave.py`
 - **Integration (`integration`)**
   - `tests/integration/test_example_plot_artifacts.py`
-  - `tests/integration/test_wust_gnlse_example_script.py`
-  - `tests/integration/test_spm_after_fiber_amp_example.py`
+  - `tests/integration/test_simple_fiber_dispersion_example.py`
+  - `tests/integration/test_fiber_amp_spm_example.py`
 - **Physics (`physics`, optionally `slow`)**
   - `tests/physics/test_fiber_dispersive_wave.py`
   - `tests/physics/test_fiber_dispersive_wave_plots.py`

@@ -1,0 +1,30 @@
+runtime:
+  seed: 7
+laser_gen:
+  name: laser_init
+  kind: analytic
+  spec:
+    pulse:
+      shape: sech2
+      peak_power_w: 5.0
+      width_fs: 1000.0
+      center_wavelength_nm: 1550.0
+      n_samples: 1024
+      time_window_fs: 12000.0
+stages:
+  - name: simple_fiber_dispersion
+    kind: fiber
+    physics:
+      length_m: 0.3
+      loss_db_per_m: 0.0
+      gamma_1_per_w_m: 0.0
+      dispersion:
+        kind: taylor
+        betas_psn_per_m: [0.03]
+    numerics:
+      backend: wust_gnlse
+      z_saves: 32
+      keep_full_solution: false
+metrics:
+  name: metrics
+  kind: standard

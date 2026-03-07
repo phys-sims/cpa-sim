@@ -15,9 +15,9 @@ def test_parse_args_auto_window_defaults_do_not_pin_stages() -> None:
     args = cli._parse_args(
         [
             "run",
-            "configs/examples/basic_cpa.yaml",
+            "configs/examples/treacy_stage_validation.yaml",
             "--out",
-            "out/basic",
+            "out/treacy-stage-validation",
             "--auto-window",
         ]
     )
@@ -31,9 +31,9 @@ def test_parse_args_auto_window_stages_when_provided() -> None:
     args = cli._parse_args(
         [
             "run",
-            "configs/examples/basic_cpa.yaml",
+            "configs/examples/treacy_stage_validation.yaml",
             "--out",
-            "out/basic",
+            "out/treacy-stage-validation",
             "--auto-window",
             "--auto-window-stages",
             "stretcher,compressor",
@@ -92,7 +92,7 @@ def test_main_applies_auto_window_policy_from_cli_flags(
     rc = cli.main(
         [
             "run",
-            "configs/examples/basic_cpa.yaml",
+            "configs/examples/treacy_stage_validation.yaml",
             "--out",
             str(out_dir),
             "--auto-window",
@@ -152,7 +152,7 @@ def test_main_auto_window_without_stage_list_does_not_inject_stage_filter(
     rc = cli.main(
         [
             "run",
-            "configs/examples/basic_cpa.yaml",
+            "configs/examples/treacy_stage_validation.yaml",
             "--out",
             str(out_dir),
             "--auto-window",
@@ -208,7 +208,7 @@ def test_main_auto_window_empty_stage_list_treated_as_unset(
     rc = cli.main(
         [
             "run",
-            "configs/examples/basic_cpa.yaml",
+            "configs/examples/treacy_stage_validation.yaml",
             "--out",
             str(out_dir),
             "--auto-window",

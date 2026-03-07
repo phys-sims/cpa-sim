@@ -35,7 +35,7 @@ from cpa_sim.models import (
 from cpa_sim.pipeline import run_pipeline
 from cpa_sim.plotting import plot_dispersive_wave_maps_from_npz
 
-_STAGE_NAME = "fiber_dispersive_wave"
+_STAGE_NAME = "wave_breaking_raman"
 RamanModelName = Literal["blowwood", "linagrawal", "hollenbeck", "none"]
 
 
@@ -184,7 +184,7 @@ def main() -> None:
         raman_model=cast(RamanModelName, args.raman_model),
     )
 
-    print("Generated dispersive-wave artifacts:")
+    print("Generated wave-breaking Raman artifacts:")
     print(f"  z-traces npz       : {outputs['z_traces_npz']}")
     print(f"  wavelength (linear): {outputs['wavelength_linear']}")
     print(f"  wavelength (log)   : {outputs['wavelength_log']}")

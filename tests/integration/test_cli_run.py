@@ -29,7 +29,7 @@ def _run_cli(
 @pytest.mark.integration
 def test_cli_run_writes_canonical_outputs(tmp_path: Path) -> None:
     repo_root = Path(__file__).resolve().parents[2]
-    config_path = repo_root / "configs" / "examples" / "basic_cpa.yaml"
+    config_path = repo_root / "configs" / "examples" / "treacy_stage_validation.yaml"
     out_dir = tmp_path / "out"
 
     proc = _run_cli(config_path=config_path, out_dir=out_dir)
@@ -57,7 +57,7 @@ def test_cli_run_writes_canonical_outputs(tmp_path: Path) -> None:
     assert isinstance(artifact_paths, dict)
 
     assert report_payload["schema_version"] == "cpa.validation_report.v1"
-    assert report_payload["provenance"]["seed"] == 7
+    assert report_payload["provenance"]["seed"] == 11
     assert "validation_tiers" in report_payload
     assert any(stage["stage"] == "metrics" for stage in report_payload["stages"])
 
@@ -76,7 +76,7 @@ def test_cli_run_writes_canonical_outputs(tmp_path: Path) -> None:
 @pytest.mark.integration
 def test_cli_run_optionally_dumps_final_state_npz(tmp_path: Path) -> None:
     repo_root = Path(__file__).resolve().parents[2]
-    config_path = repo_root / "configs" / "examples" / "basic_cpa.yaml"
+    config_path = repo_root / "configs" / "examples" / "treacy_stage_validation.yaml"
     out_dir = tmp_path / "out"
 
     proc = _run_cli(config_path=config_path, out_dir=out_dir, dump_state_npz=True)

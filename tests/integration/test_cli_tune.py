@@ -101,16 +101,54 @@ def _run_tune_cli(*, tuning_config: Path, fake_pkg_root: Path) -> subprocess.Com
     )
 
 
+def _write_base_pipeline_config(path: Path) -> None:
+    path.write_text(
+        """
+runtime:
+  seed: 7
+laser_gen:
+  kind: analytic
+  spec:
+    pulse:
+      shape: gaussian
+      peak_power_w: 1.0
+      width_fs: 100.0
+      center_wavelength_nm: 1030.0
+      rep_rate_mhz: 1.0
+      n_samples: 128
+      time_window_fs: 1200.0
+compressor:
+  name: compressor
+  kind: treacy_grating_pair
+  line_density_lpmm: 1200.0
+  incidence_angle_deg: 35.0
+  separation_um: 100000.0
+  wavelength_nm: 1030.0
+  diffraction_order: -1
+  n_passes: 2
+  include_tod: true
+  apply_to_pulse: true
+metrics:
+  name: metrics
+  kind: standard
+""",
+        encoding="utf-8",
+    )
+
+
 @pytest.mark.integration
 def test_cli_tune_run_saves_best_config(tmp_path: Path) -> None:
     fake_pkg_root = tmp_path / "fake_pkg"
     _write_fake_ml(fake_pkg_root)
 
+    base_pipeline_config = tmp_path / "base_pipeline.yaml"
+    _write_base_pipeline_config(base_pipeline_config)
+
     out_dir = tmp_path / "out"
     tuning_config = tmp_path / "tuning.yaml"
     tuning_config.write_text(
-        """
-base_pipeline_config: configs/examples/basic_cpa.yaml
+        f"""
+base_pipeline_config: "{base_pipeline_config.as_posix()}"
 parameters:
   - name: compressor_sep
     path: compressor.separation_um
@@ -140,6 +178,9 @@ def test_cli_tune_run_with_target_spectrum_csv(tmp_path: Path) -> None:
     fake_pkg_root = tmp_path / "fake_pkg"
     _write_fake_ml(fake_pkg_root)
 
+    base_pipeline_config = tmp_path / "base_pipeline.yaml"
+    _write_base_pipeline_config(base_pipeline_config)
+
     target_csv = tmp_path / "target_spectrum.csv"
     target_csv.write_text(
         "omega,signal\n-0.02,0.0\n0.0,1.0\n0.02,0.0\n",
@@ -150,7 +191,7 @@ def test_cli_tune_run_with_target_spectrum_csv(tmp_path: Path) -> None:
     tuning_config = tmp_path / "tuning_spectral.yaml"
     tuning_config.write_text(
         f"""
-base_pipeline_config: configs/examples/basic_cpa.yaml
+base_pipeline_config: "{base_pipeline_config.as_posix()}"
 parameters:
   - name: compressor_sep
     path: compressor.separation_um

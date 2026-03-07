@@ -77,15 +77,17 @@ pip install -e .[gnlse]
 ### 2) Run a canonical config from `configs/examples/`
 
 ```bash
-cpa-sim run configs/examples/basic_cpa.yaml --out out/basic
+cpa-sim run configs/examples/treacy_stage_validation.yaml --out out/treacy-stage-validation
 ```
 
 Other canonical examples:
 
 ```bash
-cpa-sim run configs/examples/tracy_golden.yaml --out out/tracy-golden
-# optional: requires the WUST-FOG gnlse dependency
-cpa-sim run configs/examples/gnlse_canonical.yaml --out out/gnlse-canonical
+# optional: these require the WUST-FOG gnlse dependency
+cpa-sim run configs/examples/simple_fiber_dispersion.yaml --out out/simple-fiber-dispersion
+cpa-sim run configs/examples/wave_breaking_raman.yaml --out out/wave-breaking-raman
+cpa-sim run configs/examples/fiber_amp_spm.yaml --out out/fiber-amp-spm
+cpa-sim run configs/examples/end_to_end_1560nm.yaml --out out/end-to-end-1560nm
 ```
 
 ### 3) Inspect output artifacts
@@ -100,7 +102,7 @@ Each run writes these CLI artifacts into `--out`:
 Example with NPZ state dump enabled:
 
 ```bash
-cpa-sim run configs/examples/basic_cpa.yaml --out out/basic --dump-state-npz
+cpa-sim run configs/examples/treacy_stage_validation.yaml --out out/treacy-stage-validation --dump-state-npz
 ```
 
 ### 4) Reproducibility note (fixed seed)
@@ -132,7 +134,7 @@ print(result.state.meta)
 
 Related docs:
 
-- Examples: `docs/examples/canonical-1560nm-chain.md`, `docs/examples/wust-gnlse-fiber-example.md`
+- Examples: `docs/examples/simple-fiber-dispersion.md`, `docs/examples/wave-breaking-raman.md`, `docs/examples/fiber-amp-spm.md`, `docs/examples/treacy-stage-validation.md`, `docs/examples/end-to-end-1560nm.md`
 - Validation: `docs/validation/auto_window.md`
 - ADRs: `docs/adr/ADR-0001-conventions-units.md`, `docs/adr/ADR-0002-result-schema-contract.md`, `docs/adr/ADR-0003-validation-tiers-ci-policy.md`, `docs/adr/ADR-0008-canonical-output-layout.md`
 
@@ -141,7 +143,7 @@ Related docs:
 Use AutoWindow policy flags from the CLI to auto-rerun eligible free-space stages with a larger time window when edge wraparound is detected:
 
 ```bash
-cpa-sim run configs/examples/basic_cpa.yaml --out out/basic --auto-window --auto-window-print
+cpa-sim run configs/examples/treacy_stage_validation.yaml --out out/treacy-stage-validation --auto-window --auto-window-print
 ```
 
 See `docs/validation/auto_window.md` for limits (including why this does not fix Nyquist aliasing).
@@ -219,25 +221,19 @@ Legacy compatibility (deprecated): `amplitude` is still accepted but should be m
 For `fiber_amp_wrap`, `power_out_w` is the target **output average power in watts** at the stage output plane.
 
 
-## Fiber stage example (WUST `gnlse`, linear dispersion)
+## Canonical examples
 
-Example policy: runnable example logic lives in `src/cpa_sim/examples/*` and is invoked via module entrypoints.
-
-A runnable fiber-stage example module is available at (configured for a **1550 nm, 1 ps** input pulse in a simple linear-dispersion regime):
-
-- `src/cpa_sim/examples/wust_gnlse_fiber_example.py`
-
-Run it with:
+Runnable example logic lives in `src/cpa_sim/examples/*` and is invoked via module entrypoints.
 
 ```bash
-python -m cpa_sim.examples.wust_gnlse_fiber_example --out artifacts/fiber-example --format svg
+python -m cpa_sim.examples.simple_fiber_dispersion --out artifacts/simple-fiber-dispersion --format svg
+python -m cpa_sim.examples.wave_breaking_raman --outdir artifacts/wave-breaking-raman
+python -m cpa_sim.examples.fiber_amp_spm --out artifacts/fiber-amp-spm
+python -m cpa_sim.examples.treacy_stage_validation
+python -m cpa_sim.examples.end_to_end_1560nm --ci-safe --out artifacts/end-to-end-1560nm-ci
 ```
 
-For configuration/units details, see `docs/examples/wust-gnlse-fiber-example.md`.
-
-Canonical end-to-end 1560 nm chain example documentation is at:
-
-- `docs/examples/canonical-1560nm-chain.md`
+See `docs/examples/` for per-example guides.
 
 
 ## Outputs and provenance
@@ -292,8 +288,8 @@ Then open the local URL printed by MkDocs (typically `http://127.0.0.1:8000`).
 
 ### CI workflow behavior
 
-- On pull requests, `.github/workflows/docs.yml` builds the documentation with `mkdocs build --strict` and uploads `site/` as a workflow artifact.
-- On manual trigger (`workflow_dispatch`), the same workflow builds and deploys to GitHub Pages using the official Pages actions.
+- On pull requests, `.github/workflows/docs-pr.yml` builds the documentation with `mkdocs build --strict` and uploads `site/` as a workflow artifact.
+- On manual trigger (`workflow_dispatch`) and nightly schedule, `.github/workflows/docs-publish.yml` builds and deploys to GitHub Pages using the official Pages actions.
 
 ### GitHub Pages setup note
 
