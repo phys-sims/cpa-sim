@@ -57,6 +57,26 @@ Combined comparison (when `--case both`):
 
 - `out/stage_plots/fiber_dispersive_wave_comparison_wust.png`
 
+## Generated reference plots
+
+Committed docs assets for this showcase live in:
+
+- `docs/assets/generated/gnlse-dispersive-wave-showcase/`
+
+### WUST-style combined comparison
+
+![WUST comparison](../assets/generated/gnlse-dispersive-wave-showcase/fiber_dispersive_wave_comparison_wust.png)
+
+### Wavelength maps (log scale)
+
+![Taylor wavelength map](../assets/generated/gnlse-dispersive-wave-showcase/fiber_dispersive_wave_taylor_wavelength_vs_distance_log.png)
+![Interpolation wavelength map](../assets/generated/gnlse-dispersive-wave-showcase/fiber_dispersive_wave_interpolation_wavelength_vs_distance_log.png)
+
+### Output spectra
+
+![Taylor output spectrum](../assets/generated/gnlse-dispersive-wave-showcase/fiber_dispersive_wave_taylor_spectrum.svg)
+![Interpolation output spectrum](../assets/generated/gnlse-dispersive-wave-showcase/fiber_dispersive_wave_interpolation_spectrum.svg)
+
 ## Interpolation data provenance
 
 The interpolation case uses a checked-in deterministic table:
