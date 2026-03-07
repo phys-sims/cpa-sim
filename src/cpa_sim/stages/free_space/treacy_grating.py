@@ -169,6 +169,9 @@ class TreacyGratingStage(LaserStage[FreeSpaceCfg]):
             f"{self.name}.apply_to_pulse": float(1.0 if apply_to_pulse else 0.0),
         }
         stage_metrics.update({f"{self.name}.{key}": value for key, value in cfg_metrics.items()})
+        stage_metrics[f"{self.name}.omega_grid_mean_rad_per_fs"] = float(
+            np.mean(out.pulse.grid.w)
+        )
         stage_metrics.update(aw_metrics)
         out.metrics.update(stage_metrics)
         out.artifacts.update(maybe_emit_stage_plots(stage_name=self.name, state=out, policy=policy))
