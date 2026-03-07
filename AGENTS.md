@@ -203,7 +203,11 @@ Each ADR must state how the decision is validated (unit/integration/physics test
 
 ### Rules
 - Do not submit a PR that fails any required checks.
-- Run `python -m ruff format .` before `python -m pre_commit run -a`, then rerun pre-commit if any hook reports files were modified.
+- Run checks in this exact order to avoid formatter-hook failures:
+  1. `python -m ruff format .`
+  2. `python -m pre_commit run -a`
+  3. If pre-commit reports `files were modified by this hook`, run step 2 again and repeat until it passes cleanly.
+  4. Then run `python -m ruff check .`, `python -m mypy src`, and `python -m pytest -q -m "not slow and not physics" --durations=10`.
 - Keep docs/examples synchronized with behavior.
 - Update `STATUS.md` whenever behavior, tests, or schemas change.
 - When updating timestamps, use the system `date` command (or `date -u`); do not guess.

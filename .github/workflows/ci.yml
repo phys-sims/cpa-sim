@@ -41,8 +41,19 @@ jobs:
           pip install -e .[dev,plotting]
           pip install pre-commit
 
-      - name: Lint & hooks (pre-commit)
-        run: python -m pre_commit run -a
+      - name: Lint & hooks (ruff format + pre-commit)
+        run: |
+          python -m ruff format .
+          for i in 1 2 3; do
+            if python -m pre_commit run -a; then
+              break
+            fi
+            if [ "$i" -eq 3 ]; then
+              echo "pre-commit did not reach a clean pass after reruns"
+              exit 1
+            fi
+            echo "pre-commit modified files; rerunning..."
+          done
 
       - name: Typecheck (mypy)
         run: python -m mypy src
