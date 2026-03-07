@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from cpa_sim.models import (
     HeatmapNormPolicy,
@@ -11,6 +12,7 @@ from cpa_sim.models import (
 from cpa_sim.plotting.common import auto_xlim_from_intensity, autoscale_window_1d
 
 
+@pytest.mark.unit
 def test_line_window_policy_stabilizes_narrow_peak_width() -> None:
     x = np.linspace(-1000.0, 1000.0, 4001)
     y = np.exp(-0.5 * (x / 2.0) ** 2)
@@ -31,6 +33,7 @@ def test_line_window_policy_stabilizes_narrow_peak_width() -> None:
     assert lo < 0.0 < hi
 
 
+@pytest.mark.unit
 def test_heatmap_policy_handles_broad_chirped_profile() -> None:
     x = np.linspace(-8000.0, 8000.0, 4096)
     z = np.linspace(0.0, 1.0, 64)
@@ -48,6 +51,7 @@ def test_heatmap_policy_handles_broad_chirped_profile() -> None:
     assert (hi - lo) > 3000.0
 
 
+@pytest.mark.unit
 def test_line_window_policy_covers_multimodal_profile_support() -> None:
     x = np.linspace(-200.0, 200.0, 2001)
     y = np.exp(-0.5 * ((x + 80.0) / 10.0) ** 2) + 0.9 * np.exp(-0.5 * ((x - 60.0) / 12.0) ** 2)
@@ -65,6 +69,7 @@ def test_line_window_policy_covers_multimodal_profile_support() -> None:
     assert hi > 55.0
 
 
+@pytest.mark.unit
 def test_heatmap_policy_rejects_low_snr_tails_with_quantile() -> None:
     rng = np.random.default_rng(123)
     x = np.linspace(-5000.0, 5000.0, 4096)
@@ -85,6 +90,7 @@ def test_heatmap_policy_rejects_low_snr_tails_with_quantile() -> None:
     assert (hi - lo) < 4500.0
 
 
+@pytest.mark.unit
 def test_plot_window_policy_reads_heatmap_norm_keys_from_policy_bag() -> None:
     policy = PlotWindowPolicy.from_policy_bag(
         {
