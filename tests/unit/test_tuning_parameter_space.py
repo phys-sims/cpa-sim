@@ -14,6 +14,8 @@ from cpa_sim.tuning.schema import TuneConfig
 
 pytestmark = pytest.mark.unit
 
+pytestmark = pytest.mark.unit
+
 
 def test_set_dot_path_updates_existing_leaf() -> None:
     payload = {"fiber": {"physics": {"length_m": 1.0}}}
