@@ -33,6 +33,7 @@ venv/
 *.code-workspace
 .DS_Store
 Thumbs.db
+.codex
 
 # --- Logs/temporary ---
 *.log
