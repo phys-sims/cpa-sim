@@ -44,6 +44,10 @@ def _state() -> LaserState:
 class _FakeSolution:
     def __init__(self, field_t: np.ndarray):
         self.At = np.vstack([field_t, 1.1 * field_t])
+        self.AW = np.fft.fftshift(
+            np.fft.fft(np.fft.ifftshift(self.At, axes=1), axis=1),
+            axes=1,
+        )
         self.Z = np.array([0.0, 1.0], dtype=float)
 
 
@@ -239,4 +243,6 @@ def test_wust_keep_full_solution_writes_z_trace_npz(
     assert data["t_fs"].ndim == 1
     assert data["at_zt_real"].shape[0] == 2
     assert data["at_zt_real"].shape == data["at_zt_imag"].shape
+    assert data["aw_zw_real"].shape == data["at_zt_real"].shape
+    assert data["aw_zw_imag"].shape == data["at_zt_real"].shape
     assert result.state.artifacts["fiber.solution_saved"] == "z_traces_npz"

@@ -227,14 +227,43 @@ def run_wust_gnlse(
         if full_at.ndim == 1:
             full_at = full_at[np.newaxis, :]
 
-        np.savez_compressed(
-            z_traces_path,
-            z_m=z_axis_m,
-            t_fs=np.asarray(out.pulse.grid.t, dtype=float),
-            w_rad_per_fs=np.asarray(out.pulse.grid.w, dtype=float),
-            at_zt_real=np.real(full_at).astype(float),
-            at_zt_imag=np.imag(full_at).astype(float),
-        )
+        t_axis_fs = np.asarray(out.pulse.grid.t, dtype=float)
+        w_axis_rad_per_fs = np.asarray(out.pulse.grid.w, dtype=float)
+        at_zt_real = np.real(full_at).astype(float)
+        at_zt_imag = np.imag(full_at).astype(float)
+
+        aw_zw_real: np.ndarray | None = None
+        aw_zw_imag: np.ndarray | None = None
+        if numerics.keep_aw:
+            aw_trace = getattr(solution, "AW", None)
+            if aw_trace is not None:
+                full_aw = np.asarray(aw_trace, dtype=np.complex128)
+                if full_aw.ndim == 1:
+                    full_aw = full_aw[np.newaxis, :]
+                if full_aw.shape == full_at.shape:
+                    aw_zw_real = np.real(full_aw).astype(float)
+                    aw_zw_imag = np.imag(full_aw).astype(float)
+
+        if aw_zw_real is not None and aw_zw_imag is not None:
+            np.savez_compressed(
+                z_traces_path,
+                z_m=z_axis_m,
+                t_fs=t_axis_fs,
+                w_rad_per_fs=w_axis_rad_per_fs,
+                at_zt_real=at_zt_real,
+                at_zt_imag=at_zt_imag,
+                aw_zw_real=aw_zw_real,
+                aw_zw_imag=aw_zw_imag,
+            )
+        else:
+            np.savez_compressed(
+                z_traces_path,
+                z_m=z_axis_m,
+                t_fs=t_axis_fs,
+                w_rad_per_fs=w_axis_rad_per_fs,
+                at_zt_real=at_zt_real,
+                at_zt_imag=at_zt_imag,
+            )
         artifacts[f"{stage_name}.z_traces_npz"] = str(z_traces_path)
         artifacts[f"{stage_name}.solution_saved"] = "z_traces_npz"
     if numerics.record_backend_version:
