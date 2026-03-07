@@ -28,7 +28,15 @@ _DIMENSIONLESS_LEAF_KEYS = {
     "n_passes",
     "edge_energy_fraction_t",
     "n_samples",
+    "auto_window_enabled",
+    "auto_window_attempts",
+    "auto_window_reruns",
+    "auto_window_n_in",
+    "auto_window_n_out",
+    "auto_window_edge_energy_fraction_final",
+    "auto_window_recenter_shift_fs_last",
 }
+
 
 _ALLOWED_SUFFIXES = (
     "_au",
