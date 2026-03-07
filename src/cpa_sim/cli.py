@@ -40,8 +40,11 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     run_parser.add_argument(
         "--auto-window-stages",
         type=str,
-        default="stretcher,compressor",
-        help="Comma-separated stage names eligible for auto-window reruns.",
+        default=None,
+        help=(
+            "Optional comma-separated stage names eligible for auto-window reruns. "
+            "When omitted, all free-space stage names are eligible."
+        ),
     )
     run_parser.add_argument(
         "--auto-window-print",
@@ -95,9 +98,10 @@ def main(argv: list[str] | None = None) -> int:
 
     policy_overrides: dict[str, Any] = {}
     if args.auto_window:
-        stages = [part.strip() for part in args.auto_window_stages.split(",") if part.strip()]
         policy_overrides["cpa.auto_window.enabled"] = True
-        policy_overrides["cpa.auto_window.stages"] = stages
+        if args.auto_window_stages is not None:
+            stages = [part.strip() for part in args.auto_window_stages.split(",") if part.strip()]
+            policy_overrides["cpa.auto_window.stages"] = stages
         policy_overrides["cpa.auto_window.print"] = bool(args.auto_window_print)
 
     run_output = run_pipeline_with_plot_policy(
