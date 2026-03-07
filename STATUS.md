@@ -18,9 +18,9 @@
 
 | Check | Command | Status | Last run | Notes |
 | --- | --- | --- | --- | --- |
-| Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-03-06 | Passed; pre-commit still reports only a deprecation warning for `default_stages`. |
-| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-03-06 | Success: no issues found in 53 source files. |
-| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-03-06 | Passed (118 tests, 11 deselected), including canonical plot-policy helper coverage and example/script integration checks. |
+| Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-03-07 | Passed; pre-commit still reports only a deprecation warning for `default_stages`. |
+| Type checking (mypy) | `python -m mypy src` | ✅ | 2026-03-07 | Success: no issues found in 56 source files. |
+| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-03-07 | Passed (124 tests, 11 deselected), including windowing auto-window helper coverage. |
 | Pytest physics (nightly/manual) | `python -m pytest -q -m physics --durations=10` | ✅ | 2026-02-21 | Runs in `.github/workflows/physics.yml` (manual + nightly), not in required PR gate. |
 | Pytest slow (supplemental) | `python -m pytest -q -m slow --durations=10` | ⬜ | — |  |
 | Pytest gnlse optional (isolated/non-blocking) | `python -m pytest -q -m gnlse --durations=10` | ✅ | 2026-02-17 | Runs only in `.github/workflows/gnlse-optional.yml`; keep non-blocking unless branch protection intentionally requires it. |

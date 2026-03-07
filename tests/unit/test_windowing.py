@@ -9,6 +9,7 @@ from cpa_sim.physics import (
     pad_laser_state_time,
     recenter_state_by_intensity_centroid,
 )
+from cpa_sim.physics.windowing import run_with_auto_window
 
 
 def _make_gaussian_state(*, n_samples: int, dt_fs: float, center_fs: float) -> LaserState:
@@ -94,3 +95,25 @@ def test_recenter_state_by_intensity_centroid_moves_centroid_to_zero() -> None:
 
     assert shift_fs == pytest.approx(initial_centroid_fs, abs=1e-9)
     assert new_centroid_fs == pytest.approx(0.0, abs=1e-6)
+
+
+@pytest.mark.unit
+def test_run_with_auto_window_no_rerun_when_edge_small() -> None:
+    state = _make_gaussian_state(n_samples=512, dt_fs=1.0, center_fs=0.0)
+
+    out_state, metrics, events = run_with_auto_window(
+        state,
+        lambda s: s,
+        stage_name="stretcher",
+        policy={
+            "cpa.auto_window.enabled": True,
+            "cpa.auto_window.edge_fraction": 0.05,
+            "cpa.auto_window.max_edge_energy_fraction": 0.5,
+        },
+    )
+
+    assert len(events) == 1
+    assert out_state.pulse.grid.t == state.pulse.grid.t
+    assert metrics["stretcher.auto_window_enabled"] == pytest.approx(1.0)
+    assert metrics["stretcher.auto_window_attempts"] == pytest.approx(1.0)
+    assert metrics["stretcher.auto_window_reruns"] == pytest.approx(0.0)
