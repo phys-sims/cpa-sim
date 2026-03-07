@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from cpa_sim.models.config import MetricsCfg
 from cpa_sim.models.observables import ObservableContract
@@ -27,6 +28,7 @@ def _build_state() -> LaserState:
     return LaserState(pulse=pulse, beam=BeamState(radius_mm=1.0, m2=1.0), meta={}, metrics={})
 
 
+@pytest.mark.unit
 def test_standard_metrics_emits_observable_contract() -> None:
     result = StandardMetricsStage(MetricsCfg()).process(_build_state())
 
