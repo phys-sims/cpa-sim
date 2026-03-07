@@ -268,6 +268,9 @@ The test strategy follows tiered validation:
 Common local commands:
 
 ```bash
+python -m ruff format .
+python -m pre_commit run -a
+# if hooks modify files, rerun pre-commit until it passes
 python -m pre_commit run -a
 python -m mypy src
 python -m pytest -q -m "not slow and not physics" --durations=10
@@ -326,6 +329,9 @@ For concrete status, see `STATUS.md` and ADRs in `docs/adr/`.
 Before opening a PR, run required quality gates:
 
 ```bash
+python -m ruff format .
+python -m pre_commit run -a
+# if hooks modify files, rerun pre-commit until it passes
 python -m pre_commit run -a
 python -m mypy src
 python -m pytest -q -m "not slow and not physics" --durations=10
