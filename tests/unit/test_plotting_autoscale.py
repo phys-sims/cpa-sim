@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from cpa_sim.plotting.common import auto_xlim_from_intensity
 
 
+@pytest.mark.unit
 def test_auto_xlim_from_intensity_focuses_signal_region() -> None:
     x = np.linspace(-6000.0, 6000.0, 4096)
     z = np.linspace(0.0, 1.0, 80)
@@ -22,6 +24,7 @@ def test_auto_xlim_from_intensity_focuses_signal_region() -> None:
     assert (xmax - xmin) < 0.2 * (x.max() - x.min())
 
 
+@pytest.mark.unit
 def test_auto_xlim_from_intensity_handles_zero_or_nan_maps() -> None:
     x = np.linspace(-6000.0, 6000.0, 1024)
 
@@ -34,6 +37,7 @@ def test_auto_xlim_from_intensity_handles_zero_or_nan_maps() -> None:
     assert xlim_nan == (float(x.min()), float(x.max()))
 
 
+@pytest.mark.unit
 def test_auto_xlim_from_intensity_handles_unsorted_x() -> None:
     x = np.array([3.0, -1.0, 2.0, 0.0, 1.0])
     i2d = np.array([[0.0, 0.0, 1.0, 4.0, 1.0], [0.0, 0.0, 0.5, 2.0, 0.5]])

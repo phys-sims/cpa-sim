@@ -10,6 +10,7 @@ from cpa_sim.plotting import build_default_plot_paths, plot_dispersive_wave_maps
 from cpa_sim.plotting.common import resolve_heatmap_render_params
 
 
+@pytest.mark.unit
 def test_build_default_plot_paths_uses_expected_naming(tmp_path: Path) -> None:
     paths = build_default_plot_paths(out_dir=tmp_path, stem="fiber_demo")
 
@@ -19,6 +20,7 @@ def test_build_default_plot_paths_uses_expected_naming(tmp_path: Path) -> None:
     assert paths.wavelength_log.name == "fiber_demo_wavelength_vs_distance_log.png"
 
 
+@pytest.mark.unit
 def test_plot_dispersive_wave_maps_from_npz_generates_all_outputs(tmp_path: Path) -> None:
     pytest.importorskip("matplotlib")
 
@@ -54,6 +56,7 @@ def test_plot_dispersive_wave_maps_from_npz_generates_all_outputs(tmp_path: Path
         assert path.stat().st_size > 0
 
 
+@pytest.mark.unit
 def test_log_dynamic_range_norm_anchors_to_peak_for_hdr_maps() -> None:
     pytest.importorskip("matplotlib")
 
@@ -75,6 +78,7 @@ def test_log_dynamic_range_norm_anchors_to_peak_for_hdr_maps() -> None:
     assert np.nanmax(render.values) <= render.vmax
 
 
+@pytest.mark.unit
 def test_linear_powerlaw_norm_uses_percentile_window_and_gamma() -> None:
     values = np.array([[0.0, 1.0, 5.0, 100.0]], dtype=float)
     policy = PlotWindowPolicy(

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from cpa_sim.plotting.common import autoscale_window_1d
 
 
+@pytest.mark.unit
 def test_autoscale_window_focuses_on_signal_support() -> None:
     x = np.linspace(-100.0, 100.0, 1001)
     values = np.exp(-((x / 10.0) ** 2))
@@ -16,6 +18,7 @@ def test_autoscale_window_focuses_on_signal_support() -> None:
     assert hi < 40.0
 
 
+@pytest.mark.unit
 def test_autoscale_window_falls_back_to_full_axis_for_flat_signal() -> None:
     x = np.linspace(-5.0, 5.0, 101)
     values = np.zeros_like(x)
