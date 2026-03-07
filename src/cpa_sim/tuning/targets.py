@@ -77,9 +77,7 @@ def read_target_csv(
     y_values: list[float] = []
     for row_idx, row in enumerate(data_rows, start=2 if has_header else 1):
         if max(x_idx, y_idx) >= len(row):
-            raise ValueError(
-                f"Target CSV row {row_idx} does not have columns {x_idx} and {y_idx}."
-            )
+            raise ValueError(f"Target CSV row {row_idx} does not have columns {x_idx} and {y_idx}.")
         try:
             x_values.append(float(row[x_idx]))
             y_values.append(float(row[y_idx]))
@@ -119,7 +117,7 @@ def normalize_trace(
                 raise ValueError(
                     "axis and values must have identical shapes for area normalization."
                 )
-            denom = abs(float(np.trapz(weights, x=x)))
+            denom = abs(float(np.trapezoid(weights, x=x)))
     else:
         raise ValueError(f"Unsupported normalization mode '{mode}'.")
 

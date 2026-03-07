@@ -3,9 +3,11 @@
 > **Source of truth:** Update this file whenever behavior, tests, schemas, or canonical examples change.
 
 ## Last updated
-- Date: 2026-03-07
+- Date: 2026-03-06
 - By: @openai-codex
 - Note: Keep this section capped at the 5 most recent scope entries.
+- Scope: Rewrote `src/cpa_sim/examples/treacy_stage_validation.py` into two explicit sections: a hand-picked generic phase-only polynomial demo and a like-for-like Treacy backend-equivalence check that derives matched `PhaseOnlyDispersionCfg` coefficients directly from `_compute_treacy_metrics(treacy_cfg)`; switched Taylor-series validation plots to use `Delta omega = state.pulse.grid.w`; corrected expected second-derivative curves to `d2phi/d(Delta omega)^2 = GDD + TOD*Delta omega`; and clarified plot titles/legends so backend equivalence is labeled as implementation parity rather than independent physics validation.
+- Scope: Resolved Treacy free-space GDD/TOD sign-convention mismatch by defining `gdd_fs2`/`tod_fs3` as physical phase derivatives (`d2phi/domega2`, `d3phi/domega3`), switching the applied polynomial phase to `+0.5*gdd_fs2*Delta omega^2 + (1/6)*tod_fs3*Delta omega^3`, clarifying config/docstring/ADR docs, and adding regression tests that numerically recover derivatives near Delta omega=0.
 - Scope: Implemented the generic tuning engine with typed `TuneConfig`/optimizer/execution/output schemas, dot-path → `phys_sims_utils.ml.ParameterSpace` conversion, a deterministic pipeline adapter returning `EvalResult`, a functional `cpa-sim tune run --config ...` CLI wiring (`OptimizationRunner`/`OptimizationLogger`/`CMAESStrategy`), best-config persistence plus optional best-point rerun, and new unit/integration coverage for parameter-space conversion and end-to-end tune CLI execution with artifact output.
 - Scope: Added a unit marker to `tests/unit/test_tuning_imports.py` so marker hygiene enforcement passes for all `tests/unit/test_*.py` files and restored the required fast-gate pytest run to green.
 - Scope: Hardened tuning dot-path patching to reject unknown intermediate/leaf keys by default (preventing silent no-op typo paths during optimization), added explicit `create_missing` opt-in behavior, and added unit coverage for accepted/rejected path updates.

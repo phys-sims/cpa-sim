@@ -82,7 +82,7 @@ class OptimizationRunner:
 
 def _run_tune_cli(*, tuning_config: Path, fake_pkg_root: Path) -> subprocess.CompletedProcess[str]:
     env = dict(os.environ)
-    env["PYTHONPATH"] = f"{fake_pkg_root}:{env.get('PYTHONPATH', '')}"
+    env["PYTHONPATH"] = f"{fake_pkg_root}{os.pathsep}{env.get('PYTHONPATH', '')}"
 
     return subprocess.run(
         [
