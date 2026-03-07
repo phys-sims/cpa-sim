@@ -24,10 +24,8 @@ python -m cpa_sim.examples.wust_gnlse_fiber_example --out artifacts/fiber-exampl
 
 Expected outputs:
 
-- `artifacts/fiber-example/fiber_time_intensity.svg`
-- `artifacts/fiber-example/fiber_spectrum.svg`
-
-Use `--format pdf` if you prefer PDF vector output.
+- `artifacts/fiber-example/fiber_example_time_intensity.svg`
+- `artifacts/fiber-example/fiber_example_spectrum.svg`
 
 ## Fiber config fields and units
 

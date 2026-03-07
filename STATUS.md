@@ -6,6 +6,7 @@
 - Date: 2026-03-07
 - By: @openai-codex
 - Note: Keep this section capped at the 5 most recent scope entries.
+- Scope: Synced docs/example parity for the WUST GNLS E example and SPM-after-amp summary payloads (removed unsupported `--format pdf` docs guidance, corrected documented artifact filenames to `fiber_example_*`, aligned `fiber_length_m` in summary inputs with configured `FiberPhysicsCfg.length_m`), and added integration coverage that validates these command/output invariants.
 - Scope: Added a unit marker to `tests/unit/test_tuning_imports.py` so marker hygiene enforcement passes for all `tests/unit/test_*.py` files and restored the required fast-gate pytest run to green.
 - Scope: Hardened tuning dot-path patching to reject unknown intermediate/leaf keys by default (preventing silent no-op typo paths during optimization), added explicit `create_missing` opt-in behavior, and added unit coverage for accepted/rejected path updates.
 - Scope: Integrated free-space `TreacyGratingStage` with policy-driven `run_with_auto_window` reruns (phase re-evaluated per padded grid), persisted auto-window provenance events in `state.meta`, merged auto-window metrics into stage metrics, and added unit coverage for enabled/disabled behavior across both `PhaseOnlyDispersionCfg` and `TreacyGratingPairCfg`.
@@ -23,7 +24,7 @@
 | --- | --- | --- | --- | --- |
 | Pre-commit (lint/format) | `python -m pre_commit run -a` | ✅ | 2026-03-07 | Passed; pre-commit still reports only a deprecation warning for `default_stages`. |
 | Type checking (mypy) | `python -m mypy src` | ✅ | 2026-03-07 | Success: no issues found in 62 source files. |
-| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-03-07 | Passed (130 tests, 11 deselected). |
+| Pytest fast (required gate) | `python -m pytest -q -m "not slow and not physics" --durations=10` | ✅ | 2026-03-07 | Passed (141 tests, 11 deselected). |
 | Pytest physics (nightly/manual) | `python -m pytest -q -m physics --durations=10` | ✅ | 2026-02-21 | Runs in `.github/workflows/physics.yml` (manual + nightly), not in required PR gate. |
 | Pytest slow (supplemental) | `python -m pytest -q -m slow --durations=10` | ⬜ | — |  |
 | Pytest gnlse optional (isolated/non-blocking) | `python -m pytest -q -m gnlse --durations=10` | ✅ | 2026-02-17 | Runs only in `.github/workflows/gnlse-optional.yml`; keep non-blocking unless branch protection intentionally requires it. |
