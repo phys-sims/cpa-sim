@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import argparse
 from pathlib import Path
 
+from cpa_sim.examples._shared import print_example_artifacts, run_example_with_default_policy
 from cpa_sim.models import (
     DispersionTaylorCfg,
     FiberCfg,
@@ -14,18 +14,16 @@ from cpa_sim.models import (
     RuntimeCfg,
     WustGnlseNumericsCfg,
 )
-from cpa_sim.reporting import run_pipeline_with_plot_policy
 
 DEFAULT_OUT_DIR = Path("artifacts/simple-fiber-dispersion")
 DEFAULT_STAGE_NAME = "simple_fiber_dispersion"
 
 
-def run_example(out_dir: Path, *, plot_format: str = "svg") -> dict[str, Path]:
+def run_example(out_dir: Path = DEFAULT_OUT_DIR, *, plot_format: str = "svg") -> dict[str, Path]:
     if plot_format != "svg":
         msg = "Only svg output is supported by stage plot policy."
         raise ValueError(msg)
 
-    out_dir.mkdir(parents=True, exist_ok=True)
     cfg = PipelineConfig(
         runtime=RuntimeCfg(seed=7),
         laser_gen=LaserGenCfg(
@@ -58,30 +56,21 @@ def run_example(out_dir: Path, *, plot_format: str = "svg") -> dict[str, Path]:
         ],
     )
 
-    run_output = run_pipeline_with_plot_policy(cfg, stage_plot_dir=out_dir)
+    run_output = run_example_with_default_policy(cfg, stage_plot_dir=out_dir)
     artifacts = run_output.artifacts
     return {
         "time_before_svg": Path(artifacts["laser_init.plot_time_intensity"]),
         "spectrum_before_svg": Path(artifacts["laser_init.plot_spectrum"]),
         "time_after_svg": Path(artifacts[f"{DEFAULT_STAGE_NAME}.plot_time_intensity"]),
         "spectrum_after_svg": Path(artifacts[f"{DEFAULT_STAGE_NAME}.plot_spectrum"]),
+        "metrics_time_overlay_svg": Path(artifacts["metrics.plot_time_intensity_overlay"]),
+        "metrics_spectrum_overlay_svg": Path(artifacts["metrics.plot_spectrum_overlay"]),
     }
 
 
-def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Run a simple linear-dispersion fiber example and save plots."
-    )
-    parser.add_argument("--out", type=Path, default=DEFAULT_OUT_DIR)
-    parser.add_argument("--format", choices=["svg"], default="svg")
-    return parser
-
-
 def main() -> None:
-    args = _build_parser().parse_args()
-    outputs = run_example(args.out, plot_format=args.format)
-    for name, path in outputs.items():
-        print(f"wrote {name}: {path}")
+    outputs = run_example()
+    print_example_artifacts(title="Generated simple fiber dispersion artifacts:", artifacts=outputs)
 
 
 if __name__ == "__main__":

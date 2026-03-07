@@ -16,3 +16,5 @@ def test_simple_fiber_dispersion_stage_naming_contract(tmp_path: Path) -> None:
     assert outputs["spectrum_before_svg"].name == "laser_init_spectrum.svg"
     assert outputs["time_after_svg"].name == f"{DEFAULT_STAGE_NAME}_time_intensity.svg"
     assert outputs["spectrum_after_svg"].name == f"{DEFAULT_STAGE_NAME}_spectrum.svg"
+    assert outputs["metrics_time_overlay_svg"].name == "metrics_time_intensity_overlay.svg"
+    assert outputs["metrics_spectrum_overlay_svg"].name == "metrics_spectrum_overlay.svg"

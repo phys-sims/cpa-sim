@@ -8,7 +8,7 @@ from cpa_sim.models.observables import ObservableContract, ObservableMeasurement
 from cpa_sim.models.state import LaserState
 from cpa_sim.phys_pipeline_compat import PolicyBag, StageResult
 from cpa_sim.stages.base import LaserStage
-from cpa_sim.utils import maybe_emit_stage_plots
+from cpa_sim.utils import maybe_emit_stage_overlay_plots, maybe_emit_stage_plots
 
 
 class StandardMetricsStage(LaserStage[MetricsCfg]):
@@ -36,6 +36,8 @@ class StandardMetricsStage(LaserStage[MetricsCfg]):
         reference = out.meta.get("reference", {})
         reference_intensity = np.asarray(reference.get("intensity_t", []), dtype=float)
         reference_spectrum = np.asarray(reference.get("spectrum_w", []), dtype=float)
+        reference_t_fs = np.asarray(reference.get("t_fs", []), dtype=float)
+        reference_w = np.asarray(reference.get("w_rad_per_fs", []), dtype=float)
 
         temporal_similarity = (
             normalized_cross_correlation(reference_intensity, intensity)
@@ -86,6 +88,17 @@ class StandardMetricsStage(LaserStage[MetricsCfg]):
         )
         out.meta["observable_contract"] = observable_contract.model_dump(mode="json")
         out.artifacts.update(maybe_emit_stage_plots(stage_name=self.name, state=out, policy=policy))
+        out.artifacts.update(
+            maybe_emit_stage_overlay_plots(
+                stage_name=self.name,
+                state=out,
+                policy=policy,
+                reference_intensity_t=reference_intensity,
+                reference_spectrum_w=reference_spectrum,
+                reference_t_fs=reference_t_fs if reference_t_fs.size > 1 else None,
+                reference_w_rad_per_fs=reference_w if reference_w.size > 1 else None,
+            )
+        )
         return StageResult(state=out, metrics=stage_metrics)
 
 

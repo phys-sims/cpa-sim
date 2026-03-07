@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import argparse
-import shlex
-import subprocess
-import sys
 from pathlib import Path
 from typing import Any
 
 import numpy as np
+
+from cpa_sim.examples.wave_breaking_raman import run_example as run_wave_breaking_raman_example
 
 LIGHT_SPEED_M_PER_S = 299_792_458.0
 EPS = 1e-30
@@ -226,6 +225,15 @@ def _cleanup_run_dir(run_dir: Path) -> None:
         run_dir.rmdir()
 
 
+def _mode_config(mode: str) -> tuple[int, int]:
+    mode_map = {
+        "ultra-fast": (1024, 48),
+        "ci": (2048, 96),
+        "full": (4096, 150),
+    }
+    return mode_map[mode]
+
+
 def main() -> None:
     args = _build_parser().parse_args()
     outdir = args.outdir
@@ -233,28 +241,20 @@ def main() -> None:
     run_dir = outdir / DOCS_RENDER_ROOT / DOCS_RUNTIME_STAGE_PLOTS
     run_dir.mkdir(parents=True, exist_ok=True)
 
-    mode_flags = {
-        "ultra-fast": ["--n-samples", "1024", "--z-saves", "48"],
-        "ci": ["--n-samples", "2048", "--z-saves", "96"],
-        "full": ["--n-samples", "4096", "--z-saves", "150"],
-    }
-    cmd = [
-        sys.executable,
-        "-m",
-        "cpa_sim.examples.wave_breaking_raman",
-        "--outdir",
-        str(run_dir),
-        "--raman-model",
-        "blowwood",
-        *mode_flags[args.mode],
-    ]
-
-    print("Running wave-breaking Raman command:")
-    print("  " + " ".join(shlex.quote(part) for part in cmd))
+    n_samples, z_saves = _mode_config(args.mode)
+    print(
+        "Running wave-breaking Raman example API "
+        f"(mode={args.mode}, n_samples={n_samples}, z_saves={z_saves})"
+    )
 
     try:
-        subprocess.run(cmd, check=True)
-        npz_path = run_dir / "wave_breaking_raman_z_traces.npz"
+        outputs = run_wave_breaking_raman_example(
+            out_dir=run_dir,
+            n_samples=n_samples,
+            z_saves=z_saves,
+            raman_model="blowwood",
+        )
+        npz_path = outputs["z_traces_npz"]
         if not npz_path.exists():
             raise FileNotFoundError(f"Expected z-traces file was not generated: {npz_path}")
         z_m, t_fs, w_rad_per_fs, at_zt = _load_z_traces(npz_path)
@@ -262,7 +262,7 @@ def main() -> None:
         _cleanup_run_dir(run_dir)
         _cleanup_run_dir(run_dir.parent)
         print(f"Wrote generated SVG assets to: {outdir}")
-    except (subprocess.CalledProcessError, RuntimeError, FileNotFoundError) as exc:
+    except (ImportError, ModuleNotFoundError, RuntimeError, FileNotFoundError) as exc:
         _cleanup_run_dir(run_dir)
         _cleanup_run_dir(run_dir.parent)
         if not args.allow_missing_gnlse:

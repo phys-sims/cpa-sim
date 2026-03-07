@@ -30,4 +30,9 @@ def test_fiber_amp_spm_example_writes_expected_summary_json(tmp_path: Path) -> N
         "n2_m2_per_w",
         "aeff_m2",
     }
-    assert set(payload["artifacts"]) == {"time_intensity_svg", "spectrum_svg"}
+    assert set(payload["artifacts"]) == {
+        "time_intensity_svg",
+        "spectrum_svg",
+        "metrics_time_overlay_svg",
+        "metrics_spectrum_overlay_svg",
+    }
