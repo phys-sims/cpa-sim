@@ -20,7 +20,7 @@ from cpa_sim.models import (
 )
 from cpa_sim.pipeline import run_pipeline
 
-DEFAULT_OUT_DIR = Path("artifacts/canonical-1560nm-chain")
+DEFAULT_OUT_DIR = Path("artifacts/end-to-end-1560nm")
 DEFAULT_PLOT_DIR = DEFAULT_OUT_DIR / "stage-plots"
 DEFAULT_SEED = 1560
 
@@ -67,7 +67,7 @@ def build_config(*, seed: int, ci_safe: bool) -> PipelineConfig:
             ),
         ),
         FiberAmpWrapCfg(
-            name="fiber_amp_wrap",
+            name="fiber_amp_spm",
             power_out_w=5.0,
             physics=FiberPhysicsCfg(
                 length_m=0.5 if ci_safe else 5.0,
@@ -133,7 +133,7 @@ def run_example(*, out_dir: Path, plot_dir: Path, seed: int, ci_safe: bool) -> d
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Run a canonical 1560 nm CPA chain with fiber broadening, "
+            "Run an end-to-end 1560 nm CPA chain with fiber broadening, "
             "fiber amp wrapping, and Treacy compression."
         )
     )

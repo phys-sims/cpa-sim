@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from pathlib import Path
 from typing import Any
 
@@ -8,7 +7,6 @@ import pytest
 import yaml
 
 from cpa_sim.models import PipelineConfig
-from cpa_sim.models.state import PulseSpec
 from cpa_sim.pipeline import run_pipeline
 from cpa_sim.reporting import build_validation_report
 
@@ -18,37 +16,47 @@ def _example_paths() -> list[Path]:
     return sorted((repo_root / "configs" / "examples").glob("*.yaml"))
 
 
-def _load_example_with_warnings(path: Path) -> tuple[PipelineConfig, list[warnings.WarningMessage]]:
+def _load_example(path: Path) -> PipelineConfig:
     payload = yaml.safe_load(path.read_text(encoding="utf-8"))
-    with warnings.catch_warnings(record=True) as caught:
-        warnings.simplefilter("always")
-        cfg = PipelineConfig.model_validate(payload)
-    return cfg, caught
+    return PipelineConfig.model_validate(payload)
 
 
 EXAMPLE_EXPECTATIONS: dict[str, dict[str, Any]] = {
-    "autocorr_input_demo.yaml": {
+    "simple_fiber_dispersion.yaml": {
         "required_metrics": ["cpa.metrics.summary.energy_au"],
-        "required_stages": ["stretcher", "metrics"],
-    },
-    "basic_cpa.yaml": {
-        "required_metrics": ["cpa.metrics.summary.energy_au"],
-        "required_stages": ["stretcher", "fiber", "amp", "compressor", "metrics"],
-    },
-    "gnlse_canonical.yaml": {
-        "required_metrics": ["cpa.fiber.fiber.energy_out_au", "cpa.metrics.summary.energy_au"],
-        "required_stages": ["fiber", "metrics"],
+        "required_stages": ["simple_fiber_dispersion", "metrics"],
         "optional_dependency": "gnlse",
         "marks": ["gnlse"],
     },
-    "legacy_amplitude_deprecated.yaml": {
+    "wave_breaking_raman.yaml": {
         "required_metrics": ["cpa.metrics.summary.energy_au"],
-        "required_stages": ["metrics"],
-        "expected_warning": "PulseSpec.amplitude is deprecated",
+        "required_stages": ["wave_breaking_raman", "metrics"],
+        "optional_dependency": "gnlse",
+        "marks": ["gnlse"],
     },
-    "tracy_golden.yaml": {
-        "required_metrics": ["cpa.canonical.canonical.gdd_fs2", "cpa.canonical.canonical.tod_fs3"],
-        "required_stages": ["canonical", "metrics"],
+    "fiber_amp_spm.yaml": {
+        "required_metrics": ["cpa.metrics.summary.energy_au"],
+        "required_stages": ["fiber_amp_spm", "metrics"],
+        "optional_dependency": "gnlse",
+        "marks": ["gnlse"],
+    },
+    "treacy_stage_validation.yaml": {
+        "required_metrics": [
+            "cpa.treacy_validation.treacy_validation.gdd_fs2",
+            "cpa.treacy_validation.treacy_validation.tod_fs3",
+        ],
+        "required_stages": ["treacy_validation", "metrics"],
+    },
+    "end_to_end_1560nm.yaml": {
+        "required_metrics": ["cpa.metrics.summary.energy_au"],
+        "required_stages": [
+            "fiber_regular_disp_1560nm",
+            "fiber_amp_spm",
+            "treacy_compressor",
+            "metrics",
+        ],
+        "optional_dependency": "gnlse",
+        "marks": ["gnlse"],
     },
 }
 
@@ -74,15 +82,7 @@ def test_example_configs_load_and_run_with_expected_outputs(example_path: Path) 
     if optional_dependency is not None:
         pytest.importorskip(optional_dependency)
 
-    cfg, caught_warnings = _load_example_with_warnings(example_path)
-
-    expected_warning = expectation.get("expected_warning")
-    if expected_warning is None:
-        assert not any(
-            "PulseSpec.amplitude is deprecated" in str(w.message) for w in caught_warnings
-        )
-    else:
-        assert any(expected_warning in str(w.message) for w in caught_warnings)
+    cfg = _load_example(example_path)
 
     result = run_pipeline(cfg)
     report = build_validation_report(cfg=cfg, result=result, artifacts=result.artifacts)
@@ -94,10 +94,6 @@ def test_example_configs_load_and_run_with_expected_outputs(example_path: Path) 
     stage_names = {stage.stage for stage in report.stages}
     for stage_name in expectation["required_stages"]:
         assert stage_name in stage_names
-
-    if expected_warning is not None:
-        amplitude_schema = PulseSpec.model_json_schema()["properties"]["amplitude"]
-        assert amplitude_schema["deprecated"] is True
 
 
 @pytest.mark.integration

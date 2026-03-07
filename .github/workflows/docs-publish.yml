@@ -43,15 +43,15 @@ jobs:
         run: |
           # Remove tracked SVG outputs first so this workflow validates
           # generation in the current run rather than repository checkout state.
-          rm -rf docs/assets/generated/gnlse-dispersive-wave
+          rm -rf docs/assets/generated/wave-breaking-raman
           python scripts/build_docs_assets.py --mode ci
 
-      - name: Verify generated dispersive-wave assets
+      - name: Verify generated wave-breaking Raman assets
         run: |
           expected_files=(
-            "docs/assets/generated/gnlse-dispersive-wave/spectrum_z0_vs_zL.svg"
-            "docs/assets/generated/gnlse-dispersive-wave/evolution_wavelength_vs_distance.svg"
-            "docs/assets/generated/gnlse-dispersive-wave/evolution_delay_vs_distance.svg"
+            "docs/assets/generated/wave-breaking-raman/spectrum_z0_vs_zL.svg"
+            "docs/assets/generated/wave-breaking-raman/evolution_wavelength_vs_distance.svg"
+            "docs/assets/generated/wave-breaking-raman/evolution_delay_vs_distance.svg"
           )
 
           missing=0

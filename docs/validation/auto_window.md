@@ -61,13 +61,13 @@ AutoWindow emits run metadata in two places:
 Enable with CLI policy flags:
 
 ```bash
-cpa-sim run configs/examples/basic_cpa.yaml --out out/basic --auto-window --auto-window-print
+cpa-sim run configs/examples/treacy_stage_validation.yaml --out out/treacy-stage-validation --auto-window --auto-window-print
 ```
 
 Optional stage scoping via comma-separated names:
 
 ```bash
-cpa-sim run configs/examples/basic_cpa.yaml --out out/basic --auto-window --auto-window-stages stretcher,compressor
+cpa-sim run configs/examples/treacy_stage_validation.yaml --out out/treacy-stage-validation --auto-window --auto-window-stages treacy_validation
 ```
 
 ## Note on future backends

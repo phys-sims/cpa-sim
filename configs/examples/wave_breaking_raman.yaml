@@ -1,0 +1,43 @@
+runtime:
+  seed: 7
+laser_gen:
+  name: laser_init
+  kind: analytic
+  spec:
+    pulse:
+      center_wavelength_nm: 835.0
+      shape: sech2
+      width_fs: 50.284
+      peak_power_w: 10000.0
+      n_samples: 2048
+      time_window_fs: 12500.0
+stages:
+  - name: wave_breaking_raman
+    kind: fiber
+    physics:
+      length_m: 0.15
+      loss_db_per_m: 0.0
+      gamma_1_per_w_m: 0.11
+      self_steepening: true
+      dispersion:
+        kind: taylor
+        betas_psn_per_m:
+          - -11.830e-3
+          - 8.1038e-5
+          - -9.5205e-8
+          - 2.0737e-10
+          - -5.3943e-13
+          - 1.3486e-15
+          - -2.5495e-18
+          - 3.0524e-21
+          - -1.7140e-24
+      raman:
+        kind: wust
+        model: blowwood
+    numerics:
+      backend: wust_gnlse
+      z_saves: 96
+      keep_full_solution: true
+metrics:
+  name: metrics
+  kind: standard

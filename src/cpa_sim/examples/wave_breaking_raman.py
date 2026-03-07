@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 from collections.abc import Callable
 from pathlib import Path
+from typing import Literal, cast
 
 from cpa_sim.models import (
     DispersionTaylorCfg,
@@ -34,7 +35,8 @@ from cpa_sim.models import (
 from cpa_sim.pipeline import run_pipeline
 from cpa_sim.plotting import plot_dispersive_wave_maps_from_npz
 
-_STAGE_NAME = "fiber_dispersive_wave"
+_STAGE_NAME = "wave_breaking_raman"
+RamanModelName = Literal["blowwood", "linagrawal", "hollenbeck", "none"]
 
 
 def _int_with_min(*, name: str, minimum: int) -> Callable[[str], int]:
@@ -84,15 +86,14 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main() -> None:
-    args = _build_parser().parse_args()
-    outdir = args.outdir
-
-    n_samples = 4096 if args.fast else args.n_samples
-    z_saves = 150 if args.fast else args.z_saves
-
-    raman_cfg = None if args.raman_model == "none" else RamanCfg(model=args.raman_model)
-
+def run_example(
+    *,
+    out_dir: Path,
+    n_samples: int = 8192,
+    z_saves: int = 400,
+    raman_model: RamanModelName = "blowwood",
+) -> dict[str, Path]:
+    raman_cfg = None if raman_model == "none" else RamanCfg(model=raman_model)
     cfg = PipelineConfig(
         runtime=RuntimeCfg(seed=7),
         laser_gen=LaserGenCfg(
@@ -143,7 +144,7 @@ def main() -> None:
         cfg,
         policy={
             "cpa.emit_stage_plots": True,
-            "cpa.stage_plot_dir": str(outdir),
+            "cpa.stage_plot_dir": str(out_dir),
         },
     )
 
@@ -153,19 +154,42 @@ def main() -> None:
     fig_paths = plot_dispersive_wave_maps_from_npz(
         npz_path=z_traces_npz,
         center_wavelength_nm=835.0,
-        out_dir=outdir,
+        out_dir=out_dir,
         stem=_STAGE_NAME,
         compat_mode="wust",
         time_range_ps=(-0.5, 5.0),
         wl_range_nm=(400.0, 1400.0),
     )
 
-    print("Generated dispersive-wave artifacts:")
-    print(f"  z-traces npz       : {z_traces_npz}")
-    print(f"  wavelength (linear): {fig_paths.wavelength_linear}")
-    print(f"  wavelength (log)   : {fig_paths.wavelength_log}")
-    print(f"  delay (linear)     : {fig_paths.delay_linear}")
-    print(f"  delay (log)        : {fig_paths.delay_log}")
+    return {
+        "z_traces_npz": z_traces_npz,
+        "wavelength_linear": fig_paths.wavelength_linear,
+        "wavelength_log": fig_paths.wavelength_log,
+        "delay_linear": fig_paths.delay_linear,
+        "delay_log": fig_paths.delay_log,
+    }
+
+
+def main() -> None:
+    args = _build_parser().parse_args()
+    outdir = args.outdir
+
+    n_samples = 4096 if args.fast else args.n_samples
+    z_saves = 150 if args.fast else args.z_saves
+
+    outputs = run_example(
+        out_dir=outdir,
+        n_samples=n_samples,
+        z_saves=z_saves,
+        raman_model=cast(RamanModelName, args.raman_model),
+    )
+
+    print("Generated wave-breaking Raman artifacts:")
+    print(f"  z-traces npz       : {outputs['z_traces_npz']}")
+    print(f"  wavelength (linear): {outputs['wavelength_linear']}")
+    print(f"  wavelength (log)   : {outputs['wavelength_log']}")
+    print(f"  delay (linear)     : {outputs['delay_linear']}")
+    print(f"  delay (log)        : {outputs['delay_log']}")
 
 
 if __name__ == "__main__":

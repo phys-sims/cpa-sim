@@ -5,16 +5,18 @@ Welcome to the documentation site for **cpa-sim**, a modular chirped-pulse ampli
 ## Start here
 
 - Read the [project README](https://github.com/phys-sims/cpa-sim/blob/main/README.md) for installation and CLI/API quickstart instructions.
-- Browse canonical workflows under [Examples](examples/canonical-1560nm-chain.md).
+- Browse canonical workflows under [Examples](examples/simple-fiber-dispersion.md).
 - Review architecture and policy decisions in [ADRs](adr/INDEX.md).
 
 ## Documentation map
 
 ### Examples
 
-- [Canonical 1560nm chain](examples/canonical-1560nm-chain.md)
-- [WUST GNLS fiber example](examples/wust-gnlse-fiber-example.md)
-- [GNLS dispersive wave example](examples/gnlse-dispersive-wave.md)
+- [Simple Fiber Dispersion](examples/simple-fiber-dispersion.md)
+- [Wave Breaking Raman](examples/wave-breaking-raman.md)
+- [Fiber Amp SPM](examples/fiber-amp-spm.md)
+- [Treacy Stage Validation](examples/treacy-stage-validation.md)
+- [End-to-End 1560nm](examples/end-to-end-1560nm.md)
 
 ### Configuration
 

@@ -3,12 +3,12 @@ from pathlib import Path
 
 import pytest
 
-from cpa_sim.examples.spm_after_fiber_amp import run_example
+from cpa_sim.examples.fiber_amp_spm import run_example
 
 
 @pytest.mark.integration
 @pytest.mark.gnlse
-def test_spm_after_fiber_amp_example_writes_expected_summary_json(tmp_path: Path) -> None:
+def test_fiber_amp_spm_example_writes_expected_summary_json(tmp_path: Path) -> None:
     pytest.importorskip("gnlse")
 
     run_example(out_dir=tmp_path)

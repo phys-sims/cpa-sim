@@ -6,26 +6,33 @@ from typing import Any
 
 import pytest
 
-from cpa_sim.examples.spm_after_fiber_amp import run_example as run_spm_example
-from cpa_sim.examples.wust_gnlse_fiber_example import run_example as run_wust_example
+from cpa_sim.examples.fiber_amp_spm import run_example as run_fiber_amp_spm_example
+from cpa_sim.examples.simple_fiber_dispersion import (
+    run_example as run_simple_fiber_dispersion_example,
+)
 
 ExampleRunner = Callable[[Path], dict[str, Any]]
 ArtifactExtractor = Callable[[dict[str, Any]], dict[str, Path]]
 
 
-def _run_wust(out_dir: Path) -> dict[str, Any]:
-    return run_wust_example(out_dir, plot_format="svg")
+def _run_simple_fiber_dispersion(out_dir: Path) -> dict[str, Any]:
+    return run_simple_fiber_dispersion_example(out_dir, plot_format="svg")
 
 
-def _run_spm(out_dir: Path) -> dict[str, Any]:
-    return run_spm_example(out_dir=out_dir)
+def _run_fiber_amp_spm(out_dir: Path) -> dict[str, Any]:
+    return run_fiber_amp_spm_example(out_dir=out_dir)
 
 
-def _extract_wust_artifacts(outputs: dict[str, Any]) -> dict[str, Path]:
-    return {name: Path(path) for name, path in outputs.items()}
+def _extract_simple_fiber_dispersion_artifacts(outputs: dict[str, Any]) -> dict[str, Path]:
+    return {
+        "time_before_svg": Path(outputs["time_before_svg"]),
+        "spectrum_before_svg": Path(outputs["spectrum_before_svg"]),
+        "time_after_svg": Path(outputs["time_after_svg"]),
+        "spectrum_after_svg": Path(outputs["spectrum_after_svg"]),
+    }
 
 
-def _extract_spm_artifacts(outputs: dict[str, Any]) -> dict[str, Path]:
+def _extract_fiber_amp_spm_artifacts(outputs: dict[str, Any]) -> dict[str, Path]:
     artifacts = outputs["artifacts"]
     return {name: Path(path) for name, path in artifacts.items()}
 
@@ -36,16 +43,16 @@ def _extract_spm_artifacts(outputs: dict[str, Any]) -> dict[str, Path]:
     ("example_name", "runner", "artifact_schema", "artifact_extractor"),
     [
         (
-            "wust_gnlse_fiber_example",
-            _run_wust,
-            {"time", "spectrum"},
-            _extract_wust_artifacts,
+            "simple_fiber_dispersion",
+            _run_simple_fiber_dispersion,
+            {"time_before_svg", "spectrum_before_svg", "time_after_svg", "spectrum_after_svg"},
+            _extract_simple_fiber_dispersion_artifacts,
         ),
         (
-            "spm_after_fiber_amp",
-            _run_spm,
+            "fiber_amp_spm",
+            _run_fiber_amp_spm,
             {"time_intensity_svg", "spectrum_svg"},
-            _extract_spm_artifacts,
+            _extract_fiber_amp_spm_artifacts,
         ),
     ],
 )

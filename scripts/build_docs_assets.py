@@ -11,7 +11,7 @@ import numpy as np
 
 LIGHT_SPEED_M_PER_S = 299_792_458.0
 EPS = 1e-30
-DEFAULT_OUTPUT_DIR = Path("docs/assets/generated/gnlse-dispersive-wave")
+DEFAULT_OUTPUT_DIR = Path("docs/assets/generated/wave-breaking-raman")
 DOCS_RENDER_ROOT = "docs_rendering"
 DOCS_RUNTIME_STAGE_PLOTS = "runtime_stage_plots"
 SVG_NAMES = (
@@ -241,7 +241,7 @@ def main() -> None:
     cmd = [
         sys.executable,
         "-m",
-        "cpa_sim.examples.gnlse_dispersive_wave",
+        "cpa_sim.examples.wave_breaking_raman",
         "--outdir",
         str(run_dir),
         "--raman-model",
@@ -249,12 +249,12 @@ def main() -> None:
         *mode_flags[args.mode],
     ]
 
-    print("Running dispersive-wave command:")
+    print("Running wave-breaking Raman command:")
     print("  " + " ".join(shlex.quote(part) for part in cmd))
 
     try:
         subprocess.run(cmd, check=True)
-        npz_path = run_dir / "fiber_dispersive_wave_z_traces.npz"
+        npz_path = run_dir / "wave_breaking_raman_z_traces.npz"
         if not npz_path.exists():
             raise FileNotFoundError(f"Expected z-traces file was not generated: {npz_path}")
         z_m, t_fs, w_rad_per_fs, at_zt = _load_z_traces(npz_path)

@@ -1,0 +1,54 @@
+runtime:
+  seed: 1560
+laser_gen:
+  name: laser_init
+  kind: analytic
+  spec:
+    pulse:
+      shape: sech2
+      avg_power_w: 0.1
+      rep_rate_mhz: 1150.0
+      width_fs: 7000.0
+      center_wavelength_nm: 1560.0
+      n_samples: 256
+      time_window_fs: 24000.0
+stages:
+  - name: fiber_regular_disp_1560nm
+    kind: fiber
+    physics:
+      length_m: 2.0
+      loss_db_per_m: 0.0
+      gamma_1_per_w_m: 0.0
+      dispersion:
+        kind: taylor
+        betas_psn_per_m: [0.022]
+    numerics:
+      backend: wust_gnlse
+      z_saves: 64
+      keep_full_solution: false
+  - name: fiber_amp_spm
+    kind: fiber_amp_wrap
+    power_out_w: 5.0
+    physics:
+      length_m: 0.5
+      loss_db_per_m: 0.2
+      gamma_1_per_w_m: 0.01
+      dispersion:
+        kind: taylor
+        betas_psn_per_m: [0.0]
+    numerics:
+      backend: wust_gnlse
+      z_saves: 64
+      keep_full_solution: false
+  - name: treacy_compressor
+    kind: treacy_grating_pair
+    line_density_lpmm: 600.0
+    incidence_angle_deg: 20.0
+    separation_um: 120000.0
+    wavelength_nm: 1560.0
+    n_passes: 2
+    include_tod: true
+    apply_to_pulse: true
+metrics:
+  name: metrics
+  kind: standard

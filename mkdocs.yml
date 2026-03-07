@@ -14,10 +14,11 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Examples:
-      - Canonical 1560nm Chain: examples/canonical-1560nm-chain.md
-      - WUST GNLS Fiber Example: examples/wust-gnlse-fiber-example.md
-      - GNLS Dispersive Wave: examples/gnlse-dispersive-wave.md
-      - GNLS Dispersive Wave (835 nm): examples/gnlse-dispersive-wave-835nm.md
+      - Simple Fiber Dispersion: examples/simple-fiber-dispersion.md
+      - Wave Breaking Raman: examples/wave-breaking-raman.md
+      - Fiber Amp SPM: examples/fiber-amp-spm.md
+      - Treacy Stage Validation: examples/treacy-stage-validation.md
+      - End-to-End 1560nm: examples/end-to-end-1560nm.md
   - Configuration:
       - Pulse Spec: config/pulse_spec.md
   - ADRs:
@@ -38,7 +39,7 @@ nav:
       - Free Space Treacy: agent/freespace-stage-treacy-context.md
       - Phys Pipeline: agent/phys-pipeline-context.md
   - Validation:
-      - Treacy Stage Validation: validation/treacy_stage_validation.md
+      - AutoWindow: validation/auto_window.md
   - Roadmaps:
       - v1 to v3 Plan: roadmaps/v1_to_v3_plan.md
       - v1 Fiber Stage Roadmap: roadmaps/v1-fiber-stage-roadmap.md
