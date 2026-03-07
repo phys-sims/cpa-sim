@@ -7,7 +7,7 @@ import numpy as np
 from cpa_sim.models.config import LaserGenCfg, PhaseOnlyDispersionCfg, TreacyGratingPairCfg
 from cpa_sim.models.state import BeamState, LaserSpec, LaserState, PulseGrid, PulseSpec, PulseState
 from cpa_sim.phys_pipeline_compat import StageResult
-from cpa_sim.plotting.common import LineSeries, plot_line_series
+from cpa_sim.plotting.common import LineSeries, autoscale_window_1d, plot_line_series
 from cpa_sim.stages.free_space.treacy_grating import (
     TreacyGratingStage,
     _compute_treacy_metrics,
@@ -17,6 +17,7 @@ from cpa_sim.stages.laser_gen.analytic import AnalyticLaserGenStage
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 ASSET_DIR = REPO_ROOT / "docs" / "assets" / "treacy_validation"
+LIGHT_SPEED_M_PER_S = 299_792_458.0
 
 
 def _empty_state() -> LaserState:
@@ -61,6 +62,51 @@ def _recover_gdd_tod(w: np.ndarray, d2phi: np.ndarray, d3phi: np.ndarray) -> tup
     return gdd_est, tod_est
 
 
+def _series_with_window(
+    *,
+    x: np.ndarray,
+    reference_values: np.ndarray,
+    series: list[LineSeries],
+    threshold_fraction: float,
+    span_multiplier: float = 1.0,
+) -> list[LineSeries]:
+    """Crop plotted series to a window derived from the original reference-domain width."""
+    x_arr = np.asarray(x, dtype=float)
+    xlim = autoscale_window_1d(
+        x_axis=x_arr,
+        values=np.asarray(reference_values, dtype=float),
+        threshold_fraction=threshold_fraction,
+    )
+    if xlim is None:
+        return series
+
+    lo, hi = xlim
+    if span_multiplier > 1.0:
+        center = 0.5 * (lo + hi)
+        half_span = 0.5 * (hi - lo) * span_multiplier
+        lo = center - half_span
+        hi = center + half_span
+
+    mask = (x_arr >= lo) & (x_arr <= hi)
+    if np.count_nonzero(mask) < 2:
+        return series
+
+    return [
+        LineSeries(
+            x=np.asarray(entry.x, dtype=float)[mask],
+            y=np.asarray(entry.y, dtype=float)[mask],
+            label=entry.label,
+        )
+        for entry in series
+    ]
+
+
+def _absolute_omega_axis_rad_per_fs(state: LaserState) -> np.ndarray:
+    center_wavelength_nm = float(state.pulse.grid.center_wavelength_nm)
+    omega0_rad_per_s = 2.0 * np.pi * LIGHT_SPEED_M_PER_S / (center_wavelength_nm * 1e-9)
+    return np.asarray(state.pulse.grid.w, dtype=float) + omega0_rad_per_s * 1e-15
+
+
 def main() -> None:
     ASSET_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -81,6 +127,7 @@ def main() -> None:
     initial_state = AnalyticLaserGenStage(laser_cfg).process(_empty_state()).state
 
     w = np.asarray(initial_state.pulse.grid.w)
+    w_abs = _absolute_omega_axis_rad_per_fs(initial_state)
     t = np.asarray(initial_state.pulse.grid.t)
 
     phase_gdd_cfg = PhaseOnlyDispersionCfg(name="phase_gdd", gdd_fs2=8.5e4, tod_fs3=0.0)
@@ -128,73 +175,109 @@ def main() -> None:
     gdd_est_gdd, tod_est_gdd = _recover_gdd_tod(w, d2_gdd, d3_gdd)
     gdd_est_treacy, tod_est_treacy = _recover_gdd_tod(w, d2_treacy, d3_treacy)
 
+    phase_series = _series_with_window(
+        x=w_abs,
+        reference_values=np.asarray(initial_state.pulse.spectrum_w, dtype=float),
+        threshold_fraction=2e-3,
+        series=[
+            LineSeries(x=w_abs, y=phi_gdd, label="PhaseOnly (GDD)"),
+            LineSeries(x=w_abs, y=phi_gdd_tod, label="PhaseOnly (GDD+TOD)"),
+            LineSeries(x=w_abs, y=phi_treacy, label="Treacy mapped to polynomial"),
+        ],
+    )
     plot_line_series(
         out_path=ASSET_DIR / "phi_vs_w.png",
-        series=[
-            LineSeries(x=w, y=phi_gdd, label="PhaseOnly (GDD)"),
-            LineSeries(x=w, y=phi_gdd_tod, label="PhaseOnly (GDD+TOD)"),
-            LineSeries(x=w, y=phi_treacy, label="Treacy mapped to polynomial"),
-        ],
-        x_label="Δω [rad/fs]",
-        y_label="φ(Δω) [rad]",
+        series=phase_series,
+        x_label="ω [rad/fs]",
+        y_label="φ(ω) [rad]",
         title="Spectral phase",
         figsize=(9, 5),
     )
 
+    group_delay_series = _series_with_window(
+        x=w_abs,
+        reference_values=np.asarray(initial_state.pulse.spectrum_w, dtype=float),
+        threshold_fraction=2e-3,
+        series=[
+            LineSeries(x=w_abs, y=tau_g_gdd, label="PhaseOnly (GDD)"),
+            LineSeries(x=w_abs, y=tau_g_gdd_tod, label="PhaseOnly (GDD+TOD)"),
+            LineSeries(x=w_abs, y=tau_g_treacy, label="Treacy mapped to polynomial"),
+        ],
+    )
     plot_line_series(
         out_path=ASSET_DIR / "group_delay_vs_w.png",
-        series=[
-            LineSeries(x=w, y=tau_g_gdd, label="PhaseOnly (GDD)"),
-            LineSeries(x=w, y=tau_g_gdd_tod, label="PhaseOnly (GDD+TOD)"),
-            LineSeries(x=w, y=tau_g_treacy, label="Treacy mapped to polynomial"),
-        ],
-        x_label="Δω [rad/fs]",
+        series=group_delay_series,
+        x_label="ω [rad/fs]",
         y_label="dφ/dω [fs]",
         title="Group delay",
         figsize=(9, 5),
     )
 
+    d2phi_series = _series_with_window(
+        x=w_abs,
+        reference_values=np.asarray(initial_state.pulse.spectrum_w, dtype=float),
+        threshold_fraction=2e-3,
+        series=[
+            LineSeries(x=w_abs, y=d2_gdd, label="PhaseOnly (GDD only)"),
+            LineSeries(x=w_abs, y=d2_treacy, label="Treacy (with TOD)"),
+            LineSeries(
+                x=w_abs, y=np.full_like(w_abs, -phase_gdd_cfg.gdd_fs2), label="Expected: -GDD"
+            ),
+        ],
+    )
     plot_line_series(
         out_path=ASSET_DIR / "d2phi_vs_w.png",
-        series=[
-            LineSeries(x=w, y=d2_gdd, label="PhaseOnly (GDD only)"),
-            LineSeries(x=w, y=d2_treacy, label="Treacy (with TOD)"),
-            LineSeries(x=w, y=np.full_like(w, -phase_gdd_cfg.gdd_fs2), label="Expected: -GDD"),
-        ],
-        x_label="Δω [rad/fs]",
+        series=d2phi_series,
+        x_label="ω [rad/fs]",
         y_label="d²φ/dω² [fs²]",
         title="Second derivative of spectral phase",
         figsize=(9, 5),
     )
 
-    plot_line_series(
-        out_path=ASSET_DIR / "intensity_time_before_after.png",
+    time_window_series = _series_with_window(
+        x=t,
+        reference_values=np.asarray(initial_state.pulse.intensity_t, dtype=float),
+        threshold_fraction=3e-3,
+        span_multiplier=6.0,
         series=[
             LineSeries(x=t, y=initial_state.pulse.intensity_t, label="Input"),
             LineSeries(x=t, y=phase_gdd_state.pulse.intensity_t, label="After stretcher (GDD)"),
             LineSeries(x=t, y=recompressed_state.pulse.intensity_t, label="After compressor"),
         ],
+    )
+    plot_line_series(
+        out_path=ASSET_DIR / "intensity_time_before_after.png",
+        series=time_window_series,
         x_label="t [fs]",
         y_label="|E(t)|² [a.u.]",
         title="Time-domain intensity before/after stretcher/compressor",
         figsize=(9, 5),
     )
 
+    spectrum_series = _series_with_window(
+        x=w_abs,
+        reference_values=np.asarray(initial_state.pulse.spectrum_w, dtype=float),
+        threshold_fraction=2e-3,
+        series=[
+            LineSeries(x=w_abs, y=initial_state.pulse.spectrum_w, label="Input"),
+            LineSeries(x=w_abs, y=phase_gdd_state.pulse.spectrum_w, label="After stretcher"),
+            LineSeries(x=w_abs, y=recompressed_state.pulse.spectrum_w, label="After compressor"),
+        ],
+    )
     plot_line_series(
         out_path=ASSET_DIR / "spectrum_before_after.png",
-        series=[
-            LineSeries(x=w, y=initial_state.pulse.spectrum_w, label="Input"),
-            LineSeries(x=w, y=phase_gdd_state.pulse.spectrum_w, label="After stretcher"),
-            LineSeries(x=w, y=recompressed_state.pulse.spectrum_w, label="After compressor"),
-        ],
-        x_label="Δω [rad/fs]",
-        y_label="|E(Δω)|² [a.u.]",
+        series=spectrum_series,
+        x_label="ω [rad/fs]",
+        y_label="|E(ω)|² [a.u.]",
         title="Spectrum before/after (phase-only invariance)",
         figsize=(9, 5),
     )
 
-    plot_line_series(
-        out_path=ASSET_DIR / "treacy_vs_poly_intensity_overlay.png",
+    treacy_overlay_series = _series_with_window(
+        x=t,
+        reference_values=np.asarray(initial_state.pulse.intensity_t, dtype=float),
+        threshold_fraction=3e-3,
+        span_multiplier=6.0,
         series=[
             LineSeries(x=t, y=treacy_state.pulse.intensity_t, label="TreacyGratingPair"),
             LineSeries(
@@ -203,6 +286,10 @@ def main() -> None:
                 label="PhaseOnly with Treacy GDD/TOD",
             ),
         ],
+    )
+    plot_line_series(
+        out_path=ASSET_DIR / "treacy_vs_poly_intensity_overlay.png",
+        series=treacy_overlay_series,
         x_label="t [fs]",
         y_label="|E(t)|² [a.u.]",
         title="Treacy vs polynomial phase-only overlay",
