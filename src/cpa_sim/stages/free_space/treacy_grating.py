@@ -12,6 +12,7 @@ from cpa_sim.models.config import (
 )
 from cpa_sim.models.state import LaserState
 from cpa_sim.phys_pipeline_compat import PolicyBag, StageResult
+from cpa_sim.physics.windowing import run_with_auto_window
 from cpa_sim.stages.base import LaserStage
 from cpa_sim.utils import maybe_emit_stage_plots
 
@@ -110,11 +111,9 @@ class TreacyGratingStage(LaserStage[FreeSpaceCfg]):
     def process(
         self, state: LaserState, *, policy: PolicyBag | None = None
     ) -> StageResult[LaserState]:
-        out = state.deepcopy()
-        w = np.asarray(out.pulse.grid.w)
+        w = np.asarray(state.pulse.grid.w)
         assert_offset_omega_grid(w)
         w_ref = 0.0
-        domega = w
 
         if isinstance(self.cfg, TreacyGratingPairCfg):
             cfg_metrics = _compute_treacy_metrics(self.cfg)
@@ -139,17 +138,38 @@ class TreacyGratingStage(LaserStage[FreeSpaceCfg]):
             }
 
         if apply_to_pulse:
-            phase = _phase_from_dispersion(domega, gdd_fs2=gdd_fs2, tod_fs3=tod_fs3)
-            out.pulse.field_w = out.pulse.field_w * np.exp(1j * phase)
-            out.pulse.field_t = np.fft.fftshift(np.fft.ifft(np.fft.ifftshift(out.pulse.field_w)))
-            out.pulse.intensity_t = np.abs(out.pulse.field_t) ** 2
-            out.pulse.spectrum_w = np.abs(out.pulse.field_w) ** 2
+
+            def _apply_once(state_in: LaserState) -> LaserState:
+                out_state = state_in.deepcopy()
+                domega = np.asarray(out_state.pulse.grid.w)
+                assert_offset_omega_grid(domega)
+                phase = _phase_from_dispersion(domega, gdd_fs2=gdd_fs2, tod_fs3=tod_fs3)
+                out_state.pulse.field_w = out_state.pulse.field_w * np.exp(1j * phase)
+                out_state.pulse.field_t = np.fft.fftshift(
+                    np.fft.ifft(np.fft.ifftshift(out_state.pulse.field_w))
+                )
+                out_state.pulse.intensity_t = np.abs(out_state.pulse.field_t) ** 2
+                out_state.pulse.spectrum_w = np.abs(out_state.pulse.field_w) ** 2
+                return out_state
+
+            out, aw_metrics, aw_events = run_with_auto_window(
+                state,
+                _apply_once,
+                stage_name=self.name,
+                policy=policy,
+            )
+            out.meta.setdefault("auto_window_events", [])
+            out.meta["auto_window_events"].extend(aw_events)
+        else:
+            out = state.deepcopy()
+            aw_metrics = {}
 
         stage_metrics = {
             f"{self.name}.energy_au": float(np.sum(out.pulse.intensity_t) * out.pulse.grid.dt),
             f"{self.name}.apply_to_pulse": float(1.0 if apply_to_pulse else 0.0),
         }
         stage_metrics.update({f"{self.name}.{key}": value for key, value in cfg_metrics.items()})
+        stage_metrics.update(aw_metrics)
         out.metrics.update(stage_metrics)
         out.artifacts.update(maybe_emit_stage_plots(stage_name=self.name, state=out, policy=policy))
         return StageResult(state=out, metrics=stage_metrics)

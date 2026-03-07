@@ -6,11 +6,11 @@
 - Date: 2026-03-07
 - By: @openai-codex
 - Note: Keep this section capped at the 5 most recent scope entries.
+- Scope: Integrated free-space `TreacyGratingStage` with policy-driven `run_with_auto_window` reruns (phase re-evaluated per padded grid), persisted auto-window provenance events in `state.meta`, merged auto-window metrics into stage metrics, and added unit coverage for enabled/disabled behavior across both `PhaseOnlyDispersionCfg` and `TreacyGratingPairCfg`.
 - Scope: Added policy-driven auto-window helpers in `physics/windowing` (`auto_window_enabled_for_stage`, `_next_n_samples`, `run_with_auto_window`) for free-space-only run→diagnose→pad→rerun control with deterministic event/metrics reporting, plus unit coverage for no-rerun behavior when edge energy already satisfies threshold.
 - Scope: Enforced FiberAmpWrap nonlinearity inputs as an XOR contract (`gamma_1_per_w_m` vs `n2_m2_per_w`+`aeff_m2`), added unit validation coverage for accepted/rejected combinations, and updated the SPM-after-amp example/docs to showcase n2+Aeff inputs instead of direct gamma.
 - Scope: Added `cpa_sim.reporting.pipeline_run.run_pipeline_with_plot_policy` as a shared script-facing run helper that applies canonical plotting policy and returns canonical metrics/artifact payloads; refactored CLI plus the WUST fiber, SPM-after-amp, and dispersive-wave showcase examples to consume canonical stage plot artifacts instead of duplicating standard line plotting; isolated docs-only render intermediates under `docs_rendering/runtime_stage_plots`; and added integration coverage asserting example artifact keys and no duplicate script-local standard plotting calls.
 - Scope: Removed temporary backward-compatibility plotting shims (`cpa_sim.utils._autoscale_window`, `cpa_sim.plotting.dispersive_wave.auto_xlim_from_intensity`), deleted the redundant `plotting/pulse_compare.py` helper, and updated scripts/tests to consume generic `cpa_sim.plotting.common` primitives directly for lower redundancy.
-- Scope: Added a dedicated `plotting` optional dependency extra (`matplotlib`) and updated PR/physics CI workflows to install `.[dev,plotting]` so Matplotlib-backed plotting tests execute in CI while remaining skippable locally when the optional package is absent.
 
 ---
 
