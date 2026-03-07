@@ -22,7 +22,10 @@ def _run_spm(out_dir: Path) -> dict[str, Any]:
 
 
 def _extract_wust_artifacts(outputs: dict[str, Any]) -> dict[str, Path]:
-    return {name: Path(path) for name, path in outputs.items()}
+    return {
+        "time": Path(outputs["time"]),
+        "spectrum": Path(outputs["spectrum"]),
+    }
 
 
 def _extract_spm_artifacts(outputs: dict[str, Any]) -> dict[str, Path]:

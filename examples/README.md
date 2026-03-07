@@ -1,30 +1,14 @@
 # Examples
 
-User-facing wrappers for canonical scenarios. Source implementations are centralized in `src/cpa_sim/examples/`.
+User-facing examples are implemented under `src/cpa_sim/examples/` and run via module entrypoints.
 
-## Dispersive-wave generation
-
-```bash
-python -m cpa_sim.examples.gnlse_dispersive_wave --outdir artifacts/example-dispersive-wave
-```
-
-The script runs the WUST `gnlse` fiber backend and writes publication-oriented figures:
-
-- Input/output spectrum comparison (`z=0` vs `z=L`)
-- Wavelength-vs-distance evolution heatmap
-- Delay-vs-distance evolution heatmap
-
-## SPM after fiber amp stage
+## Run examples
 
 ```bash
-python -m cpa_sim.examples.spm_after_fiber_amp --out artifacts/example-spm-after-amp
+python -m cpa_sim.examples.wust_gnlse_fiber_example --out artifacts/fiber-example --format svg
+python -m cpa_sim.examples.gnlse_dispersive_wave --outdir artifacts/gnlse-dispersive-wave
+python -m cpa_sim.examples.spm_after_fiber_amp --out artifacts/spm-after-fiber-amp
+python -m cpa_sim.examples.treacy_stage_validation
 ```
 
-This script demonstrates nonlinear self-phase modulation (SPM) through a `FiberAmpWrapStage` using:
-
-- `n2 = 2.6e-20 m²/W`
-- `Aeff = 4.18879020478639e-12 m²`
-- fiber length `L = 2 m`
-- input pulse: `sech²`, `7 ps` FWHM, `0.3 W` average power
-- amplifier target output: `4.5 W` average power
-- repetition rate: `1.115 GHz`
+Top-level wrapper scripts were removed to keep a single source of truth.

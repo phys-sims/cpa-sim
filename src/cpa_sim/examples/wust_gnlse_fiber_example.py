@@ -11,7 +11,6 @@ from cpa_sim.models import (
     LaserSpec,
     PipelineConfig,
     PulseSpec,
-    RamanCfg,
     RuntimeCfg,
     WustGnlseNumericsCfg,
 )
@@ -45,11 +44,10 @@ def run_example(out_dir: Path, *, plot_format: str = "svg") -> dict[str, Path]:
             FiberCfg(
                 name=DEFAULT_STAGE_NAME,
                 physics=FiberPhysicsCfg(
-                    length_m=0.25,
+                    length_m=0.3,
                     loss_db_per_m=0.0,
-                    gamma_1_per_w_m=0.008,
-                    dispersion=DispersionTaylorCfg(betas_psn_per_m=[-0.02]),
-                    raman=RamanCfg(model="blowwood"),
+                    gamma_1_per_w_m=0.0,
+                    dispersion=DispersionTaylorCfg(betas_psn_per_m=[0.03]),
                 ),
                 numerics=WustGnlseNumericsCfg(
                     backend="wust_gnlse",
@@ -63,6 +61,11 @@ def run_example(out_dir: Path, *, plot_format: str = "svg") -> dict[str, Path]:
     run_output = run_pipeline_with_plot_policy(cfg, stage_plot_dir=out_dir)
     artifacts = run_output.artifacts
     return {
+        "time_before": Path(artifacts["laser_init.plot_time_intensity"]),
+        "spectrum_before": Path(artifacts["laser_init.plot_spectrum"]),
+        "time_after": Path(artifacts[f"{DEFAULT_STAGE_NAME}.plot_time_intensity"]),
+        "spectrum_after": Path(artifacts[f"{DEFAULT_STAGE_NAME}.plot_spectrum"]),
+        # Backward-compat aliases for existing tests/callers.
         "time": Path(artifacts[f"{DEFAULT_STAGE_NAME}.plot_time_intensity"]),
         "spectrum": Path(artifacts[f"{DEFAULT_STAGE_NAME}.plot_spectrum"]),
     }
@@ -70,7 +73,7 @@ def run_example(out_dir: Path, *, plot_format: str = "svg") -> dict[str, Path]:
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Run a small WUST gnlse fiber example and save plots."
+        description="Run a simple linear-dispersion fiber example and save plots."
     )
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument("--format", choices=["svg"], default="svg")

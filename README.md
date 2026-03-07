@@ -219,11 +219,11 @@ Legacy compatibility (deprecated): `amplitude` is still accepted but should be m
 For `fiber_amp_wrap`, `power_out_w` is the target **output average power in watts** at the stage output plane.
 
 
-## Fiber stage example (WUST `gnlse`, Raman-enabled)
+## Fiber stage example (WUST `gnlse`, linear dispersion)
 
 Example policy: runnable example logic lives in `src/cpa_sim/examples/*` and is invoked via module entrypoints.
 
-A runnable fiber-stage example module is available at (configured for a **1550 nm, 1 ps** input pulse with Kerr nonlinearity + Raman response):
+A runnable fiber-stage example module is available at (configured for a **1550 nm, 1 ps** input pulse in a simple linear-dispersion regime):
 
 - `src/cpa_sim/examples/wust_gnlse_fiber_example.py`
 

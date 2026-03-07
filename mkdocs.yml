@@ -17,7 +17,6 @@ nav:
       - Canonical 1560nm Chain: examples/canonical-1560nm-chain.md
       - WUST GNLS Fiber Example: examples/wust-gnlse-fiber-example.md
       - GNLS Dispersive Wave: examples/gnlse-dispersive-wave.md
-      - GNLS Dispersive Wave (835 nm): examples/gnlse-dispersive-wave-835nm.md
   - Configuration:
       - Pulse Spec: config/pulse_spec.md
   - ADRs:
