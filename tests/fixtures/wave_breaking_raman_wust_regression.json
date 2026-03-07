@@ -1,0 +1,40 @@
+{
+  "case": "wave_breaking_raman_wust_blowwood",
+  "config": {
+    "seed": 7,
+    "center_wavelength_nm": 835.0,
+    "n_samples": 4096,
+    "z_saves": 200,
+    "raman_model": "blowwood"
+  },
+  "bounds": {
+    "energy_ratio": {
+      "min": 0.9,
+      "max": 1.1
+    },
+    "blue_peak_ratio": {
+      "min": 0.0001,
+      "max": 1.0
+    },
+    "blue_peak_wavelength_nm": {
+      "min": 500.0,
+      "max": 650.0
+    },
+    "global_peak_wavelength_nm": {
+      "min": 750.0,
+      "max": 790.0
+    },
+    "spectral_centroid_nm": {
+      "min": 760.0,
+      "max": 980.0
+    },
+    "delay_peak_ps": {
+      "min": -0.3,
+      "max": 2.0
+    },
+    "delay_rms_ps": {
+      "min": 0.02,
+      "max": 2.5
+    }
+  }
+}

@@ -29,6 +29,8 @@ def _extract_simple_fiber_dispersion_artifacts(outputs: dict[str, Any]) -> dict[
         "spectrum_before_svg": Path(outputs["spectrum_before_svg"]),
         "time_after_svg": Path(outputs["time_after_svg"]),
         "spectrum_after_svg": Path(outputs["spectrum_after_svg"]),
+        "metrics_time_overlay_svg": Path(outputs["metrics_time_overlay_svg"]),
+        "metrics_spectrum_overlay_svg": Path(outputs["metrics_spectrum_overlay_svg"]),
     }
 
 
@@ -45,13 +47,25 @@ def _extract_fiber_amp_spm_artifacts(outputs: dict[str, Any]) -> dict[str, Path]
         (
             "simple_fiber_dispersion",
             _run_simple_fiber_dispersion,
-            {"time_before_svg", "spectrum_before_svg", "time_after_svg", "spectrum_after_svg"},
+            {
+                "time_before_svg",
+                "spectrum_before_svg",
+                "time_after_svg",
+                "spectrum_after_svg",
+                "metrics_time_overlay_svg",
+                "metrics_spectrum_overlay_svg",
+            },
             _extract_simple_fiber_dispersion_artifacts,
         ),
         (
             "fiber_amp_spm",
             _run_fiber_amp_spm,
-            {"time_intensity_svg", "spectrum_svg"},
+            {
+                "time_intensity_svg",
+                "spectrum_svg",
+                "metrics_time_overlay_svg",
+                "metrics_spectrum_overlay_svg",
+            },
             _extract_fiber_amp_spm_artifacts,
         ),
     ],

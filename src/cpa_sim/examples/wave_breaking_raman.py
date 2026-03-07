@@ -15,11 +15,10 @@ API so it can be used as a reproducible, user-facing workflow.
 
 from __future__ import annotations
 
-import argparse
-from collections.abc import Callable
 from pathlib import Path
-from typing import Literal, cast
+from typing import Literal
 
+from cpa_sim.examples._shared import print_example_artifacts, run_example_with_default_policy
 from cpa_sim.models import (
     DispersionTaylorCfg,
     FiberCfg,
@@ -32,65 +31,20 @@ from cpa_sim.models import (
     RuntimeCfg,
     WustGnlseNumericsCfg,
 )
-from cpa_sim.pipeline import run_pipeline
 from cpa_sim.plotting import plot_dispersive_wave_maps_from_npz
 
 _STAGE_NAME = "wave_breaking_raman"
+DEFAULT_OUT_DIR = Path("artifacts/wave-breaking-raman")
+DEFAULT_N_SAMPLES = 8192
+DEFAULT_Z_SAVES = 400
 RamanModelName = Literal["blowwood", "linagrawal", "hollenbeck", "none"]
-
-
-def _int_with_min(*, name: str, minimum: int) -> Callable[[str], int]:
-    def _parse(value: str) -> int:
-        try:
-            parsed = int(value)
-        except ValueError as exc:
-            raise argparse.ArgumentTypeError(f"{name} must be an integer.") from exc
-        if parsed < minimum:
-            raise argparse.ArgumentTypeError(f"{name} must be >= {minimum}; got {parsed}.")
-        return parsed
-
-    return _parse
-
-
-def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Generate dispersive-wave figures with cpa-sim + WUST gnlse"
-    )
-    parser.add_argument(
-        "--outdir", type=Path, required=True, help="Output directory for generated figures"
-    )
-    parser.add_argument(
-        "--n-samples",
-        type=_int_with_min(name="--n-samples", minimum=2),
-        default=8192,
-        help="Pulse temporal grid sample count (must be >= 2)",
-    )
-    parser.add_argument(
-        "--z-saves",
-        type=_int_with_min(name="--z-saves", minimum=1),
-        default=400,
-        help="Number of saved z-slices from gnlse (must be >= 1)",
-    )
-    parser.add_argument(
-        "--raman-model",
-        type=str,
-        default="blowwood",
-        choices=["blowwood", "linagrawal", "hollenbeck", "none"],
-        help="Raman response model (or 'none' to disable Raman)",
-    )
-    parser.add_argument(
-        "--fast",
-        action="store_true",
-        help="Quick mode: overrides to n_samples=4096 and z_saves=150",
-    )
-    return parser
 
 
 def run_example(
     *,
-    out_dir: Path,
-    n_samples: int = 8192,
-    z_saves: int = 400,
+    out_dir: Path = DEFAULT_OUT_DIR,
+    n_samples: int = DEFAULT_N_SAMPLES,
+    z_saves: int = DEFAULT_Z_SAVES,
     raman_model: RamanModelName = "blowwood",
 ) -> dict[str, Path]:
     raman_cfg = None if raman_model == "none" else RamanCfg(model=raman_model)
@@ -140,15 +94,9 @@ def run_example(
         ],
     )
 
-    result = run_pipeline(
-        cfg,
-        policy={
-            "cpa.emit_stage_plots": True,
-            "cpa.stage_plot_dir": str(out_dir),
-        },
-    )
+    run_output = run_example_with_default_policy(cfg, stage_plot_dir=out_dir)
 
-    artifacts = {**result.artifacts, **result.state.artifacts}
+    artifacts = run_output.artifacts
     z_traces_npz = Path(artifacts[f"{_STAGE_NAME}.z_traces_npz"])
 
     fig_paths = plot_dispersive_wave_maps_from_npz(
@@ -171,25 +119,8 @@ def run_example(
 
 
 def main() -> None:
-    args = _build_parser().parse_args()
-    outdir = args.outdir
-
-    n_samples = 4096 if args.fast else args.n_samples
-    z_saves = 150 if args.fast else args.z_saves
-
-    outputs = run_example(
-        out_dir=outdir,
-        n_samples=n_samples,
-        z_saves=z_saves,
-        raman_model=cast(RamanModelName, args.raman_model),
-    )
-
-    print("Generated wave-breaking Raman artifacts:")
-    print(f"  z-traces npz       : {outputs['z_traces_npz']}")
-    print(f"  wavelength (linear): {outputs['wavelength_linear']}")
-    print(f"  wavelength (log)   : {outputs['wavelength_log']}")
-    print(f"  delay (linear)     : {outputs['delay_linear']}")
-    print(f"  delay (log)        : {outputs['delay_log']}")
+    outputs = run_example()
+    print_example_artifacts(title="Generated wave-breaking Raman artifacts:", artifacts=outputs)
 
 
 if __name__ == "__main__":

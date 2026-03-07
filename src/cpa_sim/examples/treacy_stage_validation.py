@@ -16,7 +16,7 @@ from cpa_sim.stages.free_space.treacy_grating import (
 from cpa_sim.stages.laser_gen.analytic import AnalyticLaserGenStage
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-ASSET_DIR = REPO_ROOT / "docs" / "assets" / "treacy_validation"
+DEFAULT_OUT_DIR = REPO_ROOT / "docs" / "assets" / "treacy_validation"
 LIGHT_SPEED_M_PER_S = 299_792_458.0
 ENABLE_ABSOLUTE_OMEGA_PLOTS = False
 
@@ -150,8 +150,8 @@ def _absolute_omega_axis_rad_per_fs(state: LaserState) -> np.ndarray:
     return np.asarray(state.pulse.grid.w, dtype=float) + omega0_rad_per_s * 1e-15
 
 
-def main() -> None:
-    ASSET_DIR.mkdir(parents=True, exist_ok=True)
+def run_example(*, out_dir: Path = DEFAULT_OUT_DIR) -> Path:
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     laser_cfg = LaserGenCfg(
         name="laser",
@@ -226,7 +226,7 @@ def main() -> None:
         ],
     )
     plot_line_series(
-        out_path=ASSET_DIR / "phi_vs_w.png",
+        out_path=out_dir / "phi_vs_w.png",
         series=phase_series,
         x_label="Delta omega [rad/fs]",
         y_label="phi(Delta omega) [rad]",
@@ -244,7 +244,7 @@ def main() -> None:
         ],
     )
     plot_line_series(
-        out_path=ASSET_DIR / "group_delay_vs_w.png",
+        out_path=out_dir / "group_delay_vs_w.png",
         series=group_delay_series,
         x_label="Delta omega [rad/fs]",
         y_label="dphi/d(Delta omega) [fs]",
@@ -268,7 +268,7 @@ def main() -> None:
         ],
     )
     plot_line_series(
-        out_path=ASSET_DIR / "d2phi_vs_w.png",
+        out_path=out_dir / "d2phi_vs_w.png",
         series=d2phi_series,
         x_label="Delta omega [rad/fs]",
         y_label="d2phi/d(Delta omega)^2 [fs^2]",
@@ -294,7 +294,7 @@ def main() -> None:
         ],
     )
     plot_line_series(
-        out_path=ASSET_DIR / "intensity_time_before_after.png",
+        out_path=out_dir / "intensity_time_before_after.png",
         series=time_window_series,
         x_label="t [fs]",
         y_label="|E(t)|^2 [a.u.]",
@@ -321,7 +321,7 @@ def main() -> None:
         ],
     )
     plot_line_series(
-        out_path=ASSET_DIR / "spectrum_before_after.png",
+        out_path=out_dir / "spectrum_before_after.png",
         series=spectrum_series,
         x_label="Delta omega [rad/fs]",
         y_label="|E(Delta omega)|^2 [a.u.]",
@@ -344,7 +344,7 @@ def main() -> None:
             ],
         )
         plot_line_series(
-            out_path=ASSET_DIR / "optional_phi_vs_absolute_omega.png",
+            out_path=out_dir / "optional_phi_vs_absolute_omega.png",
             series=absolute_phase_series,
             x_label="Absolute optical omega [rad/fs]",
             y_label="phi(omega) [rad]",
@@ -389,7 +389,7 @@ def main() -> None:
         ],
     )
     plot_line_series(
-        out_path=ASSET_DIR / "treacy_vs_poly_intensity_overlay.png",
+        out_path=out_dir / "treacy_vs_poly_intensity_overlay.png",
         series=treacy_overlay_series,
         x_label="t [fs]",
         y_label="|E(t)|^2 [a.u.]",
@@ -415,7 +415,7 @@ def main() -> None:
         ],
     )
     plot_line_series(
-        out_path=ASSET_DIR / "treacy_vs_poly_spectrum_overlay.png",
+        out_path=out_dir / "treacy_vs_poly_spectrum_overlay.png",
         series=treacy_spectrum_overlay_series,
         x_label="Delta omega [rad/fs]",
         y_label="|E(Delta omega)|^2 [a.u.]",
@@ -472,7 +472,12 @@ def main() -> None:
     print(f"Spectrum relative L2 difference        : {treacy_spectrum_rel_l2:10.6e}")
     print(f"RMS relative difference                : {treacy_rms_rel_diff:10.6e}")
     print()
-    print(f"Artifacts written to: {ASSET_DIR}")
+    print(f"Artifacts written to: {out_dir}")
+    return out_dir
+
+
+def main() -> None:
+    run_example(out_dir=DEFAULT_OUT_DIR)
 
 
 if __name__ == "__main__":

@@ -97,6 +97,7 @@ Each run writes these CLI artifacts into `--out`:
 - `metrics.json` (overall + per-stage metrics),
 - `artifacts.json` (artifact path registry),
 - `stage_plots/` with per-stage SVG time-intensity and spectrum plots,
+- metrics-stage input/output overlays (`metrics_time_intensity_overlay.svg`, `metrics_spectrum_overlay.svg`),
 - optional `state_final.npz` when `--dump-state-npz` is passed.
 
 Example with NPZ state dump enabled:
@@ -226,11 +227,11 @@ For `fiber_amp_wrap`, `power_out_w` is the target **output average power in watt
 Runnable example logic lives in `src/cpa_sim/examples/*` and is invoked via module entrypoints.
 
 ```bash
-python -m cpa_sim.examples.simple_fiber_dispersion --out artifacts/simple-fiber-dispersion --format svg
-python -m cpa_sim.examples.wave_breaking_raman --outdir artifacts/wave-breaking-raman
-python -m cpa_sim.examples.fiber_amp_spm --out artifacts/fiber-amp-spm
+python -m cpa_sim.examples.simple_fiber_dispersion
+python -m cpa_sim.examples.wave_breaking_raman
+python -m cpa_sim.examples.fiber_amp_spm
 python -m cpa_sim.examples.treacy_stage_validation
-python -m cpa_sim.examples.end_to_end_1560nm --ci-safe --out artifacts/end-to-end-1560nm-ci
+python -m cpa_sim.examples.end_to_end_1560nm
 ```
 
 See `docs/examples/` for per-example guides.
@@ -248,6 +249,8 @@ See `docs/examples/` for per-example guides.
 - `stage_plots/`
   - `<stage>_time_intensity.svg`
   - `<stage>_spectrum.svg`
+  - `metrics_time_intensity_overlay.svg`
+  - `metrics_spectrum_overlay.svg`
 - `state_final.npz` (optional via `--dump-state-npz`)
 
 A run returns a `StageResult` with deterministic `state`, `metrics`, and provenance metadata in `state.meta`.

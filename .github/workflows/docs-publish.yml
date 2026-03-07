@@ -37,7 +37,8 @@ jobs:
           # gnlse currently imports pkg_resources at build time in CI;
           # pin setuptools to avoid breakages from newer releases.
           pip install "setuptools<81"
-          pip install -e .[gnlse]
+          # Pin solver version in CI for stable wave-breaking regression outputs.
+          pip install --no-build-isolation "gnlse==2.0.0"
 
       - name: Generate docs assets (scheduled/manual)
         run: |

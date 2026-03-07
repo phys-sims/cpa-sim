@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-import argparse
-import json
 from pathlib import Path
 from typing import Any
 
+from cpa_sim.examples._shared import (
+    ensure_out_dir,
+    print_example_artifacts,
+    run_example_with_default_policy,
+    write_example_json,
+)
 from cpa_sim.models import (
     DispersionTaylorCfg,
     FiberAmpWrapCfg,
@@ -18,7 +22,6 @@ from cpa_sim.models import (
     TreacyGratingPairCfg,
     WustGnlseNumericsCfg,
 )
-from cpa_sim.pipeline import run_pipeline
 
 DEFAULT_OUT_DIR = Path("artifacts/end-to-end-1560nm")
 DEFAULT_PLOT_DIR = DEFAULT_OUT_DIR / "stage-plots"
@@ -100,12 +103,17 @@ def build_config(*, seed: int, ci_safe: bool) -> PipelineConfig:
     )
 
 
-def run_example(*, out_dir: Path, plot_dir: Path, seed: int, ci_safe: bool) -> dict[str, Any]:
-    out_dir.mkdir(parents=True, exist_ok=True)
+def run_example(
+    *,
+    out_dir: Path = DEFAULT_OUT_DIR,
+    plot_dir: Path = DEFAULT_PLOT_DIR,
+    seed: int = DEFAULT_SEED,
+    ci_safe: bool = False,
+) -> dict[str, Any]:
+    ensure_out_dir(out_dir)
     cfg = build_config(seed=seed, ci_safe=ci_safe)
-    policy = {
+    policy_overrides = {
         "cpa.emit_stage_plots": True,
-        "cpa.stage_plot_dir": str(plot_dir),
         "cpa.plot.line.threshold_fraction": 1e-3,
         "cpa.plot.line.min_support_width": 0.0,
         "cpa.plot.line.pad_fraction": 0.05,
@@ -113,46 +121,32 @@ def run_example(*, out_dir: Path, plot_dir: Path, seed: int, ci_safe: bool) -> d
         "cpa.plot.heatmap.pad_fraction": 0.10,
         "cpa.plot.heatmap.fallback_behavior": "full_axis",
     }
-    result = run_pipeline(cfg, policy=policy)
+    run_output = run_example_with_default_policy(
+        cfg,
+        stage_plot_dir=plot_dir,
+        policy_overrides=policy_overrides,
+    )
+    result = run_output.result
 
     payload = {
         "seed": seed,
         "ci_safe": ci_safe,
-        "policy": policy,
+        "policy": run_output.policy,
         "metrics": result.metrics,
         "observables": result.state.meta.get("observable_contract", {}),
-        "artifacts": {**result.artifacts, **result.state.artifacts},
+        "artifacts": run_output.artifacts,
     }
-    (out_dir / "run_summary.json").write_text(
-        json.dumps(payload, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    write_example_json(out_dir / "run_summary.json", payload)
     return payload
 
 
-def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description=(
-            "Run an end-to-end 1560 nm CPA chain with fiber broadening, "
-            "fiber amp wrapping, and Treacy compression."
-        )
-    )
-    parser.add_argument("--out", type=Path, default=DEFAULT_OUT_DIR)
-    parser.add_argument("--plot-dir", type=Path, default=DEFAULT_PLOT_DIR)
-    parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
-    parser.add_argument("--ci-safe", action="store_true")
-    return parser
-
-
 def main() -> None:
-    args = _build_parser().parse_args()
-    output = run_example(
-        out_dir=args.out,
-        plot_dir=args.plot_dir,
-        seed=args.seed,
-        ci_safe=args.ci_safe,
+    output = run_example()
+    print_example_artifacts(
+        title="Generated end-to-end 1560nm artifacts:",
+        artifacts={k: Path(v) for k, v in output["artifacts"].items()},
     )
-    print(f"wrote summary: {args.out / 'run_summary.json'}")
+    print(f"  summary_json: {DEFAULT_OUT_DIR / 'run_summary.json'}")
     print(f"artifacts emitted: {len(output['artifacts'])}")
 
 

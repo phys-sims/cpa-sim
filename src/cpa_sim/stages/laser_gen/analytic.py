@@ -65,6 +65,8 @@ class AnalyticLaserGenStage(LaserStage[LaserGenCfg]):
         out.meta.setdefault("reference", {})
         out.meta["reference"].update(
             {
+                "t_fs": t.tolist(),
+                "w_rad_per_fs": w.tolist(),
                 "intensity_t": intensity.tolist(),
                 "spectrum_w": spectrum.tolist(),
             }

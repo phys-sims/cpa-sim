@@ -168,6 +168,30 @@ def test_wust_delay_axis_converts_fs_to_ps() -> None:
 
 
 @pytest.mark.unit
+def test_wust_map_respects_requested_time_and_wavelength_ranges() -> None:
+    at_zt = np.ones((3, 16), dtype=np.complex128)
+    z_m = np.array([0.0, 0.075, 0.15], dtype=float)
+    t_fs = np.linspace(-1000.0, 2000.0, 16)
+    w_rad_per_fs = np.linspace(-0.5, 0.5, 16)
+
+    map_data = _prepare_wust_map_data(
+        at_zt=at_zt,
+        z_m=z_m,
+        t_fs=t_fs,
+        w_rad_per_fs=w_rad_per_fs,
+        center_wavelength_nm=835.0,
+        aw_zw=None,
+        time_range_ps=(-1.0, 2.0),
+        wl_range_nm=(450.0, 1300.0),
+    )
+
+    assert map_data.time_range_ps == (-1.0, 2.0)
+    assert map_data.wl_range_nm == (450.0, 1300.0)
+    assert float(np.min(map_data.wavelength_nm)) >= 450.0
+    assert float(np.max(map_data.wavelength_nm)) <= 1300.0
+
+
+@pytest.mark.unit
 def test_wust_linear_map_normalizes_by_domain_max() -> None:
     values = np.array([[1.0, 2.0], [4.0, 0.0]], dtype=float)
     normalized = _normalize_by_max(values)

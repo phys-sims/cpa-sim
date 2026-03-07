@@ -1,9 +1,13 @@
 from __future__ import annotations
 
-import argparse
 from pathlib import Path
 from typing import Any
 
+from cpa_sim.examples._shared import (
+    print_example_artifacts,
+    run_example_with_default_policy,
+    write_example_json,
+)
 from cpa_sim.models import (
     DispersionTaylorCfg,
     FiberAmpWrapCfg,
@@ -15,15 +19,12 @@ from cpa_sim.models import (
     RuntimeCfg,
     WustGnlseNumericsCfg,
 )
-from cpa_sim.reporting import run_pipeline_with_plot_policy, write_json
 
 DEFAULT_OUT_DIR = Path("artifacts/fiber-amp-spm")
 DEFAULT_STAGE_NAME = "fiber_amp_spm"
 
 
-def run_example(*, out_dir: Path) -> dict[str, Any]:
-    out_dir.mkdir(parents=True, exist_ok=True)
-
+def run_example(*, out_dir: Path = DEFAULT_OUT_DIR) -> dict[str, Any]:
     cfg = PipelineConfig(
         runtime=RuntimeCfg(seed=7),
         laser_gen=LaserGenCfg(
@@ -58,7 +59,7 @@ def run_example(*, out_dir: Path) -> dict[str, Any]:
             )
         ],
     )
-    run_output = run_pipeline_with_plot_policy(cfg, stage_plot_dir=out_dir)
+    run_output = run_example_with_default_policy(cfg, stage_plot_dir=out_dir)
     summary = {
         "inputs": {
             "shape": "sech2",
@@ -74,25 +75,22 @@ def run_example(*, out_dir: Path) -> dict[str, Any]:
         "artifacts": {
             "time_intensity_svg": run_output.artifacts[f"{DEFAULT_STAGE_NAME}.plot_time_intensity"],
             "spectrum_svg": run_output.artifacts[f"{DEFAULT_STAGE_NAME}.plot_spectrum"],
+            "metrics_time_overlay_svg": run_output.artifacts["metrics.plot_time_intensity_overlay"],
+            "metrics_spectrum_overlay_svg": run_output.artifacts["metrics.plot_spectrum_overlay"],
         },
     }
 
-    write_json(out_dir / "summary.json", summary)
+    write_example_json(out_dir / "summary.json", summary)
     return summary
 
 
-def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Show SPM after a fiber amp stage at 0.3 W in / 4.5 W out average power."
-    )
-    parser.add_argument("--out", type=Path, default=DEFAULT_OUT_DIR)
-    return parser
-
-
 def main() -> None:
-    args = _build_parser().parse_args()
-    run_example(out_dir=args.out)
-    print(f"wrote summary: {args.out / 'summary.json'}")
+    summary = run_example()
+    print_example_artifacts(
+        title="Generated fiber amp SPM artifacts:",
+        artifacts={k: Path(v) for k, v in summary["artifacts"].items()},
+    )
+    print(f"  summary_json: {DEFAULT_OUT_DIR / 'summary.json'}")
 
 
 if __name__ == "__main__":

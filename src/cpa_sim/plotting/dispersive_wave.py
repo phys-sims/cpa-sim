@@ -22,6 +22,8 @@ _FS_TO_PS = 1e-3
 _WUST_LOG_FLOOR_DB = -40.0
 _WUST_DEFAULT_TIME_RANGE_PS = (-0.5, 5.0)
 _WUST_DEFAULT_WL_RANGE_NM = (400.0, 1400.0)
+_WUST_LINEAR_CMAP = "jet"
+_WUST_LOG_CMAP = "magma"
 
 
 @dataclass(frozen=True)
@@ -296,12 +298,17 @@ def _render_wust_delay_map(
     *, ax: Any, map_data: _WustMapData, scale: Literal["linear", "log"]
 ) -> Any:
     values = map_data.delay_linear if scale == "linear" else map_data.delay_log_db
-    artist = ax.pcolormesh(
-        map_data.delay_ps,
-        map_data.z_m,
+    artist = ax.imshow(
         values,
-        shading="auto",
-        cmap="magma",
+        origin="lower",
+        aspect="auto",
+        cmap=_WUST_LINEAR_CMAP if scale == "linear" else _WUST_LOG_CMAP,
+        extent=[
+            float(np.min(map_data.delay_ps)),
+            float(np.max(map_data.delay_ps)),
+            float(np.min(map_data.z_m)),
+            float(np.max(map_data.z_m)),
+        ],
         vmin=0.0 if scale == "linear" else _WUST_LOG_FLOOR_DB,
     )
     ax.set_xlim(map_data.time_range_ps)
@@ -318,7 +325,7 @@ def _render_wust_wavelength_map(
         values,
         origin="lower",
         aspect="auto",
-        cmap="magma",
+        cmap=_WUST_LINEAR_CMAP if scale == "linear" else _WUST_LOG_CMAP,
         extent=[
             float(np.min(map_data.wavelength_nm)),
             float(np.max(map_data.wavelength_nm)),
@@ -337,11 +344,12 @@ def _save_wust_map(
     *,
     out_path: Path,
     renderer: Any,
+    color_label: str,
 ) -> None:
     plt = load_pyplot()
     fig, ax = plt.subplots(figsize=(8, 4.8))
     artist = renderer(ax)
-    fig.colorbar(artist, ax=ax)
+    fig.colorbar(artist, ax=ax, label=color_label)
     fig.tight_layout()
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_path, dpi=170)
@@ -354,18 +362,22 @@ def _plot_wust_maps(
     _save_wust_map(
         out_path=paths.delay_linear,
         renderer=lambda ax: _render_wust_delay_map(ax=ax, map_data=map_data, scale="linear"),
+        color_label="Normalized intensity",
     )
     _save_wust_map(
         out_path=paths.delay_log,
         renderer=lambda ax: _render_wust_delay_map(ax=ax, map_data=map_data, scale="log"),
+        color_label="Intensity [dB]",
     )
     _save_wust_map(
         out_path=paths.wavelength_linear,
         renderer=lambda ax: _render_wust_wavelength_map(ax=ax, map_data=map_data, scale="linear"),
+        color_label="Normalized spectral intensity",
     )
     _save_wust_map(
         out_path=paths.wavelength_log,
         renderer=lambda ax: _render_wust_wavelength_map(ax=ax, map_data=map_data, scale="log"),
+        color_label="Spectral intensity [dB]",
     )
     return paths
 

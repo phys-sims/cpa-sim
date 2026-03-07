@@ -27,6 +27,9 @@ For `cpa-sim run config.yaml --out out/`, define a canonical layout under `out/`
   - per-stage files:
     - `<stage_name>_time_intensity.svg`
     - `<stage_name>_spectrum.svg`
+  - metrics-stage overlay files:
+    - `metrics_time_intensity_overlay.svg`
+    - `metrics_spectrum_overlay.svg`
 - `report.json` (required)
   - schema version: `cpa.validation_report.v1`
   - includes run provenance, validation-tier labels/references, summary metrics, and stage artifact pointers
