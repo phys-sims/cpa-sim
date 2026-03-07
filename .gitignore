@@ -14,7 +14,6 @@ coverage.xml
 htmlcov/
 artifacts/
 out/
-out
 
 # --- Packaging/build ---
 dist/
