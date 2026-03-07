@@ -32,6 +32,22 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Write final state arrays to out/state_final.npz.",
     )
+    run_parser.add_argument(
+        "--auto-window",
+        action="store_true",
+        help="Enable free-space auto-window reruns for configured stages.",
+    )
+    run_parser.add_argument(
+        "--auto-window-stages",
+        type=str,
+        default="stretcher,compressor",
+        help="Comma-separated stage names eligible for auto-window reruns.",
+    )
+    run_parser.add_argument(
+        "--auto-window-print",
+        action="store_true",
+        help="Print auto-window rerun diagnostics when reruns are triggered.",
+    )
 
     add_tune_subcommand(subparsers)
 
@@ -77,7 +93,18 @@ def main(argv: list[str] | None = None) -> int:
     out_dir: Path = args.out
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    run_output = run_pipeline_with_plot_policy(cfg, stage_plot_dir=out_dir / "stage_plots")
+    policy_overrides: dict[str, Any] = {}
+    if args.auto_window:
+        stages = [part.strip() for part in args.auto_window_stages.split(",") if part.strip()]
+        policy_overrides["cpa.auto_window.enabled"] = True
+        policy_overrides["cpa.auto_window.stages"] = stages
+        policy_overrides["cpa.auto_window.print"] = bool(args.auto_window_print)
+
+    run_output = run_pipeline_with_plot_policy(
+        cfg,
+        stage_plot_dir=out_dir / "stage_plots",
+        policy_overrides=policy_overrides,
+    )
     result = run_output.result
     artifacts = dict(run_output.artifacts)
 
