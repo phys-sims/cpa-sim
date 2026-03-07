@@ -6,6 +6,7 @@
 - Date: 2026-03-07
 - By: @openai-codex
 - Note: Keep this section capped at the 5 most recent scope entries.
+- Scope: Hardened tuning dot-path patching to reject unknown intermediate/leaf keys by default (preventing silent no-op typo paths during optimization), added explicit `create_missing` opt-in behavior, and added unit coverage for accepted/rejected path updates.
 - Scope: Integrated free-space `TreacyGratingStage` with policy-driven `run_with_auto_window` reruns (phase re-evaluated per padded grid), persisted auto-window provenance events in `state.meta`, merged auto-window metrics into stage metrics, and added unit coverage for enabled/disabled behavior across both `PhaseOnlyDispersionCfg` and `TreacyGratingPairCfg`.
 - Scope: Added policy-driven auto-window helpers in `physics/windowing` (`auto_window_enabled_for_stage`, `_next_n_samples`, `run_with_auto_window`) for free-space-only run→diagnose→pad→rerun control with deterministic event/metrics reporting, plus unit coverage for no-rerun behavior when edge energy already satisfies threshold.
 - Scope: Added a minimal tuning scaffold under `cpa_sim.tuning` (schema, parameter-space patching, policy adapter, objective placeholder, and tune CLI module), wired a new `cpa-sim tune run` placeholder subcommand into the main CLI, kept the `ml` extra aligned to `phys-sims-utils[ml]` (without redundant direct CMA dependency), and added integration/unit coverage for tune help, tune placeholder defaults, and tuning package imports.

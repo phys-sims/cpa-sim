@@ -4,8 +4,17 @@ from copy import deepcopy
 from typing import Any
 
 
-def set_dot_path(payload: dict[str, Any], path: str, value: Any) -> dict[str, Any]:
-    """Set ``value`` at a dot-separated path in a nested mapping."""
+def set_dot_path(
+    payload: dict[str, Any],
+    path: str,
+    value: Any,
+    *,
+    create_missing: bool = False,
+) -> dict[str, Any]:
+    """Set ``value`` at a dot-separated path in a nested mapping.
+
+    By default, all intermediate path segments must already exist.
+    """
 
     if not path:
         raise ValueError("Dot path must be non-empty.")
@@ -13,15 +22,22 @@ def set_dot_path(payload: dict[str, Any], path: str, value: Any) -> dict[str, An
     parts = path.split(".")
     cursor: dict[str, Any] = payload
     for key in parts[:-1]:
-        next_value = cursor.get(key)
-        if next_value is None:
-            next_value = {}
-            cursor[key] = next_value
+        if key not in cursor:
+            if create_missing:
+                cursor[key] = {}
+            else:
+                raise ValueError(f"Unknown path segment '{key}' in '{path}'.")
+
+        next_value = cursor[key]
         if not isinstance(next_value, dict):
             raise ValueError(f"Path segment '{key}' is not a mapping in '{path}'.")
         cursor = next_value
 
-    cursor[parts[-1]] = value
+    leaf_key = parts[-1]
+    if leaf_key not in cursor and not create_missing:
+        raise ValueError(f"Unknown target key '{leaf_key}' in '{path}'.")
+
+    cursor[leaf_key] = value
     return payload
 
 
