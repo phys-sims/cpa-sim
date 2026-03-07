@@ -65,7 +65,7 @@ def _apply_polynomial_phase_independent(
 
     out = state.deepcopy()
     domega = np.asarray(out.pulse.grid.w, dtype=np.float64)
-    phase = -0.5 * gdd_fs2 * domega**2 - (1.0 / 6.0) * tod_fs3 * domega**3
+    phase = 0.5 * gdd_fs2 * domega**2 + (1.0 / 6.0) * tod_fs3 * domega**3
     out.pulse.field_w = np.asarray(out.pulse.field_w, dtype=np.complex128) * np.exp(1j * phase)
     out.pulse.field_t = np.fft.fftshift(np.fft.ifft(np.fft.ifftshift(out.pulse.field_w)))
     out.pulse.intensity_t = np.abs(out.pulse.field_t) ** 2

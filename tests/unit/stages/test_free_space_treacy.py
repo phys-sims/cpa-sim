@@ -12,7 +12,11 @@ from cpa_sim.models import (
     TreacyGratingPairCfg,
 )
 from cpa_sim.models.state import BeamState, LaserState, PulseGrid, PulseState
-from cpa_sim.stages.free_space.treacy_grating import TreacyGratingStage
+from cpa_sim.stages.free_space.treacy_grating import (
+    TreacyGratingStage,
+    _compute_treacy_metrics,
+    _phase_from_dispersion,
+)
 from cpa_sim.stages.laser_gen import AnalyticLaserGenStage
 
 # Golden values are copied from LaserCalculator.com readouts which are rounded
@@ -81,6 +85,43 @@ def _rms_width_fs(state: LaserState) -> float:
     t_mean = float(np.sum(t_fs * intensity) / norm)
     variance = float(np.sum(((t_fs - t_mean) ** 2) * intensity) / norm)
     return float(np.sqrt(max(variance, 0.0)))
+
+
+def _finite_d2_d3_at_zero_from_phase(*, gdd_fs2: float, tod_fs3: float) -> tuple[float, float]:
+    step_rad_per_fs = 1e-4
+    domega = step_rad_per_fs * np.array([-2.0, -1.0, 0.0, 1.0, 2.0], dtype=np.float64)
+    phase = _phase_from_dispersion(domega, gdd_fs2=gdd_fs2, tod_fs3=tod_fs3)
+
+    d2phi = (-phase[4] + 16.0 * phase[3] - 30.0 * phase[2] + 16.0 * phase[1] - phase[0]) / (
+        12.0 * step_rad_per_fs**2
+    )
+    d3phi = (-phase[0] + 2.0 * phase[1] - 2.0 * phase[3] + phase[4]) / (2.0 * step_rad_per_fs**3)
+    return float(d2phi), float(d3phi)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("gdd_fs2", "tod_fs3"),
+    [
+        (2_500.0, -1_000.0),
+        (-4_200.0, 8_000.0),
+    ],
+)
+def test_phase_polynomial_derivatives_match_coefficients(gdd_fs2: float, tod_fs3: float) -> None:
+    d2phi, d3phi = _finite_d2_d3_at_zero_from_phase(gdd_fs2=gdd_fs2, tod_fs3=tod_fs3)
+    assert d2phi == pytest.approx(gdd_fs2, rel=1e-9, abs=1e-6)
+    assert d3phi == pytest.approx(tod_fs3, rel=1e-9, abs=1e-6)
+
+
+@pytest.mark.unit
+def test_treacy_metric_coefficients_match_phase_derivatives_near_zero() -> None:
+    metrics = _compute_treacy_metrics(TreacyGratingPairCfg(name="treacy"))
+    d2phi, d3phi = _finite_d2_d3_at_zero_from_phase(
+        gdd_fs2=metrics["gdd_fs2"],
+        tod_fs3=metrics["tod_fs3"],
+    )
+    assert d2phi == pytest.approx(metrics["gdd_fs2"], rel=1e-9, abs=1e-3)
+    assert d3phi == pytest.approx(metrics["tod_fs3"], rel=1e-9, abs=1e-3)
 
 
 @pytest.mark.unit

@@ -57,8 +57,8 @@ def _derivatives(phi: np.ndarray, w: np.ndarray) -> tuple[np.ndarray, np.ndarray
 
 def _recover_gdd_tod(w: np.ndarray, d2phi: np.ndarray, d3phi: np.ndarray) -> tuple[float, float]:
     center_mask = np.abs(w) <= 0.7 * np.max(np.abs(w))
-    gdd_est = -float(np.mean(d2phi[center_mask]))
-    tod_est = -float(np.mean(d3phi[center_mask]))
+    gdd_est = float(np.mean(d2phi[center_mask]))
+    tod_est = float(np.mean(d3phi[center_mask]))
     return gdd_est, tod_est
 
 
@@ -221,7 +221,7 @@ def main() -> None:
             LineSeries(x=w_abs, y=d2_gdd, label="PhaseOnly (GDD only)"),
             LineSeries(x=w_abs, y=d2_treacy, label="Treacy (with TOD)"),
             LineSeries(
-                x=w_abs, y=np.full_like(w_abs, -phase_gdd_cfg.gdd_fs2), label="Expected: -GDD"
+                x=w_abs, y=np.full_like(w_abs, phase_gdd_cfg.gdd_fs2), label="Expected: GDD"
             ),
         ],
     )

@@ -37,13 +37,13 @@ def test_normalize_trace_peak_and_area_modes() -> None:
 
     axis = np.asarray([0.0, 1.0, 2.0], dtype=float)
     area = normalize_trace(values, axis=axis, mode="area")
-    assert np.isclose(np.trapz(np.abs(area), x=axis), 1.0)
+    assert np.isclose(np.trapezoid(np.abs(area), x=axis), 1.0)
 
     # Descending axes should still normalize by positive area magnitude.
     axis_desc = axis[::-1]
     values_desc = values[::-1]
     area_desc = normalize_trace(values_desc, axis=axis_desc, mode="area")
-    assert np.isclose(abs(np.trapz(np.abs(area_desc), x=axis_desc)), 1.0)
+    assert np.isclose(abs(np.trapezoid(np.abs(area_desc), x=axis_desc)), 1.0)
 
 
 def test_normalize_trace_rejects_zero_trace_for_peak_or_area() -> None:

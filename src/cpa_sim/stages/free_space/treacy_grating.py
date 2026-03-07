@@ -24,16 +24,23 @@ def _phase_from_dispersion(
     gdd_fs2: float,
     tod_fs3: float,
 ) -> np.ndarray:
-    """Evaluate polynomial dispersion phase on an offset-frequency (Δω) grid.
+    """Evaluate spectral phase polynomial on an offset-frequency grid.
 
-    In this envelope-model simulator, ``PulseGrid.w`` is already a carrier-offset axis
-    (Δω). Dispersion polynomials are applied directly on this Δω grid (about Δω≈0),
-    not by subtracting ``ω0_optical`` or re-centering with ``mean(w)``.
+    ``gdd_fs2`` and ``tod_fs3`` use the physical-derivative convention:
+    ``gdd_fs2 = d2phi/domega2|omega0`` and ``tod_fs3 = d3phi/domega3|omega0``.
+
+    Applied polynomial:
+    ``phi(delta_omega) = 0.5*gdd_fs2*delta_omega^2 + (1/6)*tod_fs3*delta_omega^3``.
+
+    In this envelope-model simulator, ``PulseGrid.w`` is already the carrier-offset
+    axis (delta_omega). The polynomial is applied directly on this grid near
+    ``delta_omega ~= 0``, without subtracting ``omega0_optical`` or re-centering
+    with ``mean(w)``.
     """
 
-    phase = -0.5 * gdd_fs2 * domega_rad_per_fs**2
+    phase = 0.5 * gdd_fs2 * domega_rad_per_fs**2
     if tod_fs3 != 0.0:
-        phase -= (1.0 / 6.0) * tod_fs3 * domega_rad_per_fs**3
+        phase += (1.0 / 6.0) * tod_fs3 * domega_rad_per_fs**3
     return phase
 
 
@@ -46,6 +53,12 @@ def _safe_asin(arg: float, *, context: str) -> float:
 
 
 def _compute_treacy_metrics(cfg: TreacyGratingPairCfg) -> dict[str, float]:
+    """Compute Treacy geometry metrics and polynomial coefficients.
+
+    Returned ``gdd_fs2`` and ``tod_fs3`` are physical phase derivatives:
+    ``gdd_fs2 = d2phi/domega2|omega0`` and ``tod_fs3 = d3phi/domega3|omega0``.
+    Any override values are interpreted in this same convention.
+    """
     lambda_um = cfg.wavelength_nm * 1e-3
     d_um = 1000.0 / cfg.line_density_lpmm
     theta_i_rad = math.radians(cfg.incidence_angle_deg)

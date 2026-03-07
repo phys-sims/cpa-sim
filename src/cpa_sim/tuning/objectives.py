@@ -156,9 +156,7 @@ def soft_constraint_penalty(
             else 0.0
         )
         target_violation = (
-            abs(metric_value - float(constraint.target))
-            if constraint.target is not None
-            else 0.0
+            abs(metric_value - float(constraint.target)) if constraint.target is not None else 0.0
         )
 
         violation = lower_violation + upper_violation + target_violation
