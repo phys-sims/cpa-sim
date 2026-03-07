@@ -35,7 +35,6 @@ dev = [
 
 ml = [
   "phys-sims-utils[ml]>=0.2.0",
-  "cma",
 ]
 
 plotting = [
