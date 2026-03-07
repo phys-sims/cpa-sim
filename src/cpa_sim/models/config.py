@@ -124,8 +124,14 @@ class TreacyGratingPairCfg(StageConfig):
     n_passes: int = 2
     include_tod: bool = True
     apply_to_pulse: bool = True
-    override_gdd_fs2: float | None = None
-    override_tod_fs3: float | None = None
+    override_gdd_fs2: float | None = Field(
+        default=None,
+        description="Override d2phi/domega2 at omega0 (fs^2) used by the applied phase polynomial.",
+    )
+    override_tod_fs3: float | None = Field(
+        default=None,
+        description="Override d3phi/domega3 at omega0 (fs^3) used by the applied phase polynomial.",
+    )
 
 
 class PhaseOnlyDispersionCfg(StageConfig):
@@ -133,8 +139,14 @@ class PhaseOnlyDispersionCfg(StageConfig):
 
     name: str
     kind: Literal["phase_only_dispersion"] = "phase_only_dispersion"
-    gdd_fs2: float = 0.0
-    tod_fs3: float = 0.0
+    gdd_fs2: float = Field(
+        default=0.0,
+        description="Physical GDD coefficient d2phi/domega2 at omega0 in fs^2.",
+    )
+    tod_fs3: float = Field(
+        default=0.0,
+        description="Physical TOD coefficient d3phi/domega3 at omega0 in fs^3.",
+    )
     apply_to_pulse: bool = True
 
 

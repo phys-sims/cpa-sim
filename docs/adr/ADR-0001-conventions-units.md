@@ -20,7 +20,7 @@ Adopt the ECO-0001 convention set for all internal `cpa-sim` calculations and ex
 3. **Metric naming:** dimensional metric keys use explicit suffixes (`_fs`, `_um`, `_rad_per_fs`, `_j`, `_w`).
 4. **Envelope normalization:** the complex envelope is represented in `sqrt(W)` so `|E|^2` is power in `W`; energy integrates as `sum(|E|^2 * dt_fs * 1e-15)`.
 5. **FFT/scaling:** use NumPy FFT sign convention with explicit time-step scaling (`Ew = dt_s * FFT(Et)`, `Et = (1/dt_s) * IFFT(Ew)`).
-6. **Sign conventions:** positive chirp means `dω_inst/dt > 0`; GDD sign follows `d²φ/dω²`; free-space grating equation signs are documented and tested per backend.
+6. **Sign conventions:** positive chirp means `dω_inst/dt > 0`; GDD/TOD follow phase derivatives `d²φ/dω²` and `d³φ/dω³`; in free-space configs/metrics, `gdd_fs2` and `tod_fs3` mean those physical derivatives at `ω0`; the applied Taylor phase on the offset grid is `φ(Δω) = +0.5*gdd_fs2*Δω^2 + (1/6)*tod_fs3*Δω^3`.
 7. **Observable/latent split:** latent complex fields (`field_t`, `field_w`) remain simulation state, while reported observables (e.g., FWHM/autocorrelation/spectral width) must declare method and assumptions in an observable contract surface.
 
 ### Frequency axis / FFT contract

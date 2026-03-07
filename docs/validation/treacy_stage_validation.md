@@ -1,10 +1,9 @@
 # Treacy stage validation
 
 This page documents reproducible validation artifacts for the free-space dispersion stage.
-The model used here is a **phase-only spectral operator on the envelope**, where the stage applies
+The model used here is a **phase-only spectral operator on the envelope**, where the stage applies `phi(Delta omega)` directly on the offset-frequency grid and the simulator `w` axis is `Delta omega` (not absolute optical carrier frequency).
 
-a phase \(\phi(\Delta\omega)\) directly on the offset-frequency grid, and the simulator’s
-`w` axis is \(\Delta\omega\) (not absolute optical carrier frequency).
+The dispersion coefficients follow the physical-derivative convention: `gdd_fs2 = d2phi/domega2|omega0`, `tod_fs3 = d3phi/domega3|omega0`, and `phi(Delta omega) = +0.5*gdd_fs2*Delta omega^2 + (1/6)*tod_fs3*Delta omega^3`.
 
 ## What was validated
 
