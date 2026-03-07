@@ -4,6 +4,8 @@ import pytest
 
 from cpa_sim.tuning.parameter_space import apply_parameter_values, set_dot_path
 
+pytestmark = pytest.mark.unit
+
 
 def test_set_dot_path_updates_existing_leaf() -> None:
     payload = {"fiber": {"physics": {"length_m": 1.0}}}
