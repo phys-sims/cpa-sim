@@ -227,14 +227,24 @@ def run_wust_gnlse(
         if full_at.ndim == 1:
             full_at = full_at[np.newaxis, :]
 
-        np.savez_compressed(
-            z_traces_path,
-            z_m=z_axis_m,
-            t_fs=np.asarray(out.pulse.grid.t, dtype=float),
-            w_rad_per_fs=np.asarray(out.pulse.grid.w, dtype=float),
-            at_zt_real=np.real(full_at).astype(float),
-            at_zt_imag=np.imag(full_at).astype(float),
-        )
+        npz_payload: dict[str, np.ndarray] = {
+            "z_m": z_axis_m,
+            "t_fs": np.asarray(out.pulse.grid.t, dtype=float),
+            "w_rad_per_fs": np.asarray(out.pulse.grid.w, dtype=float),
+            "at_zt_real": np.real(full_at).astype(float),
+            "at_zt_imag": np.imag(full_at).astype(float),
+        }
+        if numerics.keep_aw:
+            aw_trace = getattr(solution, "AW", None)
+            if aw_trace is not None:
+                full_aw = np.asarray(aw_trace, dtype=np.complex128)
+                if full_aw.ndim == 1:
+                    full_aw = full_aw[np.newaxis, :]
+                if full_aw.shape == full_at.shape:
+                    npz_payload["aw_zw_real"] = np.real(full_aw).astype(float)
+                    npz_payload["aw_zw_imag"] = np.imag(full_aw).astype(float)
+
+        np.savez_compressed(z_traces_path, **npz_payload)
         artifacts[f"{stage_name}.z_traces_npz"] = str(z_traces_path)
         artifacts[f"{stage_name}.solution_saved"] = "z_traces_npz"
     if numerics.record_backend_version:

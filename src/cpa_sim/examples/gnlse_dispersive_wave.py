@@ -155,6 +155,9 @@ def main() -> None:
         center_wavelength_nm=835.0,
         out_dir=outdir,
         stem=_STAGE_NAME,
+        compat_mode="wust",
+        time_range_ps=(-0.5, 5.0),
+        wl_range_nm=(400.0, 1400.0),
     )
 
     print("Generated dispersive-wave artifacts:")
