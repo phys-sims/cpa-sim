@@ -15,10 +15,13 @@ from cpa_sim.reporting import (
     run_pipeline_with_plot_policy,
     write_json,
 )
+from cpa_sim.tuning.cli import add_tune_subcommand, run_tune_command
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(prog="cpa-sim", description="Run a CPA simulation pipeline")
+    parser = argparse.ArgumentParser(
+        prog="cpa-sim", description="Run and tune CPA simulation pipelines"
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     run_parser = subparsers.add_parser("run", help="Run a pipeline configuration")
@@ -29,6 +32,8 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Write final state arrays to out/state_final.npz.",
     )
+
+    add_tune_subcommand(subparsers)
 
     return parser.parse_args(argv)
 
@@ -62,6 +67,9 @@ def _write_state_dump(path: Path, *, state: Any) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
+    if args.command == "tune":
+        return run_tune_command(args)
+
     if args.command != "run":
         return 2
 
