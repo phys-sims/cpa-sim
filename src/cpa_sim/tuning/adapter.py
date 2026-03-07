@@ -5,10 +5,12 @@ from importlib import import_module
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import yaml  # type: ignore[import-untyped]
 
 from cpa_sim.models import PipelineConfig
 from cpa_sim.pipeline import run_pipeline
+from cpa_sim.tuning.objectives import build_objective_evaluator
 from cpa_sim.tuning.parameter_space import apply_parameter_values
 from cpa_sim.tuning.schema import TuneConfig
 
@@ -32,6 +34,7 @@ class PipelineTuningAdapter:
     def __init__(self, config: TuneConfig):
         self._config = config
         self._base_payload = _load_base_pipeline_payload(config.base_pipeline_config)
+        self._objective_evaluator = build_objective_evaluator(config.objective)
 
     @property
     def base_payload(self) -> dict[str, Any]:
@@ -45,32 +48,38 @@ class PipelineTuningAdapter:
         runtime_payload["seed"] = effective_seed
         patched["runtime"] = runtime_payload
 
-        cfg = PipelineConfig.model_validate(patched)
-        policy = build_tuning_pipeline_policy(self._config.execution.policy_overrides)
-        policy["cpa.emit_stage_plots"] = self._config.execution.emit_stage_plots
+        objective_value = float(self._config.objective.exception_penalty)
+        metrics: dict[str, float] = {}
+        artifacts: dict[str, str] = {}
+        success = False
+        metadata: dict[str, Any] = {"seed": effective_seed}
 
-        result = run_pipeline(cfg, policy=policy)
+        try:
+            cfg = PipelineConfig.model_validate(patched)
+            policy = build_tuning_pipeline_policy(self._config.execution.policy_overrides)
+            policy["cpa.emit_stage_plots"] = self._config.execution.emit_stage_plots
 
-        objective_value = _compute_objective(
-            metrics=result.metrics,
-            metric_key=self._config.objective.metric,
-            direction=self._config.objective.direction,
-        )
+            result = run_pipeline(cfg, policy=policy)
+            metrics = result.metrics
+            artifacts = {**result.artifacts, **result.state.artifacts}
+            objective_value = float(self._objective_evaluator(metrics, result.state))
+            if np.isfinite(objective_value):
+                success = True
+            else:
+                objective_value = float(self._config.objective.exception_penalty)
+                metadata["error"] = "Objective returned non-finite value"
+        except Exception as exc:
+            objective_value = float(self._config.objective.exception_penalty)
+            metadata["error"] = f"{type(exc).__name__}: {exc}"
 
         return _build_eval_result(
             parameters=values,
             objective=objective_value,
-            metrics=result.metrics,
-            artifacts={**result.artifacts, **result.state.artifacts},
-            seed=effective_seed,
+            metrics=metrics,
+            artifacts=artifacts,
+            metadata=metadata,
+            success=success,
         )
-
-
-def _compute_objective(*, metrics: dict[str, float], metric_key: str, direction: str) -> float:
-    if metric_key not in metrics:
-        raise ValueError(f"Objective metric '{metric_key}' was not produced by run_pipeline.")
-    value = float(metrics[metric_key])
-    return -value if direction == "maximize" else value
 
 
 def _build_eval_result(
@@ -79,7 +88,8 @@ def _build_eval_result(
     objective: float,
     metrics: dict[str, float],
     artifacts: dict[str, str],
-    seed: int,
+    metadata: dict[str, Any],
+    success: bool,
 ) -> Any:
     try:
         ml_module = import_module("phys_sims_utils.ml")
@@ -99,8 +109,8 @@ def _build_eval_result(
         "loss": objective,
         "metrics": metrics,
         "artifacts": artifacts,
-        "metadata": {"seed": seed},
-        "success": True,
+        "metadata": metadata,
+        "success": success,
     }
 
     signature = inspect.signature(EvalResult)

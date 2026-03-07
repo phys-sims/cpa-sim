@@ -22,9 +22,7 @@ def test_cli_tune_help() -> None:
     assert "run" in proc.stdout
 
 
-@pytest.mark.integration
-def test_cli_tune_run_saves_best_config(tmp_path: Path) -> None:
-    fake_pkg_root = tmp_path / "fake_pkg"
+def _write_fake_ml(fake_pkg_root: Path) -> None:
     fake_ml = fake_pkg_root / "phys_sims_utils" / "ml"
     fake_ml.mkdir(parents=True)
     (fake_pkg_root / "phys_sims_utils" / "__init__.py").write_text("", encoding="utf-8")
@@ -81,6 +79,33 @@ class OptimizationRunner:
         encoding="utf-8",
     )
 
+
+def _run_tune_cli(*, tuning_config: Path, fake_pkg_root: Path) -> subprocess.CompletedProcess[str]:
+    env = dict(os.environ)
+    env["PYTHONPATH"] = f"{fake_pkg_root}:{env.get('PYTHONPATH', '')}"
+
+    return subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "cpa_sim.cli",
+            "tune",
+            "run",
+            "--config",
+            str(tuning_config),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+    )
+
+
+@pytest.mark.integration
+def test_cli_tune_run_saves_best_config(tmp_path: Path) -> None:
+    fake_pkg_root = tmp_path / "fake_pkg"
+    _write_fake_ml(fake_pkg_root)
+
     out_dir = tmp_path / "out"
     tuning_config = tmp_path / "tuning.yaml"
     tuning_config.write_text(
@@ -103,24 +128,50 @@ output:
         encoding="utf-8",
     )
 
-    env = dict(os.environ)
-    env["PYTHONPATH"] = f"{fake_pkg_root}:{env.get('PYTHONPATH', '')}"
+    proc = _run_tune_cli(tuning_config=tuning_config, fake_pkg_root=fake_pkg_root)
 
-    proc = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "cpa_sim.cli",
-            "tune",
-            "run",
-            "--config",
-            str(tuning_config),
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
-        env=env,
+    assert proc.returncode == 0, proc.stderr
+    assert (out_dir / "best_config.yaml").exists()
+    assert "Tuning finished." in proc.stdout
+
+
+@pytest.mark.integration
+def test_cli_tune_run_with_target_spectrum_csv(tmp_path: Path) -> None:
+    fake_pkg_root = tmp_path / "fake_pkg"
+    _write_fake_ml(fake_pkg_root)
+
+    target_csv = tmp_path / "target_spectrum.csv"
+    target_csv.write_text(
+        "omega,signal\n-0.02,0.0\n0.0,1.0\n0.02,0.0\n",
+        encoding="utf-8",
     )
+
+    out_dir = tmp_path / "out_spectral"
+    tuning_config = tmp_path / "tuning_spectral.yaml"
+    tuning_config.write_text(
+        f"""
+base_pipeline_config: configs/examples/basic_cpa.yaml
+parameters:
+  - name: compressor_sep
+    path: compressor.separation_um
+    bounds: [100000.0, 400000.0]
+objective:
+  kind: spectral_rmse
+  target_csv: {target_csv}
+  target_x_column: omega
+  target_y_column: signal
+  normalization: peak
+optimizer:
+  max_evals: 1
+execution:
+  seed: 7
+output:
+  out_dir: {out_dir}
+""",
+        encoding="utf-8",
+    )
+
+    proc = _run_tune_cli(tuning_config=tuning_config, fake_pkg_root=fake_pkg_root)
 
     assert proc.returncode == 0, proc.stderr
     assert (out_dir / "best_config.yaml").exists()
