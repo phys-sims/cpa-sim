@@ -1,9 +1,11 @@
 import numpy as np
+import pytest
 
 from cpa_sim.models import PipelineConfig
 from cpa_sim.pipeline import run_pipeline
 
 
+@pytest.mark.unit
 def test_run_is_deterministic_for_same_config_and_seed() -> None:
     cfg = PipelineConfig()
     result_a = run_pipeline(cfg)
@@ -13,6 +15,7 @@ def test_run_is_deterministic_for_same_config_and_seed() -> None:
     assert result_a.metrics == result_b.metrics
 
 
+@pytest.mark.unit
 def test_free_space_phase_preserves_energy() -> None:
     cfg = PipelineConfig()
     base = run_pipeline(cfg)
@@ -22,6 +25,7 @@ def test_free_space_phase_preserves_energy() -> None:
     assert np.isclose(energy_after, laser_energy)
 
 
+@pytest.mark.unit
 def test_policy_hash_is_recorded_in_provenance() -> None:
     cfg = PipelineConfig()
     result = run_pipeline(cfg, policy={"debug": {"enabled": True}})
