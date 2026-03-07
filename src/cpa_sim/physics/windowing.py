@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 
 import numpy as np
 
 from cpa_sim.models.state import LaserState, PulseGrid, PulseState
+from cpa_sim.phys_pipeline_compat import PolicyBag
+from cpa_sim.utils import _policy_get
 
 
 def intensity_weighted_mean_fs(t_fs: np.ndarray, intensity: np.ndarray) -> float:
@@ -130,3 +133,164 @@ def pad_laser_state_time(state: LaserState, *, new_n_samples: int) -> LaserState
         spectrum_w=np.abs(field_w_new) ** 2,
     )
     return out
+
+
+def _parse_stage_list(value: object) -> tuple[str, ...] | None:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return tuple(part.strip() for part in value.split(",") if part.strip())
+    if isinstance(value, (list, tuple)):
+        return tuple(str(item) for item in value)
+    return (str(value),)
+
+
+def auto_window_enabled_for_stage(policy: PolicyBag | None, *, stage_name: str) -> bool:
+    enabled = bool(_policy_get(policy, "cpa.auto_window.enabled", False))
+    if not enabled:
+        return False
+    stage_list = _parse_stage_list(_policy_get(policy, "cpa.auto_window.stages", None))
+    if stage_list is None:
+        return True
+    return stage_name in stage_list
+
+
+def _next_n_samples(n: int, *, growth_factor: float, prefer_pow2: bool) -> int:
+    next_n = int(math.ceil(float(n) * float(growth_factor)))
+    if prefer_pow2:
+        next_n = 1 << max(0, next_n - 1).bit_length()
+    return max(next_n, n + 1)
+
+
+# NOTE: AutoWindow is currently intended ONLY for the existing free-space phase-only backends
+# (Treacy grating pair and phase-only dispersion). Future dispersion-aware ray-tracing / spatial
+# free-space backends may be expensive and should likely ignore/disable auto-window reruns
+# by default.
+def run_with_auto_window(
+    state: LaserState,
+    run_once: Callable[[LaserState], LaserState],
+    *,
+    stage_name: str,
+    policy: PolicyBag | None,
+) -> tuple[LaserState, dict[str, float], list[dict[str, object]]]:
+    enabled = auto_window_enabled_for_stage(policy, stage_name=stage_name)
+    metrics_prefix = f"{stage_name}.auto_window"
+
+    if not enabled:
+        out_state = run_once(state)
+        metrics = {
+            f"{metrics_prefix}_enabled": 0.0,
+            f"{metrics_prefix}_attempts": 1.0,
+            f"{metrics_prefix}_reruns": 0.0,
+            f"{metrics_prefix}_n_in": float(len(state.pulse.field_t)),
+            f"{metrics_prefix}_n_out": float(len(out_state.pulse.field_t)),
+            f"{metrics_prefix}_edge_energy_fraction_final": 0.0,
+            f"{metrics_prefix}_recenter_shift_fs_last": 0.0,
+        }
+        return out_state, metrics, []
+
+    edge_fraction = float(_policy_get(policy, "cpa.auto_window.edge_fraction", 0.05))
+    threshold = float(_policy_get(policy, "cpa.auto_window.max_edge_energy_fraction", 1e-6))
+    max_iters = int(_policy_get(policy, "cpa.auto_window.max_iters", 6))
+    growth_factor = float(_policy_get(policy, "cpa.auto_window.growth_factor", 2.0))
+    prefer_pow2 = bool(_policy_get(policy, "cpa.auto_window.prefer_pow2", True))
+    max_n_samples_raw = _policy_get(policy, "cpa.auto_window.max_n_samples", None)
+    max_n_samples = None if max_n_samples_raw is None else int(max_n_samples_raw)
+    recenter_each_iter = bool(_policy_get(policy, "cpa.auto_window.recenter_each_iter", True))
+    verbose = bool(_policy_get(policy, "cpa.auto_window.print", False))
+    nyquist_guard_fraction = float(
+        _policy_get(policy, "cpa.auto_window.nyquist_guard_fraction", 0.05)
+    )
+    max_nyquist_energy_fraction = float(
+        _policy_get(policy, "cpa.auto_window.max_nyquist_energy_fraction", 1e-6)
+    )
+
+    nyquist_energy_input = nyquist_energy_fraction(
+        np.asarray(state.pulse.spectrum_w, dtype=np.float64),
+        nyquist_guard_fraction=nyquist_guard_fraction,
+    )
+    if nyquist_energy_input > max_nyquist_energy_fraction:
+        raise RuntimeError(
+            "Auto-window input Nyquist guard energy is too large; this indicates a dt/Nyquist "
+            "sampling issue that padding cannot fix. "
+            f"stage={stage_name} nyquist_energy_fraction={nyquist_energy_input:.6e} "
+            f"threshold={max_nyquist_energy_fraction:.6e}"
+        )
+
+    base_state = state
+    n0 = int(len(base_state.pulse.field_t))
+    n = n0
+    events: list[dict[str, object]] = []
+
+    attempts = 0
+    n_final = float(n0)
+    edge_final = 0.0
+    shift_last = 0.0
+
+    for attempt in range(max_iters + 1):
+        attempts = attempt + 1
+        trial_in = base_state if n == n0 else pad_laser_state_time(base_state, new_n_samples=n)
+        trial_out = run_once(trial_in)
+        if recenter_each_iter:
+            trial_out, shift_fs = recenter_state_by_intensity_centroid(trial_out)
+        else:
+            shift_fs = 0.0
+
+        n_current = int(len(trial_in.pulse.field_t))
+        dt_fs = float(trial_in.pulse.grid.dt)
+        time_window_fs = dt_fs * float(max(0, n_current - 1))
+        edge = edge_energy_fraction(
+            np.asarray(trial_out.pulse.intensity_t, dtype=np.float64), edge_fraction=edge_fraction
+        )
+        event: dict[str, object] = {
+            "stage": stage_name,
+            "attempt": attempt,
+            "n_samples": n_current,
+            "dt_fs": dt_fs,
+            "time_window_fs": time_window_fs,
+            "edge_fraction": edge_fraction,
+            "edge_energy_fraction": float(edge),
+            "threshold": threshold,
+            "nyquist_guard_fraction": nyquist_guard_fraction,
+            "nyquist_energy_fraction_input": float(nyquist_energy_input),
+            "recenter_shift_fs": float(shift_fs),
+        }
+        events.append(event)
+
+        n_final = float(n_current)
+        edge_final = float(edge)
+        shift_last = float(shift_fs)
+
+        if edge <= threshold:
+            metrics = {
+                f"{metrics_prefix}_enabled": 1.0,
+                f"{metrics_prefix}_attempts": float(attempts),
+                f"{metrics_prefix}_reruns": float(max(0, attempts - 1)),
+                f"{metrics_prefix}_n_in": float(n0),
+                f"{metrics_prefix}_n_out": n_final,
+                f"{metrics_prefix}_edge_energy_fraction_final": edge_final,
+                f"{metrics_prefix}_recenter_shift_fs_last": shift_last,
+            }
+            return trial_out, metrics, events
+
+        n_next = _next_n_samples(n_current, growth_factor=growth_factor, prefer_pow2=prefer_pow2)
+        if max_n_samples is not None and n_next > max_n_samples:
+            raise RuntimeError(
+                "Auto-window exceeded max_n_samples before edge-energy threshold was met. "
+                f"stage={stage_name} attempt={attempt} edge_energy_fraction={edge:.6e} "
+                f"threshold={threshold:.6e} n_current={n_current} n_next={n_next} "
+                f"max_n_samples={max_n_samples}"
+            )
+
+        if verbose:
+            print(
+                f"[auto-window] stage={stage_name} attempt={attempt} edge={edge:.6e} > "
+                f"{threshold:.6e} -> pad N {n_current} -> {n_next} and rerun"
+            )
+        n = n_next
+
+    raise RuntimeError(
+        "Auto-window failed to reach edge-energy threshold within max_iters. "
+        f"stage={stage_name} max_iters={max_iters} final_edge_energy_fraction={edge_final:.6e} "
+        f"final_n_samples={int(n_final)}"
+    )
