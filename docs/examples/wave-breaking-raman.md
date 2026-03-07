@@ -2,6 +2,8 @@
 
 This is the canonical nonlinear fiber example: higher-order dispersion + Raman + self-steepening with WUST-compatible delay/wavelength evolution maps.
 
+Reference solver: this example is explicitly aligned to the external WUST-FOG `gnlse` Python package, and `WustGnlseNumericsCfg(backend="wust_gnlse")` is used to run that backend through cpa-sim config.
+
 ## Physics config (minimal)
 
 ```python

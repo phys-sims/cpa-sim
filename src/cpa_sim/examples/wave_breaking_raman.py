@@ -8,9 +8,10 @@ phase matching. The most important knobs are:
 - Raman response model selection, and
 - self-steepening (optical shock term).
 
-The setup is aligned with the `gnlse-python` dispersive-wave / Raman examples
-(`example_dispersive_wave`, `test_raman`) but executed through cpa-sim's stage/config
-API so it can be used as a reproducible, user-facing workflow.
+Reference solver: the external WUST-FOG `gnlse` Python package. This setup is
+aligned with WUST-FOG `gnlse` dispersive-wave / Raman examples
+(`example_dispersive_wave`, `test_raman`) but executed through cpa-sim's
+stage/config API so it can be used as a reproducible, user-facing workflow.
 """
 
 from __future__ import annotations
@@ -47,6 +48,7 @@ def run_example(
     z_saves: int = DEFAULT_Z_SAVES,
     raman_model: RamanModelName = "blowwood",
 ) -> dict[str, Path]:
+    """Run the WUST-FOG `gnlse`-aligned wave-breaking Raman example."""
     raman_cfg = None if raman_model == "none" else RamanCfg(model=raman_model)
     cfg = PipelineConfig(
         runtime=RuntimeCfg(seed=7),
