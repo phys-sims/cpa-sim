@@ -133,7 +133,18 @@ print(result.state.meta)
 Related docs:
 
 - Examples: `docs/examples/canonical-1560nm-chain.md`, `docs/examples/wust-gnlse-fiber-example.md`
+- Validation: `docs/validation/auto_window.md`
 - ADRs: `docs/adr/ADR-0001-conventions-units.md`, `docs/adr/ADR-0002-result-schema-contract.md`, `docs/adr/ADR-0003-validation-tiers-ci-policy.md`, `docs/adr/ADR-0008-canonical-output-layout.md`
+
+### AutoWindow (free-space wraparound guard)
+
+Use AutoWindow policy flags from the CLI to auto-rerun eligible free-space stages with a larger time window when edge wraparound is detected:
+
+```bash
+cpa-sim run configs/examples/basic_cpa.yaml --out out/basic --auto-window --auto-window-print
+```
+
+See `docs/validation/auto_window.md` for limits (including why this does not fix Nyquist aliasing).
 
 ## Configuration model (high-level)
 
@@ -257,6 +268,9 @@ The test strategy follows tiered validation:
 Common local commands:
 
 ```bash
+python -m ruff format .
+python -m pre_commit run -a
+# if hooks modify files, rerun pre-commit until it passes
 python -m pre_commit run -a
 python -m mypy src
 python -m pytest -q -m "not slow and not physics" --durations=10
@@ -315,6 +329,9 @@ For concrete status, see `STATUS.md` and ADRs in `docs/adr/`.
 Before opening a PR, run required quality gates:
 
 ```bash
+python -m ruff format .
+python -m pre_commit run -a
+# if hooks modify files, rerun pre-commit until it passes
 python -m pre_commit run -a
 python -m mypy src
 python -m pytest -q -m "not slow and not physics" --durations=10
